@@ -2,10 +2,12 @@ import SwiftUI
 
 enum CatState {
     case idle
+    case leftPawDown
+    case rightPawDown
+    case bothPawsDown
+    case leftPawUp
+    case rightPawUp
     case typing
-    case leftPaw
-    case rightPaw
-    case bothPaws
 }
 
 enum InputType {
@@ -15,73 +17,175 @@ enum InputType {
     case scroll
 }
 
+// MARK: - Authentic BangoCat Sprite System using Real Images
+struct BangoCatSprite: View {
+    let state: CatState
+
+    // Pre-load all images to avoid loading issues during animation
+    @State private var baseImage: NSImage?
+    @State private var leftUpImage: NSImage?
+    @State private var leftDownImage: NSImage?
+    @State private var rightUpImage: NSImage?
+    @State private var rightDownImage: NSImage?
+
+    var body: some View {
+        ZStack {
+            // Base cat image (without hands)
+            if let baseImage = baseImage {
+                Image(nsImage: baseImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+            } else {
+                Rectangle()
+                    .fill(Color.orange.opacity(0.3))
+                    .overlay(Text("Loading base..."))
+            }
+
+            // Left hand - show appropriate image based on state
+            leftHandView
+
+            // Right hand - show appropriate image based on state
+            rightHandView
+        }
+        .frame(maxWidth: 300, maxHeight: 250)
+        .onAppear {
+            loadAllImages()
+        }
+        .onChange(of: state) { newValue in
+            print("🔄 State changed to: \(newValue)")
+        }
+    }
+
+    private var leftHandView: some View {
+        Group {
+            switch state {
+            case .leftPawDown, .bothPawsDown, .typing:
+                if let leftDownImage = leftDownImage {
+                    Image(nsImage: leftDownImage)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                } else {
+                    Rectangle()
+                        .fill(Color.red.opacity(0.8))
+                        .frame(width: 60, height: 40)
+                        .overlay(Text("L-DOWN\nMISSING").font(.caption))
+                }
+            default:
+                if let leftUpImage = leftUpImage {
+                    Image(nsImage: leftUpImage)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                } else {
+                    Rectangle()
+                        .fill(Color.blue.opacity(0.8))
+                        .frame(width: 60, height: 40)
+                        .overlay(Text("L-UP\nMISSING").font(.caption))
+                }
+            }
+        }
+    }
+
+    private var rightHandView: some View {
+        Group {
+            switch state {
+            case .rightPawDown, .bothPawsDown, .typing:
+                if let rightDownImage = rightDownImage {
+                    Image(nsImage: rightDownImage)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                } else {
+                    Rectangle()
+                        .fill(Color.red.opacity(0.8))
+                        .frame(width: 60, height: 40)
+                        .overlay(Text("R-DOWN\nMISSING").font(.caption))
+                }
+            default:
+                if let rightUpImage = rightUpImage {
+                    Image(nsImage: rightUpImage)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                } else {
+                    Rectangle()
+                        .fill(Color.green.opacity(0.8))
+                        .frame(width: 60, height: 40)
+                        .overlay(Text("R-UP\nMISSING").font(.caption))
+                }
+            }
+        }
+    }
+
+    private func loadAllImages() {
+        print("🎨 Loading all sprite images...")
+        baseImage = loadImage("base")
+        leftUpImage = loadImage("left-up")
+        leftDownImage = loadImage("left-down")
+        rightUpImage = loadImage("right-up")
+        rightDownImage = loadImage("right-down")
+
+        print("🎨 Image loading complete:")
+        print("  base: \(baseImage != nil ? "✅" : "❌")")
+        print("  left-up: \(leftUpImage != nil ? "✅" : "❌")")
+        print("  left-down: \(leftDownImage != nil ? "✅" : "❌")")
+        print("  right-up: \(rightUpImage != nil ? "✅" : "❌")")
+        print("  right-down: \(rightDownImage != nil ? "✅" : "❌")")
+    }
+
+
+
+    // Helper function to load images from bundle resources
+    private func loadImage(_ name: String) -> NSImage? {
+        // Try to load from bundle resources
+        if let url = Bundle.main.url(forResource: name, withExtension: "png"),
+           let image = NSImage(contentsOf: url) {
+            print("✅ Loaded image: \(name).png")
+            return image
+        }
+
+        // Try alternative paths
+        let possiblePaths = [
+            "Sources/BangoCat/Resources/Images/\(name).png",
+            "Resources/Images/\(name).png",
+            "\(name).png"
+        ]
+
+        for path in possiblePaths {
+            if let image = NSImage(contentsOfFile: path) {
+                print("✅ Loaded image from path: \(path)")
+                return image
+            }
+        }
+
+        print("❌ Failed to load image: \(name).png")
+        return nil
+    }
+}
+
 struct CatView: View {
     @State private var currentState: CatState = .idle
     @State private var animationTimer: Timer?
     @State private var scale: Double = 1.0
-    @State private var leftPawOffset: CGFloat = 0
-    @State private var rightPawOffset: CGFloat = 0
 
     var body: some View {
         ZStack {
-            // Cat body (circle for now)
-            Circle()
-                .fill(Color.orange)
-                .frame(width: 80, height: 80)
+            // Transparent background for overlay
+            Color.clear
+
+            // The authentic BangoCat sprite using real images
+            BangoCatSprite(state: currentState)
                 .scaleEffect(scale)
-
-            // Cat face
-            VStack(spacing: 2) {
-                // Eyes
-                HStack(spacing: 15) {
-                    Circle()
-                        .fill(Color.black)
-                        .frame(width: 8, height: 8)
-                    Circle()
-                        .fill(Color.black)
-                        .frame(width: 8, height: 8)
-                }
-
-                // Nose
-                Circle()
-                    .fill(Color.pink)
-                    .frame(width: 4, height: 4)
-            }
-            .offset(y: -5)
-
-            // Left paw
-            Circle()
-                .fill(Color.orange)
-                .frame(width: 20, height: 20)
-                .offset(x: -50, y: 30 + leftPawOffset)
-
-            // Right paw
-            Circle()
-                .fill(Color.orange)
-                .frame(width: 20, height: 20)
-                .offset(x: 50, y: 30 + rightPawOffset)
-
-            // Ears
-            HStack(spacing: 40) {
-                Triangle()
-                    .fill(Color.orange)
-                    .frame(width: 15, height: 15)
-                Triangle()
-                    .fill(Color.orange)
-                    .frame(width: 15, height: 15)
-            }
-            .offset(y: -45)
+                .animation(.easeInOut(duration: 0.08), value: currentState)
+                .animation(.easeInOut(duration: 0.1), value: scale)
         }
-        .frame(width: 160, height: 160)
+        .frame(maxWidth: 350, maxHeight: 300)  // Accommodate real image dimensions
         .background(Color.clear)
-        .animation(.easeInOut(duration: 0.15), value: scale)
-        .animation(.easeInOut(duration: 0.1), value: leftPawOffset)
-        .animation(.easeInOut(duration: 0.1), value: rightPawOffset)
+        .onAppear {
+            print("🐱 CatView appeared, current state: \(currentState)")
+        }
     }
 
-        func triggerAnimation(for inputType: InputType) {
+            func triggerAnimation(for inputType: InputType) {
         // Debug logging
-        print("🐱 Animation triggered for: \(inputType)")
+        print("🐱 Animation triggered for: \(inputType), current state: \(currentState)")
 
         // Cancel existing timer
         animationTimer?.invalidate()
@@ -93,10 +197,10 @@ struct CatView: View {
             triggerTypingAnimation()
         case .leftClick:
             print("🖱️ Left click detected - left paw animation")
-            triggerPawAnimation(.leftPaw)
+            triggerPawAnimation(.leftPawDown)
         case .rightClick:
             print("🖱️ Right click detected - right paw animation")
-            triggerPawAnimation(.rightPaw)
+            triggerPawAnimation(.rightPawDown)
         case .scroll:
             print("🔄 Scroll detected - both paws animation")
             triggerBothPawsAnimation()
@@ -124,63 +228,48 @@ struct CatView: View {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             animationTimer?.invalidate()
             currentState = .idle
-            resetPaws()
         }
     }
 
-        private func triggerPawAnimation(_ paw: CatState) {
+    private func triggerPawAnimation(_ paw: CatState) {
+        print("🎯 Setting state to: \(paw)")
         currentState = paw
 
-        if paw == .leftPaw {
-            withAnimation(.easeInOut(duration: 0.15)) {
-                leftPawOffset = -25  // Increased movement for visibility
-            }
-        } else {
-            withAnimation(.easeInOut(duration: 0.15)) {
-                rightPawOffset = -25  // Increased movement for visibility
-            }
-        }
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+        // Animate back to idle after a short delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            print("🎯 Returning to idle state")
             currentState = .idle
-            resetPaws()
         }
     }
 
-        private func triggerBothPawsAnimation() {
-        currentState = .bothPaws
+                private func triggerBothPawsAnimation() {
+        print("🎯 Setting state to: bothPawsDown")
+        currentState = .bothPawsDown
 
-        withAnimation(.easeInOut(duration: 0.15)) {
-            leftPawOffset = -25  // Increased movement for visibility
-            rightPawOffset = -25  // Increased movement for visibility
-        }
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            print("🎯 Returning to idle state")
             currentState = .idle
-            resetPaws()
         }
     }
 
-    private func animateAlternatePaws() {
+        private func animateAlternatePaws() {
         var isLeft = true
-        animationTimer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true) { _ in
-            withAnimation(.easeInOut(duration: 0.15)) {
-                if isLeft {
-                    leftPawOffset = -25  // Increased movement for visibility
-                    rightPawOffset = 0
-                } else {
-                    leftPawOffset = 0
-                    rightPawOffset = -25  // Increased movement for visibility
+        animationTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
+            // Alternate between left and right paw strikes
+            if isLeft {
+                currentState = .leftPawDown
+                // After a short time, return to normal before switching
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                    currentState = .rightPawUp  // Show right up while left is down
+                }
+            } else {
+                currentState = .rightPawDown
+                // After a short time, return to normal before switching
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                    currentState = .leftPawUp   // Show left up while right is down
                 }
             }
             isLeft.toggle()
-        }
-    }
-
-    private func resetPaws() {
-        withAnimation(.easeInOut(duration: 0.2)) {
-            leftPawOffset = 0
-            rightPawOffset = 0
         }
     }
 }
