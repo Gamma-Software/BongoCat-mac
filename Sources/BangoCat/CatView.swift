@@ -17,6 +17,104 @@ enum InputType {
     case scroll
 }
 
+// MARK: - Observable Cat Animation Controller
+class CatAnimationController: ObservableObject {
+    @Published var currentState: CatState = .idle
+    @Published var scale: Double = 1.0
+
+    private var animationTimer: Timer?
+
+    func triggerAnimation(for inputType: InputType) {
+        // Debug logging
+        print("🐱 Animation triggered for: \(inputType), current state: \(currentState)")
+
+        // Cancel existing timer
+        animationTimer?.invalidate()
+
+        // Trigger appropriate animation
+        switch inputType {
+        case .keyboard:
+            print("⌨️ Keyboard detected - typing animation")
+            triggerTypingAnimation()
+        case .leftClick:
+            print("🖱️ Left click detected - left paw animation")
+            triggerPawAnimation(.leftPawDown)
+        case .rightClick:
+            print("🖱️ Right click detected - right paw animation")
+            triggerPawAnimation(.rightPawDown)
+        case .scroll:
+            print("🔄 Scroll detected - both paws animation")
+            triggerBothPawsAnimation()
+        }
+
+        // Scale animation for feedback
+        withAnimation(.easeInOut(duration: 0.1)) {
+            scale = 1.1
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            withAnimation(.easeInOut(duration: 0.1)) {
+                self.scale = 1.0
+            }
+        }
+    }
+
+    private func triggerTypingAnimation() {
+        currentState = .typing
+
+        // Alternate paw animation
+        animateAlternatePaws()
+
+        // Return to idle after delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            self.animationTimer?.invalidate()
+            self.currentState = .idle
+        }
+    }
+
+    private func triggerPawAnimation(_ paw: CatState) {
+        print("🎯 Setting state to: \(paw)")
+        currentState = paw
+
+        // Animate back to idle after a short delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            print("🎯 Returning to idle state")
+            self.currentState = .idle
+        }
+    }
+
+    private func triggerBothPawsAnimation() {
+        print("🎯 Setting state to: bothPawsDown")
+        currentState = .bothPawsDown
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            print("🎯 Returning to idle state")
+            self.currentState = .idle
+        }
+    }
+
+    private func animateAlternatePaws() {
+        var isLeft = true
+        animationTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
+            // Alternate between left and right paw strikes
+            if isLeft {
+                self.currentState = .leftPawDown
+                // After a short time, return to normal before switching
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                    self.currentState = .rightPawUp  // Show right up while left is down
+                }
+            } else {
+                self.currentState = .rightPawDown
+                // After a short time, return to normal before switching
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                    self.currentState = .leftPawUp   // Show left up while right is down
+                }
+            }
+            isLeft.toggle()
+        }
+    }
+}
+
 // MARK: - Authentic BangoCat Sprite System using Real Images
 struct BangoCatSprite: View {
     let state: CatState
@@ -161,9 +259,7 @@ struct BangoCatSprite: View {
 }
 
 struct CatView: View {
-    @State private var currentState: CatState = .idle
-    @State private var animationTimer: Timer?
-    @State private var scale: Double = 1.0
+    @EnvironmentObject private var animationController: CatAnimationController
 
     var body: some View {
         ZStack {
@@ -171,105 +267,15 @@ struct CatView: View {
             Color.clear
 
             // The authentic BangoCat sprite using real images
-            BangoCatSprite(state: currentState)
-                .scaleEffect(scale)
-                .animation(.easeInOut(duration: 0.08), value: currentState)
-                .animation(.easeInOut(duration: 0.1), value: scale)
+            BangoCatSprite(state: animationController.currentState)
+                .scaleEffect(animationController.scale)
+                .animation(.easeInOut(duration: 0.08), value: animationController.currentState)
+                .animation(.easeInOut(duration: 0.1), value: animationController.scale)
         }
         .frame(maxWidth: 350, maxHeight: 300)  // Accommodate real image dimensions
         .background(Color.clear)
         .onAppear {
-            print("🐱 CatView appeared, current state: \(currentState)")
-        }
-    }
-
-            func triggerAnimation(for inputType: InputType) {
-        // Debug logging
-        print("🐱 Animation triggered for: \(inputType), current state: \(currentState)")
-
-        // Cancel existing timer
-        animationTimer?.invalidate()
-
-        // Trigger appropriate animation
-        switch inputType {
-        case .keyboard:
-            print("⌨️ Keyboard detected - typing animation")
-            triggerTypingAnimation()
-        case .leftClick:
-            print("🖱️ Left click detected - left paw animation")
-            triggerPawAnimation(.leftPawDown)
-        case .rightClick:
-            print("🖱️ Right click detected - right paw animation")
-            triggerPawAnimation(.rightPawDown)
-        case .scroll:
-            print("🔄 Scroll detected - both paws animation")
-            triggerBothPawsAnimation()
-        }
-
-        // Scale animation for feedback
-        withAnimation(.easeInOut(duration: 0.1)) {
-            scale = 1.1
-        }
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            withAnimation(.easeInOut(duration: 0.1)) {
-                scale = 1.0
-            }
-        }
-    }
-
-    private func triggerTypingAnimation() {
-        currentState = .typing
-
-        // Alternate paw animation
-        animateAlternatePaws()
-
-        // Return to idle after delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            animationTimer?.invalidate()
-            currentState = .idle
-        }
-    }
-
-    private func triggerPawAnimation(_ paw: CatState) {
-        print("🎯 Setting state to: \(paw)")
-        currentState = paw
-
-        // Animate back to idle after a short delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-            print("🎯 Returning to idle state")
-            currentState = .idle
-        }
-    }
-
-                private func triggerBothPawsAnimation() {
-        print("🎯 Setting state to: bothPawsDown")
-        currentState = .bothPawsDown
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-            print("🎯 Returning to idle state")
-            currentState = .idle
-        }
-    }
-
-        private func animateAlternatePaws() {
-        var isLeft = true
-        animationTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
-            // Alternate between left and right paw strikes
-            if isLeft {
-                currentState = .leftPawDown
-                // After a short time, return to normal before switching
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-                    currentState = .rightPawUp  // Show right up while left is down
-                }
-            } else {
-                currentState = .rightPawDown
-                // After a short time, return to normal before switching
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-                    currentState = .leftPawUp   // Show left up while right is down
-                }
-            }
-            isLeft.toggle()
+            print("🐱 CatView appeared, current state: \(animationController.currentState)")
         }
     }
 }
@@ -288,5 +294,6 @@ struct Triangle: Shape {
 
 #Preview {
     CatView()
+        .environmentObject(CatAnimationController())
         .background(Color.green.opacity(0.2))
 }

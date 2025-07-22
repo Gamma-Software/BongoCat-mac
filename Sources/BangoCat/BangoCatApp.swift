@@ -55,7 +55,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func setupInputMonitoring() {
         inputMonitor = InputMonitor { [weak self] inputType in
             DispatchQueue.main.async {
-                self?.overlayWindow?.catView?.triggerAnimation(for: inputType)
+                self?.overlayWindow?.catAnimationController?.triggerAnimation(for: inputType)
             }
         }
         inputMonitor?.start()

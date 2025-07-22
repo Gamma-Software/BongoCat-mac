@@ -2,7 +2,7 @@ import Cocoa
 import SwiftUI
 
 class OverlayWindow: NSWindowController {
-    var catView: CatView?
+    var catAnimationController: CatAnimationController?
     private var isVisible = true
 
     override init(window: NSWindow?) {
@@ -31,9 +31,10 @@ class OverlayWindow: NSWindowController {
         window.ignoresMouseEvents = false
         window.collectionBehavior = [.canJoinAllSpaces, .stationary]
 
-        // Create the cat view
-        catView = CatView()
-        let hostingView = NSHostingView(rootView: catView!)
+        // Create the animation controller and cat view
+        catAnimationController = CatAnimationController()
+        let catView = CatView().environmentObject(catAnimationController!)
+        let hostingView = NSHostingView(rootView: catView)
         hostingView.frame = window.contentView?.bounds ?? NSRect.zero
         hostingView.autoresizingMask = [.width, .height]
 
