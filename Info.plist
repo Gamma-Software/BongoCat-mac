@@ -7,9 +7,9 @@
     <key>CFBundleName</key>
     <string>BangoCat</string>
     <key>CFBundleVersion</key>
-    <string>1.0</string>
+    <string>2024.12</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.0</string>
+    <string>1.0.1</string>
     <key>CFBundleIconFile</key>
     <string>AppIcon</string>
     <key>LSUIElement</key>

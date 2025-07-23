@@ -18,6 +18,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     var inputMonitor: InputMonitor?
     var statusBarItem: NSStatusItem?
 
+    // App information
+    private let appVersion = "1.0.1"
+    private let appBuild = "2024.12"
+    private let appAuthor = "Valentin Rudloff"
+    private let appWebsite = "https://valentin.pival.fr"
+
     // Scale management
     private var currentScale: Double = 1.0
     private let scaleKey = "BangoCatScale"
@@ -178,6 +184,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Visit Website", action: #selector(visitWebsite), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "About BangoCat", action: #selector(showCredits), keyEquivalent: ""))
+
+        // Version info
+        let versionItem = NSMenuItem(title: "Version \(getVersionString())", action: nil, keyEquivalent: "")
+        versionItem.isEnabled = false // Make it non-clickable
+        menu.addItem(versionItem)
+
         menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Quit BangoCat", action: #selector(quitApp), keyEquivalent: "q"))
 
@@ -400,17 +412,37 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc private func showCredits() {
         let alert = NSAlert()
-        alert.messageText = "About BangoCat"
+        alert.messageText = "About BangoCat \(getVersionString())"
         alert.informativeText = """
-        BangoCat for macOS
+        🐱 BangoCat for macOS 🐱
 
-        Created by Valentin Rudloff
+        Version: \(getVersionString())
+        Bundle ID: \(getBundleIdentifier())
 
-        Inspired by Irox Games Studio on Steam and the Bango Cat phenomenon. The original Steam game was only compatible with Windows, so I created this Mac version to bring the joy of Bango Cat to macOS users.
+        ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-        Enjoy your typing companion! 🐱
+        Created with ❤️ by \(appAuthor)
+        Website: \(appWebsite)
+
+        ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+        🎵 Original Concept:
+        Inspired by DitzyFlama's Bongo Cat meme and StrayRogue's adorable cat artwork. The Windows Steam version by Irox Games Studio sparked the idea for this native macOS implementation.
+
+        🚀 Features:
+        • Native Swift/SwiftUI implementation
+        • Global input monitoring with accessibility permissions
+        • Per-application position memory
+        • Customizable animations and scaling
+        • Low resource usage & streaming-ready
+
+        ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+        Enjoy your typing companion! 🎹🐱
+        Made for streamers, coders, and cat lovers everywhere.
         """
         alert.alertStyle = .informational
+        alert.addButton(withTitle: "Visit Website")
         alert.addButton(withTitle: "OK")
 
         // Try to set the app icon if available
@@ -432,7 +464,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             alert.icon = dialogIcon
         }
 
-        alert.runModal()
+        let response = alert.runModal()
+
+        // Handle button responses
+        if response == .alertFirstButtonReturn {
+            // "Visit Website" button clicked
+            visitWebsite()
+        }
+        // .alertSecondButtonReturn would be "OK" button - no action needed
     }
 
     @objc private func visitWebsite() {
@@ -446,6 +485,22 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc private func quitApp() {
         NSApplication.shared.terminate(self)
+    }
+
+    // MARK: - Version Information
+
+    private func getVersionString() -> String {
+        // Try to get version from bundle first, fallback to hardcoded
+        if let bundleVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String,
+           let bundleBuild = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String {
+            return "\(bundleVersion) (\(bundleBuild))"
+        } else {
+            return "\(appVersion) (\(appBuild))"
+        }
+    }
+
+    private func getBundleIdentifier() -> String {
+        return Bundle.main.bundleIdentifier ?? "com.bangocat.mac"
     }
 
         // MARK: - Public methods for context menu
