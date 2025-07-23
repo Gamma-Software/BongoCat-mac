@@ -826,7 +826,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
 
         let screenFrame = screen.visibleFrame
-        let windowSize = overlayWindow?.window?.frame.size ?? NSSize(width: 175, height: 200)
+        let windowSize = overlayWindow?.window?.frame.size ?? NSSize(width: 150, height: 125) // Updated default size
         let margin: CGFloat = 20 // Distance from screen edges
 
         switch corner {

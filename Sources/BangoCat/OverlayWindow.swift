@@ -8,7 +8,7 @@ class OverlayWindow: NSWindowController, NSWindowDelegate {
 
     override init(window: NSWindow?) {
         let window = NSWindow(
-            contentRect: NSRect(x: 100, y: 100, width: 175, height: 200),
+            contentRect: NSRect(x: 100, y: 100, width: 150, height: 125), // Reduced from 175x200 to 150x125 to fit cat only
             styleMask: [.borderless],
             backing: .buffered,
             defer: false
@@ -27,7 +27,7 @@ class OverlayWindow: NSWindowController, NSWindowDelegate {
 
         // Make window transparent and always on top
         window.isOpaque = false
-        window.backgroundColor = .clear
+        window.backgroundColor = .blue
         window.level = .screenSaver
         window.ignoresMouseEvents = false
         window.collectionBehavior = [.canJoinAllSpaces, .stationary]
@@ -82,8 +82,8 @@ class OverlayWindow: NSWindowController, NSWindowDelegate {
         animationController.updateViewScale(scale)
 
         // Calculate new window size based on scale
-        let baseWidth: CGFloat = 175
-        let baseHeight: CGFloat = 200
+        let baseWidth: CGFloat = 150  // Reduced from 175 to match cat size
+        let baseHeight: CGFloat = 125 // Reduced from 200 to match cat size
         let newWidth = baseWidth * scale
         let newHeight = baseHeight * scale
 

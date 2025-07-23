@@ -86,9 +86,6 @@ class CatAnimationController: ObservableObject {
     // Stroke counter
     let strokeCounter = StrokeCounter()
 
-    // Miaou functionality
-    @Published var showMiaou: Bool = false
-
     private var animationTimer: Timer?
     private var useLeftPaw: Bool = true  // Track which paw to use next
     private var lastPressedKey: String = ""  // Track the last pressed key
@@ -120,23 +117,6 @@ class CatAnimationController: ObservableObject {
     func setIgnoreClicksEnabled(_ enabled: Bool) {
         ignoreClicksEnabled = enabled
         print("Ignore clicks \(enabled ? "enabled" : "disabled")")
-    }
-
-        func triggerMiaou() {
-        print("🐱 Miaou! Cat was clicked!")
-        print("🐱 Setting showMiaou to true")
-
-        // Show miaou text briefly
-        showMiaou = true
-
-        // Hide miaou text after a short delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-            print("🐱 Hiding miaou text")
-            self.showMiaou = false
-        }
-
-        // Play system beep sound (simple audio feedback)
-        NSSound.beep()
     }
 
     func triggerAnimation(for inputType: InputType) {
@@ -504,155 +484,124 @@ struct CatView: View {
     @EnvironmentObject private var animationController: CatAnimationController
 
     var body: some View {
-        ZStack {
-            // Transparent background for overlay
-            Color.clear
+        GeometryReader { geometry in
+            VStack(spacing: 0) {
+                // Clear background area (18.5% of total height to match original 25px/135px)
+                Color.clear
+                    .frame(height: geometry.size.height * 0.185)
 
-            // The authentic BangoCat sprite using real images
-            BangoCatSprite(state: animationController.currentState)
-                .scaleEffect(animationController.scale)
-                .scaleEffect(x: animationController.isFlippedHorizontally ? -1 : 1, y: 1)  // Apply horizontal flip
-                .rotationEffect(.degrees(animationController.rotation))  // Apply rotation
-                .animation(.easeInOut(duration: 0.08), value: animationController.currentState)
-                .animation(.easeInOut(duration: 0.1), value: animationController.scale)
-                .animation(.easeInOut(duration: 0.3), value: animationController.rotation)  // Smooth rotation transitions
-                .animation(.easeInOut(duration: 0.3), value: animationController.isFlippedHorizontally)  // Smooth flip transitions
-                .contentShape(Rectangle()) // Make the entire sprite area tappable
-                .onTapGesture {
-                    print("🐱 Tap gesture detected!")
-                    animationController.triggerMiaou()
+                // Red cat area (81.5% of total height to match original 110px/135px)
+                ZStack {
+                    Color.red
+
+                    // The authentic BangoCat sprite using real images
+                    BangoCatSprite(state: animationController.currentState)
+                        .scaleEffect(animationController.scale)
+                        .scaleEffect(x: animationController.isFlippedHorizontally ? -1 : 1, y: 1)  // Apply horizontal flip
+                        .rotationEffect(.degrees(animationController.rotation))  // Apply rotation
+                        .animation(.easeInOut(duration: 0.08), value: animationController.currentState)
+                        .animation(.easeInOut(duration: 0.1), value: animationController.scale)
+                        .animation(.easeInOut(duration: 0.3), value: animationController.rotation)  // Smooth rotation transitions
+                        .animation(.easeInOut(duration: 0.3), value: animationController.isFlippedHorizontally)  // Smooth flip transitions
+                        .contentShape(Rectangle()) // Make the entire sprite area tappable
+                        .contextMenu {
+                            // Scale options
+                            Menu("Scale") {
+                                Button("Small") {
+                                    print("🔧 Context menu: Setting scale to 0.65, appDelegate: \(animationController.appDelegate != nil)")
+                                    animationController.appDelegate?.setScalePublic(0.65)
+                                }
+                                Button("Medium") {
+                                    print("🔧 Context menu: Setting scale to 0.75, appDelegate: \(animationController.appDelegate != nil)")
+                                    animationController.appDelegate?.setScalePublic(0.75)
+                                }
+                                Button("Big") {
+                                    print("🔧 Context menu: Setting scale to 1.0, appDelegate: \(animationController.appDelegate != nil)")
+                                    animationController.appDelegate?.setScalePublic(1.0)
+                                }
+                            }
+
+                            Divider()
+
+                            // Toggle options
+                            Button(animationController.scaleOnInputEnabled ? "Disable Scale Pulse" : "Enable Scale Pulse") {
+                                print("🔧 Context menu: Toggling scale pulse, appDelegate: \(animationController.appDelegate != nil)")
+                                animationController.appDelegate?.toggleScalePulsePublic()
+                            }
+
+                            Button(animationController.rotation != 0.0 ? "Disable Rotation" : "Enable Rotation") {
+                                print("🔧 Context menu: Toggling rotation, appDelegate: \(animationController.appDelegate != nil)")
+                                animationController.appDelegate?.toggleBangoCatRotatePublic()
+                            }
+
+                            Button(animationController.isFlippedHorizontally ? "Unflip Horizontally" : "Flip Horizontally") {
+                                print("🔧 Context menu: Toggling horizontal flip, appDelegate: \(animationController.appDelegate != nil)")
+                                animationController.appDelegate?.toggleHorizontalFlipPublic()
+                            }
+
+                            Button(animationController.ignoreClicksEnabled ? "Enable Clicks" : "Ignore Clicks") {
+                                print("🔧 Context menu: Toggling ignore clicks, appDelegate: \(animationController.appDelegate != nil)")
+                                animationController.appDelegate?.toggleIgnoreClicksPublic()
+                            }
+
+                            Divider()
+
+                            // Position options
+                            Menu("Position") {
+                                Button("Top Left") {
+                                    animationController.appDelegate?.setCornerPositionPublic(.topLeft)
+                                }
+                                Button("Top Right") {
+                                    animationController.appDelegate?.setCornerPositionPublic(.topRight)
+                                }
+                                Button("Bottom Left") {
+                                    animationController.appDelegate?.setCornerPositionPublic(.bottomLeft)
+                                }
+                                Button("Bottom Right") {
+                                    animationController.appDelegate?.setCornerPositionPublic(.bottomRight)
+                                }
+                                Divider()
+                                Button("Save Current Position") {
+                                    animationController.appDelegate?.saveCurrentPositionActionPublic()
+                                }
+                                Button("Restore Saved Position") {
+                                    animationController.appDelegate?.restoreSavedPositionPublic()
+                                }
+                            }
+
+                            Divider()
+
+                            // Utility options
+                            Button("Hide BangoCat") {
+                                animationController.appDelegate?.toggleOverlayPublic()
+                            }
+
+                            Button("Reset Stroke Counter") {
+                                animationController.appDelegate?.resetStrokeCounterPublic()
+                            }
+
+                            Divider()
+
+                            Button("Visit Website") {
+                                animationController.appDelegate?.visitWebsitePublic()
+                            }
+
+                            Button("About BangoCat") {
+                                animationController.appDelegate?.showCreditsPublic()
+                            }
+
+                            Divider()
+
+                            Button("Quit BangoCat") {
+                                animationController.appDelegate?.quitAppPublic()
+                            }
+                        }
                 }
-                .contextMenu {
-                    // Scale options
-                    Menu("Scale") {
-                        Button("Small (65%)") {
-                            print("🔧 Context menu: Setting scale to 0.65, appDelegate: \(animationController.appDelegate != nil)")
-                            animationController.appDelegate?.setScalePublic(0.65)
-                        }
-                        Button("Medium (75%)") {
-                            print("🔧 Context menu: Setting scale to 0.75, appDelegate: \(animationController.appDelegate != nil)")
-                            animationController.appDelegate?.setScalePublic(0.75)
-                        }
-                        Button("Big (100%)") {
-                            print("🔧 Context menu: Setting scale to 1.0, appDelegate: \(animationController.appDelegate != nil)")
-                            animationController.appDelegate?.setScalePublic(1.0)
-                        }
-                    }
-
-                    Divider()
-
-                                        // Toggle options
-                    Button(animationController.scaleOnInputEnabled ? "Disable Scale Pulse" : "Enable Scale Pulse") {
-                        print("🔧 Context menu: Toggling scale pulse, appDelegate: \(animationController.appDelegate != nil)")
-                        animationController.appDelegate?.toggleScalePulsePublic()
-                    }
-
-                    Button(animationController.rotation != 0.0 ? "Disable Rotation" : "Enable Rotation") {
-                        print("🔧 Context menu: Toggling rotation, appDelegate: \(animationController.appDelegate != nil)")
-                        animationController.appDelegate?.toggleBangoCatRotatePublic()
-                    }
-
-                    Button(animationController.isFlippedHorizontally ? "Unflip Horizontally" : "Flip Horizontally") {
-                        print("🔧 Context menu: Toggling horizontal flip, appDelegate: \(animationController.appDelegate != nil)")
-                        animationController.appDelegate?.toggleHorizontalFlipPublic()
-                    }
-
-                    Button(animationController.ignoreClicksEnabled ? "Enable Clicks" : "Ignore Clicks") {
-                        print("🔧 Context menu: Toggling ignore clicks, appDelegate: \(animationController.appDelegate != nil)")
-                        animationController.appDelegate?.toggleIgnoreClicksPublic()
-                    }
-
-                    Divider()
-
-                    // Position options
-                    Menu("Position") {
-                        Button("Top Left") {
-                            animationController.appDelegate?.setCornerPositionPublic(.topLeft)
-                        }
-                        Button("Top Right") {
-                            animationController.appDelegate?.setCornerPositionPublic(.topRight)
-                        }
-                        Button("Bottom Left") {
-                            animationController.appDelegate?.setCornerPositionPublic(.bottomLeft)
-                        }
-                        Button("Bottom Right") {
-                            animationController.appDelegate?.setCornerPositionPublic(.bottomRight)
-                        }
-                        Divider()
-                        Button("Save Current Position") {
-                            animationController.appDelegate?.saveCurrentPositionActionPublic()
-                        }
-                        Button("Restore Saved Position") {
-                            animationController.appDelegate?.restoreSavedPositionPublic()
-                        }
-                    }
-
-                    Divider()
-
-                                        // Utility options
-                    Button("Hide BangoCat") {
-                        animationController.appDelegate?.toggleOverlayPublic()
-                    }
-
-                    Button("Reset Stroke Counter") {
-                        animationController.appDelegate?.resetStrokeCounterPublic()
-                    }
-
-                    Divider()
-
-                    Button("Visit Website") {
-                        animationController.appDelegate?.visitWebsitePublic()
-                    }
-
-                    Button("About BangoCat") {
-                        animationController.appDelegate?.showCreditsPublic()
-                    }
-
-                    Divider()
-
-                    Button("Quit BangoCat") {
-                        animationController.appDelegate?.quitAppPublic()
-                    }
-                }
-
-            // Miaou text overlay
-            if animationController.showMiaou {
-                VStack(spacing: 4) {
-                Text("miaou!")
-                        .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(.white)
-
-                    Text("Strokes: \(animationController.strokeCounter.totalStrokes)")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(.white.opacity(0.9))
-
-                    HStack(spacing: 8) {
-                        Text("Keys: \(animationController.strokeCounter.keystrokes)")
-                            .font(.system(size: 12, weight: .regular))
-                            .foregroundColor(.white.opacity(0.8))
-
-                        Text("Clicks: \(animationController.strokeCounter.mouseClicks)")
-                            .font(.system(size: 12, weight: .regular))
-                            .foregroundColor(.white.opacity(0.8))
-                    }
-                }
-                    .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(Color.black.opacity(0.9))
-                            .shadow(color: .black.opacity(0.3), radius: 4, x: 2, y: 2)
-                    )
-                .offset(y: -80) // Position above the cat, moved up a bit more for the larger bubble
-                    .transition(.scale.combined(with: .opacity))
-                    .animation(.spring(response: 0.4, dampingFraction: 0.6), value: animationController.showMiaou)
-                    .zIndex(1) // Ensure it appears on top
+                .frame(height: geometry.size.height * 0.815)
             }
         }
         .scaleEffect(animationController.viewScale)  // Apply view scaling
         .animation(.easeInOut(duration: 0.3), value: animationController.viewScale)  // Smooth scale transitions
-        .frame(maxWidth: 175, maxHeight: 200)  // Increased height to accommodate miaou bubble
-        .background(Color.clear)
         .onAppear {
             print("🐱 CatView appeared, current state: \(animationController.currentState)")
         }
