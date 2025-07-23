@@ -160,6 +160,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(positionMenuItem)
 
         menu.addItem(NSMenuItem.separator())
+        menu.addItem(NSMenuItem(title: "Reset to Factory Defaults", action: #selector(resetToFactoryDefaults), keyEquivalent: ""))
+        menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Quit BangoCat", action: #selector(quitApp), keyEquivalent: "q"))
 
         // Set targets for menu items
@@ -303,6 +305,66 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc private func toggleOverlay() {
         overlayWindow?.toggleVisibility()
+    }
+
+    @objc private func resetToFactoryDefaults() {
+        let alert = NSAlert()
+        alert.messageText = "Reset to Factory Defaults"
+        alert.informativeText = "This will reset all BangoCat settings to their default values:\n\n• Scale: 100%\n• Scale Pulse: Enabled\n• Rotation: Disabled\n• Flip: Disabled\n• Ignore Clicks: Disabled\n• Position: Default location\n• Stroke Counter: Will be reset\n\nThis action cannot be undone."
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: "Reset")
+        alert.addButton(withTitle: "Cancel")
+
+        let response = alert.runModal()
+        if response == .alertFirstButtonReturn {
+            // Reset all settings to factory defaults
+            currentScale = 1.0
+            scaleOnInputEnabled = true
+            currentRotation = 0.0
+            isFlippedHorizontally = false
+            ignoreClicksEnabled = false
+            savedPosition = NSPoint(x: 100, y: 100)
+            currentCornerPosition = .custom
+            snapToCornerEnabled = false
+
+            // Save all the reset values
+            saveScale()
+            saveScaleOnInputPreference()
+            saveRotation()
+            saveFlip()
+            saveIgnoreClicksPreference()
+            savePositionPreferences()
+
+            // Apply changes to the overlay window
+            overlayWindow?.updateScale(currentScale)
+            overlayWindow?.updateRotation(currentRotation)
+            overlayWindow?.updateFlip(isFlippedHorizontally)
+            overlayWindow?.catAnimationController?.setScaleOnInputEnabled(scaleOnInputEnabled)
+            overlayWindow?.catAnimationController?.setIgnoreClicksEnabled(ignoreClicksEnabled)
+            overlayWindow?.window?.setFrameOrigin(savedPosition)
+
+            // Reset stroke counter
+            overlayWindow?.catAnimationController?.strokeCounter.reset()
+
+            // Update all menu items to reflect the changes
+            updateScaleMenuItems()
+            updateScalePulseMenuItem()
+            updateRotationMenuItem()
+            updateFlipMenuItem()
+            updateIgnoreClicksMenuItem()
+            updatePositionMenuItems()
+            updateStrokeCounterMenuItem()
+
+            print("All settings reset to factory defaults")
+
+            // Show confirmation
+            let confirmAlert = NSAlert()
+            confirmAlert.messageText = "Settings Reset"
+            confirmAlert.informativeText = "All BangoCat settings have been reset to factory defaults."
+            confirmAlert.alertStyle = .informational
+            confirmAlert.addButton(withTitle: "OK")
+            confirmAlert.runModal()
+        }
     }
 
     @objc private func quitApp() {
