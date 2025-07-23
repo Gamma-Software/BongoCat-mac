@@ -33,6 +33,9 @@ cp "Info.plist" "${APP_BUNDLE}/Contents/"
 
 # Copy app icons
 echo "🖼️  Copying app icons..."
+if [ -f "AppIcon.icns" ]; then
+    cp "AppIcon.icns" "${APP_BUNDLE}/Contents/Resources/"
+fi
 if [ -f "bongo.ico" ]; then
     cp "bongo.ico" "${APP_BUNDLE}/Contents/Resources/"
 fi
