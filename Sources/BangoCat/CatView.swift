@@ -618,9 +618,9 @@ struct CatView: View {
             // Miaou text overlay
             if animationController.showMiaou {
                 VStack(spacing: 4) {
-                    Text("miaou!")
+                Text("miaou!")
                         .font(.system(size: 16, weight: .bold))
-                        .foregroundColor(.white)
+                    .foregroundColor(.white)
 
                     Text("Strokes: \(animationController.strokeCounter.totalStrokes)")
                         .font(.system(size: 14, weight: .medium))
@@ -636,17 +636,17 @@ struct CatView: View {
                             .foregroundColor(.white.opacity(0.8))
                     }
                 }
-                .padding(.horizontal, 12)
+                    .padding(.horizontal, 12)
                 .padding(.vertical, 8)
-                .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(Color.black.opacity(0.9))
-                        .shadow(color: .black.opacity(0.3), radius: 4, x: 2, y: 2)
-                )
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.black.opacity(0.9))
+                            .shadow(color: .black.opacity(0.3), radius: 4, x: 2, y: 2)
+                    )
                 .offset(y: -80) // Position above the cat, moved up a bit more for the larger bubble
-                .transition(.scale.combined(with: .opacity))
-                .animation(.spring(response: 0.4, dampingFraction: 0.6), value: animationController.showMiaou)
-                .zIndex(1) // Ensure it appears on top
+                    .transition(.scale.combined(with: .opacity))
+                    .animation(.spring(response: 0.4, dampingFraction: 0.6), value: animationController.showMiaou)
+                    .zIndex(1) // Ensure it appears on top
             }
         }
         .scaleEffect(animationController.viewScale)  // Apply view scaling
