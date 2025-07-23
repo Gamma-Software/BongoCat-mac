@@ -7,7 +7,7 @@ class OverlayWindow: NSWindowController {
 
     override init(window: NSWindow?) {
         let window = NSWindow(
-            contentRect: NSRect(x: 100, y: 100, width: 350, height: 300),
+            contentRect: NSRect(x: 100, y: 100, width: 175, height: 150),
             styleMask: [.borderless],
             backing: .buffered,
             defer: false

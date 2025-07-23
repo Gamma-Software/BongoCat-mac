@@ -11,9 +11,12 @@ enum CatState {
 }
 
 enum InputType {
-    case keyboard
-    case leftClick
-    case rightClick
+    case keyboardDown
+    case keyboardUp
+    case leftClickDown
+    case leftClickUp
+    case rightClickDown
+    case rightClickUp
     case scroll
 }
 
@@ -23,6 +26,9 @@ class CatAnimationController: ObservableObject {
     @Published var scale: Double = 1.0
 
     private var animationTimer: Timer?
+    private var useLeftPaw: Bool = true  // Track which paw to use next
+    private var lastPawDownTime: Date = Date()  // Track when paw went down
+    private var minimumAnimationDuration: TimeInterval = 2.0  // Minimum animation duration
 
     func triggerAnimation(for inputType: InputType) {
         // Debug logging
@@ -33,18 +39,30 @@ class CatAnimationController: ObservableObject {
 
         // Trigger appropriate animation
         switch inputType {
-        case .keyboard:
-            print("⌨️ Keyboard detected - typing animation")
-            triggerTypingAnimation()
-        case .leftClick:
-            print("🖱️ Left click detected - left paw animation")
+        case .keyboardDown:
+            print("⌨️ Keyboard down detected - paws down")
+            triggerKeyboardDown()
+        case .keyboardUp:
+            print("⌨️ Keyboard up detected - paws up")
+            triggerKeyboardUp()
+        case .leftClickDown:
+            print("🖱️ Left click down detected - left paw animation")
             triggerPawAnimation(.leftPawDown)
-        case .rightClick:
-            print("🖱️ Right click detected - right paw animation")
+        case .leftClickUp:
+            print("🖱️ Left click up detected - left paw up animation")
+            triggerPawAnimation(.leftPawUp)
+        case .rightClickDown:
+            print("🖱️ Right click down detected - right paw animation")
             triggerPawAnimation(.rightPawDown)
-        case .scroll:
-            print("🔄 Scroll detected - both paws animation")
-            triggerBothPawsAnimation()
+        case .rightClickUp:
+            print("🖱️ Right click up detected - right paw up animation")
+            triggerPawAnimation(.rightPawUp)
+        //case .scroll:
+        //    print("🔄 Scroll detected - both paws animation")
+        //    triggerBothPawsAnimation()
+        default:
+            // Handle any other input types (like scroll if uncommented later)
+            break
         }
 
         // Scale animation for feedback
@@ -56,6 +74,48 @@ class CatAnimationController: ObservableObject {
             withAnimation(.easeInOut(duration: 0.1)) {
                 self.scale = 1.0
             }
+        }
+    }
+
+    private func triggerKeyboardDown() {
+        // Cancel any existing animation timer
+        animationTimer?.invalidate()
+
+        // Record the time when paw goes down
+        lastPawDownTime = Date()
+
+        // Alternate between left and right paw for each keystroke
+        let pawState: CatState = useLeftPaw ? .leftPawDown : .rightPawDown
+        let pawName = useLeftPaw ? "left" : "right"
+
+        print("🎯 Setting \(pawName) paw down (keyboard pressed)")
+        currentState = pawState
+
+        // Toggle for next keystroke
+        useLeftPaw.toggle()
+
+        // No automatic return to idle - paws stay down until keyboardUp
+    }
+
+    private func triggerKeyboardUp() {
+        // Cancel any existing animation timer
+        animationTimer?.invalidate()
+
+        // Calculate how long the paw has been down
+        let elapsedTime = Date().timeIntervalSince(lastPawDownTime)
+        let remainingTime = max(0, minimumAnimationDuration - elapsedTime)
+
+        if remainingTime > 0 {
+            // Wait for the remaining time before returning to idle
+            print("🎯 Waiting \(remainingTime)s before returning to idle (minimum duration)")
+            DispatchQueue.main.asyncAfter(deadline: .now() + remainingTime) {
+                print("🎯 Returning paws to idle after minimum duration")
+                self.currentState = .idle
+            }
+        } else {
+            // Minimum duration already passed, return to idle immediately
+            print("🎯 Returning paws to idle (keyboard released)")
+            currentState = .idle
         }
     }
 
@@ -76,10 +136,36 @@ class CatAnimationController: ObservableObject {
         print("🎯 Setting state to: \(paw)")
         currentState = paw
 
-        // Animate back to idle after a short delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-            print("🎯 Returning to idle state")
-            self.currentState = .idle
+        // Record time for minimum duration tracking
+        lastPawDownTime = Date()
+
+        // Handle different paw states appropriately
+        switch paw {
+        case .leftPawUp, .rightPawUp:
+            // Up states return to idle after minimum duration
+            DispatchQueue.main.asyncAfter(deadline: .now() + minimumAnimationDuration) {
+                print("🎯 Returning to idle from up position after minimum duration")
+                if self.currentState == paw { // Only change if still in same state
+                    self.currentState = .idle
+                }
+            }
+        case .leftPawDown, .rightPawDown:
+            // Down states stay down until corresponding up event occurs
+            // Add timeout for safety in case up event is missed (longer timeout)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                print("🎯 Timeout: returning to idle from down position")
+                if self.currentState == paw { // Only change if still in same state
+                    self.currentState = .idle
+                }
+            }
+        default:
+            // Other states return to idle after minimum duration
+            DispatchQueue.main.asyncAfter(deadline: .now() + minimumAnimationDuration) {
+                print("🎯 Returning to idle state after minimum duration")
+                if self.currentState == paw { // Only change if still in same state
+                    self.currentState = .idle
+                }
+            }
         }
     }
 
@@ -145,7 +231,7 @@ struct BangoCatSprite: View {
             // Right hand - show appropriate image based on state
             rightHandView
         }
-        .frame(maxWidth: 300, maxHeight: 250)
+        .frame(maxWidth: 150, maxHeight: 125)
         .onAppear {
             loadAllImages()
         }
@@ -165,7 +251,7 @@ struct BangoCatSprite: View {
                 } else {
                     Rectangle()
                         .fill(Color.red.opacity(0.8))
-                        .frame(width: 60, height: 40)
+                        .frame(width: 30, height: 20)
                         .overlay(Text("L-DOWN\nMISSING").font(.caption))
                 }
             default:
@@ -176,7 +262,7 @@ struct BangoCatSprite: View {
                 } else {
                     Rectangle()
                         .fill(Color.blue.opacity(0.8))
-                        .frame(width: 60, height: 40)
+                        .frame(width: 30, height: 20)
                         .overlay(Text("L-UP\nMISSING").font(.caption))
                 }
             }
@@ -194,7 +280,7 @@ struct BangoCatSprite: View {
                 } else {
                     Rectangle()
                         .fill(Color.red.opacity(0.8))
-                        .frame(width: 60, height: 40)
+                        .frame(width: 30, height: 20)
                         .overlay(Text("R-DOWN\nMISSING").font(.caption))
                 }
             default:
@@ -205,7 +291,7 @@ struct BangoCatSprite: View {
                 } else {
                     Rectangle()
                         .fill(Color.green.opacity(0.8))
-                        .frame(width: 60, height: 40)
+                        .frame(width: 30, height: 20)
                         .overlay(Text("R-UP\nMISSING").font(.caption))
                 }
             }
@@ -272,7 +358,7 @@ struct CatView: View {
                 .animation(.easeInOut(duration: 0.08), value: animationController.currentState)
                 .animation(.easeInOut(duration: 0.1), value: animationController.scale)
         }
-        .frame(maxWidth: 350, maxHeight: 300)  // Accommodate real image dimensions
+        .frame(maxWidth: 175, maxHeight: 150)  // Accommodate real image dimensions
         .background(Color.clear)
         .onAppear {
             print("🐱 CatView appeared, current state: \(animationController.currentState)")
