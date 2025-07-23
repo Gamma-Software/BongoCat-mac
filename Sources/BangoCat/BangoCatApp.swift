@@ -34,6 +34,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var isFlippedHorizontally: Bool = false
     private let flipKey = "BangoCatFlipHorizontally"
 
+    // Ignore clicks management
+    private var ignoreClicksEnabled: Bool = false
+    private let ignoreClicksKey = "BangoCatIgnoreClicks"
+
     // Position management
     private var snapToCornerEnabled: Bool = false
     private let snapToCornerKey = "BangoCatSnapToCorner"
@@ -49,6 +53,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         loadScaleOnInputPreference()
         loadSavedRotation()
         loadSavedFlip()
+        loadIgnoreClicksPreference()
         loadPositionPreferences()
         setupStatusBarItem()
         setupOverlayWindow()
@@ -121,6 +126,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         menu.addItem(NSMenuItem.separator())
 
+        // Ignore clicks option
+        menu.addItem(NSMenuItem(title: "Ignore Clicks", action: #selector(toggleIgnoreClicks), keyEquivalent: ""))
+
+        menu.addItem(NSMenuItem.separator())
+
         // Stroke counter section
         let strokeCounterItem = NSMenuItem(title: "Loading stroke count...", action: nil, keyEquivalent: "")
         strokeCounterItem.tag = 999 // Special tag to identify this item for updates
@@ -170,6 +180,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         updatePositionMenuItems()
         updateRotationMenuItem()
         updateFlipMenuItem()
+        updateIgnoreClicksMenuItem()
 
         // Update stroke counter after a short delay to ensure overlay window is ready
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -248,6 +259,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         overlayWindow?.updateRotation(currentRotation)  // Apply the loaded rotation
         overlayWindow?.updateFlip(isFlippedHorizontally)  // Apply the loaded flip
         overlayWindow?.catAnimationController?.setScaleOnInputEnabled(scaleOnInputEnabled)  // Apply pulse preference
+        overlayWindow?.catAnimationController?.setIgnoreClicksEnabled(ignoreClicksEnabled)  // Apply ignore clicks preference
 
         // Apply saved position
         overlayWindow?.window?.setFrameOrigin(savedPosition)
@@ -335,6 +347,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         print("Loaded horizontal flip: \(isFlippedHorizontally)")
     }
 
+    private func loadIgnoreClicksPreference() {
+        if UserDefaults.standard.object(forKey: ignoreClicksKey) != nil {
+            ignoreClicksEnabled = UserDefaults.standard.bool(forKey: ignoreClicksKey)
+        } else {
+            ignoreClicksEnabled = false // Default disabled
+        }
+        print("Loaded ignore clicks preference: \(ignoreClicksEnabled)")
+    }
+
     private func saveScale() {
         UserDefaults.standard.set(currentScale, forKey: scaleKey)
         print("Saved scale: \(currentScale)")
@@ -353,6 +374,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private func saveFlip() {
         UserDefaults.standard.set(isFlippedHorizontally, forKey: flipKey)
         print("Saved horizontal flip: \(isFlippedHorizontally)")
+    }
+
+    private func saveIgnoreClicksPreference() {
+        UserDefaults.standard.set(ignoreClicksEnabled, forKey: ignoreClicksKey)
+        print("Saved ignore clicks preference: \(ignoreClicksEnabled)")
     }
 
     @objc private func setScale065() {
@@ -446,6 +472,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         print("Cat horizontal flip toggled to: \(isFlippedHorizontally)")
     }
 
+    @objc private func toggleIgnoreClicks() {
+        ignoreClicksEnabled.toggle()
+        saveIgnoreClicksPreference()
+        overlayWindow?.catAnimationController?.setIgnoreClicksEnabled(ignoreClicksEnabled)
+        updateIgnoreClicksMenuItem()
+        print("Ignore clicks toggled to: \(ignoreClicksEnabled)")
+    }
+
     // MARK: - Stroke Counter Management
 
     @objc private func resetStrokeCounter() {
@@ -498,6 +532,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         for item in menu.items {
             if item.title == "Flip Horizontally" {
                 item.state = isFlippedHorizontally ? .on : .off
+                break
+            }
+        }
+    }
+
+    private func updateIgnoreClicksMenuItem() {
+        guard let menu = statusBarItem?.menu else { return }
+        for item in menu.items {
+            if item.title == "Ignore Clicks" {
+                item.state = ignoreClicksEnabled ? .on : .off
                 break
             }
         }

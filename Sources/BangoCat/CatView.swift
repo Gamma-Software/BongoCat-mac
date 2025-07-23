@@ -78,6 +78,7 @@ class CatAnimationController: ObservableObject {
     @Published var scaleOnInputEnabled: Bool = true  // Control scale pulse on input
     @Published var rotation: Double = 0.0  // New rotation property for cat rotation
     @Published var isFlippedHorizontally: Bool = false  // New property for horizontal flip
+    @Published var ignoreClicksEnabled: Bool = false  // Control whether to ignore mouse clicks
 
     // Stroke counter
     let strokeCounter = StrokeCounter()
@@ -111,6 +112,11 @@ class CatAnimationController: ObservableObject {
     func setHorizontalFlip(_ flipped: Bool) {
         isFlippedHorizontally = flipped
         print("Cat horizontal flip updated to: \(flipped)")
+    }
+
+    func setIgnoreClicksEnabled(_ enabled: Bool) {
+        ignoreClicksEnabled = enabled
+        print("Ignore clicks \(enabled ? "enabled" : "disabled")")
     }
 
         func triggerMiaou() {
@@ -147,17 +153,33 @@ class CatAnimationController: ObservableObject {
             print("⌨️ Keyboard up detected - key: \(key)")
             triggerKeyboardUp(for: key)
         case .leftClickDown:
+            if ignoreClicksEnabled {
+                print("🖱️ Left click ignored (ignore clicks enabled)")
+                return
+            }
             print("🖱️ Left click down detected - left paw animation")
             strokeCounter.incrementMouseClicks()
             triggerPawAnimation(.leftPawDown)
         case .leftClickUp:
+            if ignoreClicksEnabled {
+                print("🖱️ Left click up ignored (ignore clicks enabled)")
+                return
+            }
             print("🖱️ Left click up detected - left paw up animation")
             triggerPawAnimation(.leftPawUp)
         case .rightClickDown:
+            if ignoreClicksEnabled {
+                print("🖱️ Right click ignored (ignore clicks enabled)")
+                return
+            }
             print("🖱️ Right click down detected - right paw animation")
             strokeCounter.incrementMouseClicks()
             triggerPawAnimation(.rightPawDown)
         case .rightClickUp:
+            if ignoreClicksEnabled {
+                print("🖱️ Right click up ignored (ignore clicks enabled)")
+                return
+            }
             print("🖱️ Right click up detected - right paw up animation")
             triggerPawAnimation(.rightPawUp)
         //case .scroll:
