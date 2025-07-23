@@ -3,15 +3,22 @@
 # BangoCat App Packaging Script
 set -e
 
+# Get to project root
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+
+cd "$PROJECT_ROOT"
+
 APP_NAME="BangoCat"
 BUNDLE_ID="com.bangocat.mac"
-VERSION="1.0"
+VERSION="1.0.1"  # Will be updated by bump_version.sh
 BUILD_DIR=".build/release"
-PACKAGE_DIR="package"
+PACKAGE_DIR="Build/package"
 APP_BUNDLE="${PACKAGE_DIR}/${APP_NAME}.app"
-DMG_NAME="${APP_NAME}-${VERSION}.dmg"
+DMG_NAME="Build/${APP_NAME}-${VERSION}.dmg"
 
 echo "🐱 Starting BangoCat packaging process..."
+echo "📍 Working from: $PROJECT_ROOT"
 
 # Clean and create package directory
 echo "📁 Setting up package directory..."
@@ -33,14 +40,14 @@ cp "Info.plist" "${APP_BUNDLE}/Contents/"
 
 # Copy app icons
 echo "🖼️  Copying app icons..."
-if [ -f "AppIcon.icns" ]; then
-    cp "AppIcon.icns" "${APP_BUNDLE}/Contents/Resources/"
+if [ -f "Assets/Icons/AppIcon.icns" ]; then
+    cp "Assets/Icons/AppIcon.icns" "${APP_BUNDLE}/Contents/Resources/"
 fi
-if [ -f "bongo.ico" ]; then
-    cp "bongo.ico" "${APP_BUNDLE}/Contents/Resources/"
+if [ -f "Assets/Icons/bongo.ico" ]; then
+    cp "Assets/Icons/bongo.ico" "${APP_BUNDLE}/Contents/Resources/"
 fi
-if [ -f "bongo-simple.ico" ]; then
-    cp "bongo-simple.ico" "${APP_BUNDLE}/Contents/Resources/"
+if [ -f "Assets/Icons/bongo-simple.ico" ]; then
+    cp "Assets/Icons/bongo-simple.ico" "${APP_BUNDLE}/Contents/Resources/"
 fi
 
 # Copy all images from Sources/BangoCat/Resources

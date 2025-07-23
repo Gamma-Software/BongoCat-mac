@@ -39,11 +39,30 @@ This project is in early development. Check back soon for updates!
 git clone https://github.com/your-username/BangoCat-mac.git
 cd BangoCat-mac
 
-# Open in Xcode
-open BangoCat-mac.xcodeproj
+# Quick build and test
+./Scripts/build.sh
+swift run
 
-# Build and run (⌘+R)
+# Or build manually
+swift build
+swift run
 ```
+
+### Development Scripts
+The project includes helpful scripts in the `Scripts/` directory:
+
+```bash
+# Build the project
+./Scripts/build.sh
+
+# Bump version (updates all version references)
+./Scripts/bump_version.sh 1.0.2
+
+# Create distributable DMG
+./Scripts/package_app.sh
+```
+
+See [`Scripts/README.md`](Scripts/README.md) for detailed documentation.
 
 ## Usage
 
@@ -84,14 +103,27 @@ Contributions are welcome! Please feel free to:
 ### Project Structure
 ```
 BangoCat-mac/
-├── Sources/
-│   ├── App/           # Main application logic
-│   ├── Overlay/       # Overlay window management
-│   ├── Input/         # Global input monitoring
-│   ├── Animation/     # Cat sprite animations
-│   └── Assets/        # Cat images and sounds
-├── Resources/         # App icons and metadata
-└── Tests/            # Unit tests
+├── Sources/BangoCat/     # Swift source code
+│   ├── BangoCatApp.swift # Main app delegate & menu logic
+│   ├── OverlayWindow.swift # Overlay window management
+│   ├── CatView.swift     # SwiftUI cat view & animations
+│   ├── InputMonitor.swift # Global input monitoring
+│   └── Resources/        # Embedded app resources
+├── Assets/               # Project assets
+│   ├── Icons/           # App icons (.icns, .ico files)
+│   └── Images/          # Cat sprite images
+├── Scripts/              # Build & development scripts
+│   ├── build.sh         # Quick build script
+│   ├── package_app.sh   # Create distributable DMG
+│   ├── bump_version.sh  # Version management
+│   └── README.md        # Script documentation
+├── Build/                # Build outputs (gitignored)
+│   ├── package/         # App bundle staging
+│   └── *.dmg           # Distributable packages
+├── Tests/                # Unit tests
+├── Package.swift         # Swift Package Manager config
+├── Info.plist           # macOS app bundle metadata
+└── README.md            # This file
 ```
 
 ### Technical Details

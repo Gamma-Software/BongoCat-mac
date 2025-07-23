@@ -61,4 +61,5 @@ fastlane/Preview.html
 fastlane/screenshots/**/*.png
 fastlane/test_output
 *.dmg
-package
+Build/
+# Note: package/ moved to Build/package/
