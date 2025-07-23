@@ -96,6 +96,15 @@ class OverlayWindow: NSWindowController, NSWindowDelegate {
         print("Window scale updated to: \(scale)")
     }
 
+    func updateRotation(_ rotation: Double) {
+        guard let animationController = catAnimationController else { return }
+
+        // Update the cat rotation
+        animationController.updateRotation(rotation)
+
+        print("Cat rotation updated to: \(rotation) degrees")
+    }
+
     func windowDidMove(_ notification: Notification) {
         if let window = window {
             appDelegate?.saveManualPosition(window.frame.origin)

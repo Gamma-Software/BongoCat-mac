@@ -26,6 +26,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var scaleOnInputEnabled: Bool = true
     private let scaleOnInputKey = "BangoCatScaleOnInput"
 
+    // Rotation management
+    private var currentRotation: Double = 0.0
+    private let rotationKey = "BangoCatRotation"
+
     // Position management
     private var snapToCornerEnabled: Bool = false
     private let snapToCornerKey = "BangoCatSnapToCorner"
@@ -39,6 +43,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         print("BangoCat starting...")
         loadSavedScale()
         loadScaleOnInputPreference()
+        loadSavedRotation()
         loadPositionPreferences()
         setupStatusBarItem()
         setupOverlayWindow()
@@ -86,9 +91,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Scale submenu
         let scaleSubmenu = NSMenu()
-        scaleSubmenu.addItem(NSMenuItem(title: "50%", action: #selector(setScale050), keyEquivalent: ""))
-        scaleSubmenu.addItem(NSMenuItem(title: "75%", action: #selector(setScale075), keyEquivalent: ""))
-        scaleSubmenu.addItem(NSMenuItem(title: "100%", action: #selector(setScale100), keyEquivalent: ""))
+        scaleSubmenu.addItem(NSMenuItem(title: "Small", action: #selector(setScale065), keyEquivalent: ""))
+        scaleSubmenu.addItem(NSMenuItem(title: "Medium", action: #selector(setScale075), keyEquivalent: ""))
+        scaleSubmenu.addItem(NSMenuItem(title: "Big", action: #selector(setScale100), keyEquivalent: ""))
 
         let scaleMenuItem = NSMenuItem(title: "Scale", action: nil, keyEquivalent: "")
         scaleMenuItem.submenu = scaleSubmenu
@@ -98,6 +103,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Scale pulse option
         menu.addItem(NSMenuItem(title: "Scale Pulse on Input", action: #selector(toggleScalePulse), keyEquivalent: ""))
+
+        menu.addItem(NSMenuItem.separator())
+
+        // Bango cat rotate option
+        menu.addItem(NSMenuItem(title: "Bango Cat Rotate", action: #selector(toggleBangoCatRotate), keyEquivalent: ""))
 
         menu.addItem(NSMenuItem.separator())
 
@@ -139,6 +149,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         updateScaleMenuItems()
         updateScalePulseMenuItem()
         updatePositionMenuItems()
+        updateRotationMenuItem()
         print("🔧 Status bar setup complete")
     }
 
@@ -208,6 +219,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         overlayWindow?.appDelegate = self // Set reference for position saving
         overlayWindow?.showWindow()
         overlayWindow?.updateScale(currentScale)  // Apply the loaded scale
+        overlayWindow?.updateRotation(currentRotation)  // Apply the loaded rotation
         overlayWindow?.catAnimationController?.setScaleOnInputEnabled(scaleOnInputEnabled)  // Apply pulse preference
 
         // Apply saved position
@@ -278,6 +290,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         print("Loaded scale on input preference: \(scaleOnInputEnabled)")
     }
 
+    private func loadSavedRotation() {
+        if UserDefaults.standard.object(forKey: rotationKey) != nil {
+            currentRotation = UserDefaults.standard.double(forKey: rotationKey)
+        } else {
+            currentRotation = 0.0 // Default rotation
+        }
+        print("Loaded rotation: \(currentRotation)")
+    }
+
     private func saveScale() {
         UserDefaults.standard.set(currentScale, forKey: scaleKey)
         print("Saved scale: \(currentScale)")
@@ -288,8 +309,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         print("Saved scale on input preference: \(scaleOnInputEnabled)")
     }
 
-    @objc private func setScale050() {
-        setScale(0.5)
+    private func saveRotation() {
+        UserDefaults.standard.set(currentRotation, forKey: rotationKey)
+        print("Saved rotation: \(currentRotation)")
+    }
+
+    @objc private func setScale065() {
+        setScale(0.65)
     }
 
     @objc private func setScale075() {
@@ -355,6 +381,27 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         for item in menu.items {
             if item.title == "Scale Pulse on Input" {
                 item.state = scaleOnInputEnabled ? .on : .off
+                break
+            }
+        }
+    }
+
+    // MARK: - Bango Cat Rotate Management
+
+    @objc private func toggleBangoCatRotate() {
+        // Toggle between 0 degrees and 13 degrees rotation
+        currentRotation = (currentRotation == 0.0) ? 13.0 : 0.0
+        saveRotation()
+        overlayWindow?.updateRotation(currentRotation)
+        updateRotationMenuItem()
+        print("Bango Cat rotated to: \(currentRotation) degrees")
+    }
+
+    private func updateRotationMenuItem() {
+        guard let menu = statusBarItem?.menu else { return }
+        for item in menu.items {
+            if item.title == "Bango Cat Rotate" {
+                item.state = (currentRotation != 0.0) ? .on : .off
                 break
             }
         }

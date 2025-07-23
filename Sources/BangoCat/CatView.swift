@@ -26,6 +26,7 @@ class CatAnimationController: ObservableObject {
     @Published var scale: Double = 1.0
     @Published var viewScale: Double = 1.0  // New scale property for view size
     @Published var scaleOnInputEnabled: Bool = true  // Control scale pulse on input
+    @Published var rotation: Double = 0.0  // New rotation property for cat rotation
 
     private var animationTimer: Timer?
     private var useLeftPaw: Bool = true  // Track which paw to use next
@@ -43,6 +44,11 @@ class CatAnimationController: ObservableObject {
     func setScaleOnInputEnabled(_ enabled: Bool) {
         scaleOnInputEnabled = enabled
         print("Scale on input \(enabled ? "enabled" : "disabled")")
+    }
+
+    func updateRotation(_ newRotation: Double) {
+        rotation = newRotation
+        print("Cat rotation updated to: \(newRotation) degrees")
     }
 
     func triggerAnimation(for inputType: InputType) {
@@ -381,8 +387,10 @@ struct CatView: View {
             // The authentic BangoCat sprite using real images
             BangoCatSprite(state: animationController.currentState)
                 .scaleEffect(animationController.scale)
+                .rotationEffect(.degrees(animationController.rotation))  // Apply rotation
                 .animation(.easeInOut(duration: 0.08), value: animationController.currentState)
                 .animation(.easeInOut(duration: 0.1), value: animationController.scale)
+                .animation(.easeInOut(duration: 0.3), value: animationController.rotation)  // Smooth rotation transitions
         }
         .scaleEffect(animationController.viewScale)  // Apply view scaling
         .animation(.easeInOut(duration: 0.3), value: animationController.viewScale)  // Smooth scale transitions
