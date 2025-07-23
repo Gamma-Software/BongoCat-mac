@@ -10,9 +10,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var currentScale: Double = 1.0
     private let scaleKey = "BangoCatScale"
 
+    // Scale pulse on input management
+    private var scaleOnInputEnabled: Bool = true
+    private let scaleOnInputKey = "BangoCatScaleOnInput"
+
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         print("BangoCat starting...")
         loadSavedScale()
+        loadScaleOnInputPreference()
         setupStatusBarItem()
         setupOverlayWindow()
         setupInputMonitoring()
@@ -58,6 +63,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(scaleMenuItem)
 
         menu.addItem(NSMenuItem.separator())
+
+        // Scale pulse option
+        menu.addItem(NSMenuItem(title: "Scale Pulse on Input", action: #selector(toggleScalePulse), keyEquivalent: ""))
+
+        menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Quit BangoCat", action: #selector(quitApp), keyEquivalent: "q"))
 
         // Set targets for menu items
@@ -73,6 +83,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Set initial checkmarks
         updateScaleMenuItems()
+        updateScalePulseMenuItem()
         print("🔧 Status bar setup complete")
     }
 
@@ -80,6 +91,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         overlayWindow = OverlayWindow()
         overlayWindow?.showWindow()
         overlayWindow?.updateScale(currentScale)  // Apply the loaded scale
+        overlayWindow?.catAnimationController?.setScaleOnInputEnabled(scaleOnInputEnabled)  // Apply pulse preference
         print("Overlay window created")
     }
 
@@ -136,9 +148,23 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         print("Loaded scale: \(currentScale)")
     }
 
+    private func loadScaleOnInputPreference() {
+        if UserDefaults.standard.object(forKey: scaleOnInputKey) != nil {
+            scaleOnInputEnabled = UserDefaults.standard.bool(forKey: scaleOnInputKey)
+        } else {
+            scaleOnInputEnabled = true // Default enabled
+        }
+        print("Loaded scale on input preference: \(scaleOnInputEnabled)")
+    }
+
     private func saveScale() {
         UserDefaults.standard.set(currentScale, forKey: scaleKey)
         print("Saved scale: \(currentScale)")
+    }
+
+    private func saveScaleOnInputPreference() {
+        UserDefaults.standard.set(scaleOnInputEnabled, forKey: scaleOnInputKey)
+        print("Saved scale on input preference: \(scaleOnInputEnabled)")
     }
 
     @objc private func setScale050() {
@@ -189,6 +215,26 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    // MARK: - Scale Pulse Management
+
+    @objc private func toggleScalePulse() {
+        scaleOnInputEnabled.toggle()
+        saveScaleOnInputPreference()
+        overlayWindow?.catAnimationController?.setScaleOnInputEnabled(scaleOnInputEnabled)  // Apply immediately
+        updateScalePulseMenuItem()
+        print("Scale pulse on input toggled to: \(scaleOnInputEnabled)")
+    }
+
+    private func updateScalePulseMenuItem() {
+        guard let menu = statusBarItem?.menu else { return }
+        for item in menu.items {
+            if item.title == "Scale Pulse on Input" {
+                item.state = scaleOnInputEnabled ? .on : .off
+                break
             }
         }
     }
