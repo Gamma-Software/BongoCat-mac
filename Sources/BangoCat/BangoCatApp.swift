@@ -63,7 +63,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         print("🔧 Status bar item created: \(statusBarItem != nil)")
 
         if let button = statusBarItem?.button {
-            button.title = "🐱"
+            // Try to load the bongo-simple.png file
+            if let iconImage = loadStatusBarIcon() {
+                button.image = iconImage
+                button.imagePosition = .imageOnly
+                print("🔧 Status bar icon loaded from bongo-simple.png")
+            } else {
+                // Fallback to emoji if icon loading fails
+                button.title = "🐱"
+                print("🔧 Fallback to emoji icon")
+            }
+
             button.toolTip = "BangoCat - Click for menu"
             print("🔧 Status bar button configured")
         } else {
@@ -130,6 +140,67 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         updateScalePulseMenuItem()
         updatePositionMenuItems()
         print("🔧 Status bar setup complete")
+    }
+
+    private func loadStatusBarIcon() -> NSImage? {
+        // First try to load from bundle resources (PNG format)
+        if let bundlePath = Bundle.main.path(forResource: "bongo-simple", ofType: "png"),
+           let bundleImage = NSImage(contentsOfFile: bundlePath) {
+            return resizeIconForStatusBar(bundleImage, fromPath: "bundle: \(bundlePath)")
+        }
+
+        // Try NSImage named loading (without extension)
+        if let bundleImage = NSImage(named: "bongo-simple") {
+            return resizeIconForStatusBar(bundleImage, fromPath: "bundle named resource")
+        }
+
+        // Fallback to file system paths (for development)
+        let iconPaths = [
+            "bongo-simple.png",
+            "./bongo-simple.png",
+            "Sources/BangoCat/Resources/bongo-simple.png"
+        ]
+
+        for path in iconPaths {
+            if let image = NSImage(contentsOfFile: path) {
+                return resizeIconForStatusBar(image, fromPath: path)
+            }
+        }
+
+        // Try loading from current working directory
+        let currentDir = FileManager.default.currentDirectoryPath
+        let currentDirPath = "\(currentDir)/bongo-simple.png"
+        if let image = NSImage(contentsOfFile: currentDirPath) {
+            return resizeIconForStatusBar(image, fromPath: currentDirPath)
+        }
+
+        print("❌ Failed to load bongo-simple.png from any path")
+        return nil
+    }
+
+    private func resizeIconForStatusBar(_ originalImage: NSImage, fromPath: String) -> NSImage {
+        let statusBarSize = NSSize(width: 18, height: 18)
+        let resizedImage = NSImage(size: statusBarSize)
+
+        resizedImage.lockFocus()
+
+        // Use high quality scaling
+        let context = NSGraphicsContext.current
+        context?.imageInterpolation = .high
+
+        // Draw the image preserving alpha channel
+        originalImage.draw(in: NSRect(origin: .zero, size: statusBarSize),
+                          from: NSRect(origin: .zero, size: originalImage.size),
+                          operation: .sourceOver,
+                          fraction: 1.0)
+
+        resizedImage.unlockFocus()
+
+        // Don't set as template - let it keep its colors and transparency
+        // resizedImage.isTemplate = false  // This is the default
+
+        print("✅ Loaded and resized status bar icon from: \(fromPath)")
+        return resizedImage
     }
 
     private func setupOverlayWindow() {
