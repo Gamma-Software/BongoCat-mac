@@ -34,6 +34,7 @@ class OverlayWindow: NSWindowController, NSWindowDelegate {
 
         // Create the animation controller and cat view
         catAnimationController = CatAnimationController()
+        // Note: appDelegate will be set later in updateAppDelegate()
         let catView = CatView().environmentObject(catAnimationController!)
         let hostingView = NSHostingView(rootView: catView)
         hostingView.frame = window.contentView?.bounds ?? NSRect.zero
@@ -49,6 +50,11 @@ class OverlayWindow: NSWindowController, NSWindowDelegate {
 
         // Center window on screen
         window.center()
+    }
+
+    func updateAppDelegate() {
+        catAnimationController?.appDelegate = appDelegate
+        print("AppDelegate reference updated in CatAnimationController: \(appDelegate != nil)")
     }
 
     func showWindow() {

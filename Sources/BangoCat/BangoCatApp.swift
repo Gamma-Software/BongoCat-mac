@@ -256,6 +256,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private func setupOverlayWindow() {
         overlayWindow = OverlayWindow()
         overlayWindow?.appDelegate = self // Set reference for position saving
+        overlayWindow?.updateAppDelegate() // Ensure the CatAnimationController has the appDelegate reference
         overlayWindow?.showWindow()
         overlayWindow?.updateScale(currentScale)  // Apply the loaded scale
         overlayWindow?.updateRotation(currentRotation)  // Apply the loaded rotation
@@ -368,6 +369,57 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @objc private func quitApp() {
+        NSApplication.shared.terminate(self)
+    }
+
+        // MARK: - Public methods for context menu
+
+    func setScalePublic(_ scale: Double) {
+        setScale(scale)
+    }
+
+    func setCornerPositionPublic(_ corner: CornerPosition) {
+        let position = getCornerPosition(for: corner)
+        overlayWindow?.window?.setFrameOrigin(position)
+        currentCornerPosition = corner
+        saveManualPosition(position)
+        updatePositionMenuItems()
+        print("Moved cat to \(corner.displayName) at position: \(position)")
+    }
+
+    func toggleScalePulsePublic() {
+        toggleScalePulse()
+    }
+
+    func toggleBangoCatRotatePublic() {
+        toggleBangoCatRotate()
+    }
+
+    func toggleHorizontalFlipPublic() {
+        toggleHorizontalFlip()
+    }
+
+    func toggleIgnoreClicksPublic() {
+        toggleIgnoreClicks()
+    }
+
+    func toggleOverlayPublic() {
+        toggleOverlay()
+    }
+
+    func resetStrokeCounterPublic() {
+        resetStrokeCounter()
+    }
+
+    func saveCurrentPositionActionPublic() {
+        saveCurrentPositionAction()
+    }
+
+    func restoreSavedPositionPublic() {
+        restoreSavedPosition()
+    }
+
+    func quitAppPublic() {
         NSApplication.shared.terminate(self)
     }
 
