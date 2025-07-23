@@ -38,7 +38,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var ignoreClicksEnabled: Bool = false
     private let ignoreClicksKey = "BangoCatIgnoreClicks"
 
-    // Position management
+    // Position management - Enhanced for per-app positioning
     private var snapToCornerEnabled: Bool = false
     private let snapToCornerKey = "BangoCatSnapToCorner"
     private var savedPosition: NSPoint = NSPoint(x: 100, y: 100)
@@ -46,6 +46,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let savedPositionYKey = "BangoCatPositionY"
     private var currentCornerPosition: CornerPosition = .custom
     private let cornerPositionKey = "BangoCatCornerPosition"
+
+    // Per-app position management
+    private var perAppPositions: [String: NSPoint] = [:]
+    private let perAppPositionsKey = "BangoCatPerAppPositions"
+    private var currentActiveApp: String = ""
+    private var appSwitchTimer: Timer?
+    private var isPerAppPositioningEnabled: Bool = false
+    private let perAppPositioningKey = "BangoCatPerAppPositioning"
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         print("BangoCat starting...")
@@ -55,14 +63,18 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         loadSavedFlip()
         loadIgnoreClicksPreference()
         loadPositionPreferences()
+        loadPerAppPositioning()
         setupStatusBarItem()
         setupOverlayWindow()
         setupInputMonitoring()
+        setupAppSwitchMonitoring()
         requestAccessibilityPermissions()
     }
 
     func applicationWillTerminate(_ aNotification: Notification) {
         inputMonitor?.stop()
+        appSwitchTimer?.invalidate()
+        savePerAppPositioning()
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
@@ -152,6 +164,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
 
         positionSubmenu.addItem(NSMenuItem.separator())
+        positionSubmenu.addItem(NSMenuItem(title: "Per-App Positioning", action: #selector(togglePerAppPositioning), keyEquivalent: ""))
+        positionSubmenu.addItem(NSMenuItem.separator())
         positionSubmenu.addItem(NSMenuItem(title: "Save Current Position", action: #selector(saveCurrentPositionAction), keyEquivalent: ""))
         positionSubmenu.addItem(NSMenuItem(title: "Restore Saved Position", action: #selector(restoreSavedPosition), keyEquivalent: ""))
 
@@ -186,6 +200,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         updateRotationMenuItem()
         updateFlipMenuItem()
         updateIgnoreClicksMenuItem()
+        updatePerAppPositioningMenuItem()
 
         // Update stroke counter after a short delay to ensure overlay window is ready
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -276,7 +291,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         overlayWindow?.catAnimationController?.setIgnoreClicksEnabled(ignoreClicksEnabled)  // Apply ignore clicks preference
 
         // Apply saved position
-        overlayWindow?.window?.setFrameOrigin(savedPosition)
+        overlayWindow?.setPositionProgrammatically(savedPosition)
 
         print("Overlay window created")
     }
@@ -338,6 +353,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             savedPosition = NSPoint(x: 100, y: 100)
             currentCornerPosition = .custom
             snapToCornerEnabled = false
+            isPerAppPositioningEnabled = false
+            perAppPositions.removeAll()
 
             // Save all the reset values
             saveScale()
@@ -346,6 +363,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             saveFlip()
             saveIgnoreClicksPreference()
             savePositionPreferences()
+            savePerAppPositioning()
 
             // Apply changes to the overlay window
             overlayWindow?.updateScale(currentScale)
@@ -353,7 +371,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             overlayWindow?.updateFlip(isFlippedHorizontally)
             overlayWindow?.catAnimationController?.setScaleOnInputEnabled(scaleOnInputEnabled)
             overlayWindow?.catAnimationController?.setIgnoreClicksEnabled(ignoreClicksEnabled)
-            overlayWindow?.window?.setFrameOrigin(savedPosition)
+            overlayWindow?.setPositionProgrammatically(savedPosition)
 
             // Reset stroke counter
             overlayWindow?.catAnimationController?.strokeCounter.reset()
@@ -365,6 +383,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             updateFlipMenuItem()
             updateIgnoreClicksMenuItem()
             updatePositionMenuItems()
+            updatePerAppPositioningMenuItem()
             updateStrokeCounterMenuItem()
 
             print("All settings reset to factory defaults")
@@ -437,7 +456,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     func setCornerPositionPublic(_ corner: CornerPosition) {
         let position = getCornerPosition(for: corner)
-        overlayWindow?.window?.setFrameOrigin(position)
+        overlayWindow?.setPositionProgrammatically(position)
         currentCornerPosition = corner
         saveManualPosition(position)
         updatePositionMenuItems()
@@ -756,11 +775,19 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     func saveManualPosition(_ position: NSPoint) {
-        savedPosition = position
-        currentCornerPosition = .custom
-        savePositionPreferences()
-        updatePositionMenuItems()
-        print("Manual position saved: \(position)")
+        if isPerAppPositioningEnabled && currentActiveApp != "unknown" {
+            // Save position for the current active app
+            perAppPositions[currentActiveApp] = position
+            savePerAppPositioning()
+            print("Manual position saved for \(currentActiveApp): \(position)")
+        } else {
+            // Save position globally (original behavior)
+            savedPosition = position
+            currentCornerPosition = .custom
+            savePositionPreferences()
+            updatePositionMenuItems()
+            print("Manual position saved: \(position)")
+        }
     }
 
     private func loadPositionPreferences() {
@@ -804,7 +831,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @objc private func restoreSavedPosition() {
-        overlayWindow?.window?.setFrameOrigin(savedPosition)
+        overlayWindow?.setPositionProgrammatically(savedPosition)
         currentCornerPosition = .custom // Assuming saved position is custom
         updatePositionMenuItems()
         print("Restored saved position: \(savedPosition)")
@@ -813,7 +840,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     @objc private func setCornerPosition(_ sender: NSMenuItem) {
         guard let corner = sender.representedObject as? CornerPosition else { return }
         let position = getCornerPosition(for: corner)
-        overlayWindow?.window?.setFrameOrigin(position)
+        overlayWindow?.setPositionProgrammatically(position)
         currentCornerPosition = corner
         saveManualPosition(position)
         updatePositionMenuItems()
@@ -852,6 +879,129 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             )
         case .custom:
             return savedPosition
+        }
+    }
+
+    // MARK: - Per-App Position Management
+
+    private func getCurrentActiveApp() -> String {
+        if let frontmostApp = NSWorkspace.shared.frontmostApplication {
+            let bundleID = frontmostApp.bundleIdentifier ?? "unknown"
+            let appName = frontmostApp.localizedName ?? "Unknown App"
+            print("🎯 Current active app: \(appName) (Bundle ID: \(bundleID))")
+            return bundleID
+        }
+        return "unknown"
+    }
+
+    private func loadPerAppPositioning() {
+        // Load per-app positioning preference
+        if UserDefaults.standard.object(forKey: perAppPositioningKey) != nil {
+            isPerAppPositioningEnabled = UserDefaults.standard.bool(forKey: perAppPositioningKey)
+        } else {
+            isPerAppPositioningEnabled = false // Default disabled
+        }
+
+        // Load per-app positions dictionary
+        if let savedPositions = UserDefaults.standard.dictionary(forKey: perAppPositionsKey) as? [String: [String: Double]] {
+            for (bundleID, position) in savedPositions {
+                if let x = position["x"], let y = position["y"] {
+                    perAppPositions[bundleID] = NSPoint(x: x, y: y)
+                }
+            }
+        }
+
+        // Initialize current active app
+        currentActiveApp = getCurrentActiveApp()
+
+        print("Loaded per-app positioning - enabled: \(isPerAppPositioningEnabled), positions: \(perAppPositions)")
+    }
+
+    private func savePerAppPositioning() {
+        UserDefaults.standard.set(isPerAppPositioningEnabled, forKey: perAppPositioningKey)
+
+        // Convert NSPoint dictionary to saveable format
+        var saveablePositions: [String: [String: Double]] = [:]
+        for (bundleID, position) in perAppPositions {
+            saveablePositions[bundleID] = ["x": position.x, "y": position.y]
+        }
+        UserDefaults.standard.set(saveablePositions, forKey: perAppPositionsKey)
+
+        print("Saved per-app positioning - enabled: \(isPerAppPositioningEnabled), positions: \(perAppPositions)")
+    }
+
+    private func setupAppSwitchMonitoring() {
+        // Set up a timer to periodically check for app switches
+        // Using a timer approach to avoid potential permission issues with workspace notifications
+        appSwitchTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
+            self?.checkForAppSwitch()
+        }
+
+        print("App switch monitoring started")
+    }
+
+    private func checkForAppSwitch() {
+        guard isPerAppPositioningEnabled else { return }
+
+        let newActiveApp = getCurrentActiveApp()
+        if newActiveApp != currentActiveApp && newActiveApp != "unknown" {
+            print("🔄 App switch detected: \(currentActiveApp) -> \(newActiveApp)")
+            handleAppSwitch(from: currentActiveApp, to: newActiveApp)
+            currentActiveApp = newActiveApp
+        }
+    }
+
+        private func handleAppSwitch(from oldApp: String, to newApp: String) {
+        // Save current position for the old app (if it's not "unknown")
+        if oldApp != "unknown", let currentPosition = overlayWindow?.window?.frame.origin {
+            perAppPositions[oldApp] = currentPosition
+            print("💾 Saved position for \(oldApp): \(currentPosition)")
+        }
+
+        // Load and apply position for the new app
+        if let savedPosition = perAppPositions[newApp] {
+            print("📍 Restoring position for \(newApp): \(savedPosition)")
+            overlayWindow?.setPositionProgrammatically(savedPosition)
+        } else {
+            print("🆕 No saved position for \(newApp), using current position")
+            // Optionally, you could set a default position here
+        }
+
+        // Save the updated positions
+        savePerAppPositioning()
+    }
+
+    @objc private func togglePerAppPositioning() {
+        isPerAppPositioningEnabled.toggle()
+        savePerAppPositioning()
+
+        if isPerAppPositioningEnabled {
+            // When enabling, save current position for the current app
+            currentActiveApp = getCurrentActiveApp()
+            if let currentPosition = overlayWindow?.window?.frame.origin {
+                perAppPositions[currentActiveApp] = currentPosition
+                savePerAppPositioning()
+            }
+        }
+
+        updatePerAppPositioningMenuItem()
+        print("Per-app positioning toggled to: \(isPerAppPositioningEnabled)")
+    }
+
+    private func updatePerAppPositioningMenuItem() {
+        guard let menu = statusBarItem?.menu else { return }
+
+        // Find the position submenu and update the per-app positioning item
+        for item in menu.items {
+            if item.title == "Position", let submenu = item.submenu {
+                for subItem in submenu.items {
+                    if subItem.title == "Per-App Positioning" {
+                        subItem.state = isPerAppPositioningEnabled ? .on : .off
+                        break
+                    }
+                }
+                break
+            }
         }
     }
 

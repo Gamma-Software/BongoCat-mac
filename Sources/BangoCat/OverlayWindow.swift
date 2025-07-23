@@ -5,6 +5,7 @@ class OverlayWindow: NSWindowController, NSWindowDelegate {
     var catAnimationController: CatAnimationController?
     private var isVisible = true
     weak var appDelegate: AppDelegate? // Reference to save position changes
+    private var isMovingProgrammatically = false // Flag to prevent saving during automatic moves
 
     override init(window: NSWindow?) {
         let window = NSWindow(
@@ -27,7 +28,8 @@ class OverlayWindow: NSWindowController, NSWindowDelegate {
 
         // Make window transparent and always on top
         window.isOpaque = false
-        window.backgroundColor = .blue
+        window.backgroundColor = .clear
+        //window.backgroundColor = .blue // DEBUG
         window.level = .screenSaver
         window.ignoresMouseEvents = false
         window.collectionBehavior = [.canJoinAllSpaces, .stationary]
@@ -120,8 +122,18 @@ class OverlayWindow: NSWindowController, NSWindowDelegate {
         print("Cat horizontal flip updated to: \(flipped)")
     }
 
+    func setPositionProgrammatically(_ position: NSPoint) {
+        isMovingProgrammatically = true
+        window?.setFrameOrigin(position)
+        // Small delay to ensure the move is processed before allowing saves again
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+            self?.isMovingProgrammatically = false
+        }
+    }
+
     func windowDidMove(_ notification: Notification) {
-        if let window = window {
+        // Only save position if it's a manual move (not programmatic)
+        if !isMovingProgrammatically, let window = window {
             appDelegate?.saveManualPosition(window.frame.origin)
         }
     }

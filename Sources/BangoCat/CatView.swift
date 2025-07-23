@@ -492,7 +492,8 @@ struct CatView: View {
 
                 // Red cat area (81.5% of total height to match original 110px/135px)
                 ZStack {
-                    Color.red
+                    Color.clear
+                    //Color.red //DEBUG
 
                     // The authentic BangoCat sprite using real images
                     BangoCatSprite(state: animationController.currentState)
