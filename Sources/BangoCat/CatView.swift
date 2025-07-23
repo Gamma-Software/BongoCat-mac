@@ -82,6 +82,9 @@ class CatAnimationController: ObservableObject {
     // Stroke counter
     let strokeCounter = StrokeCounter()
 
+    // Miaou functionality
+    @Published var showMiaou: Bool = false
+
     private var animationTimer: Timer?
     private var useLeftPaw: Bool = true  // Track which paw to use next
     private var lastPressedKey: String = ""  // Track the last pressed key
@@ -108,6 +111,23 @@ class CatAnimationController: ObservableObject {
     func setHorizontalFlip(_ flipped: Bool) {
         isFlippedHorizontally = flipped
         print("Cat horizontal flip updated to: \(flipped)")
+    }
+
+        func triggerMiaou() {
+        print("🐱 Miaou! Cat was clicked!")
+        print("🐱 Setting showMiaou to true")
+
+        // Show miaou text briefly
+        showMiaou = true
+
+        // Hide miaou text after a short delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            print("🐱 Hiding miaou text")
+            self.showMiaou = false
+        }
+
+        // Play system beep sound (simple audio feedback)
+        NSSound.beep()
     }
 
     func triggerAnimation(for inputType: InputType) {
@@ -455,10 +475,33 @@ struct CatView: View {
                 .animation(.easeInOut(duration: 0.1), value: animationController.scale)
                 .animation(.easeInOut(duration: 0.3), value: animationController.rotation)  // Smooth rotation transitions
                 .animation(.easeInOut(duration: 0.3), value: animationController.isFlippedHorizontally)  // Smooth flip transitions
+                .contentShape(Rectangle()) // Make the entire sprite area tappable
+                .onTapGesture {
+                    print("🐱 Tap gesture detected!")
+                    animationController.triggerMiaou()
+                }
+
+            // Miaou text overlay
+            if animationController.showMiaou {
+                Text("miaou!")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.black.opacity(0.9))
+                            .shadow(color: .black.opacity(0.3), radius: 4, x: 2, y: 2)
+                    )
+                    .offset(y: -60) // Position above the cat, closer to avoid clipping
+                    .transition(.scale.combined(with: .opacity))
+                    .animation(.spring(response: 0.4, dampingFraction: 0.6), value: animationController.showMiaou)
+                    .zIndex(1) // Ensure it appears on top
+            }
         }
         .scaleEffect(animationController.viewScale)  // Apply view scaling
         .animation(.easeInOut(duration: 0.3), value: animationController.viewScale)  // Smooth scale transitions
-        .frame(maxWidth: 175, maxHeight: 150)  // Accommodate real image dimensions
+        .frame(maxWidth: 175, maxHeight: 200)  // Increased height to accommodate miaou bubble
         .background(Color.clear)
         .onAppear {
             print("🐱 CatView appeared, current state: \(animationController.currentState)")
