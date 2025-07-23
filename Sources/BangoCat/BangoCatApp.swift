@@ -456,8 +456,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     // MARK: - Bango Cat Rotate Management
 
     @objc private func toggleBangoCatRotate() {
-        // Toggle between 0 degrees and 13 degrees rotation
-        currentRotation = (currentRotation == 0.0) ? 13.0 : 0.0
+        // Toggle between 0 degrees and 13/-13 degrees rotation based on flip state
+        if currentRotation == 0.0 {
+            // When enabling rotation, use 13° if not flipped, -13° if flipped
+            currentRotation = isFlippedHorizontally ? -13.0 : 13.0
+        } else {
+            // When disabling rotation, always go back to 0°
+            currentRotation = 0.0
+        }
         saveRotation()
         overlayWindow?.updateRotation(currentRotation)
         updateRotationMenuItem()
@@ -466,6 +472,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc private func toggleHorizontalFlip() {
         isFlippedHorizontally.toggle()
+
+        // If the cat is currently rotated, adjust the rotation for the new flip state
+        if currentRotation != 0.0 {
+            currentRotation = isFlippedHorizontally ? -13.0 : 13.0
+            saveRotation()
+            overlayWindow?.updateRotation(currentRotation)
+        }
+
         saveFlip()
         overlayWindow?.updateFlip(isFlippedHorizontally)
         updateFlipMenuItem()
