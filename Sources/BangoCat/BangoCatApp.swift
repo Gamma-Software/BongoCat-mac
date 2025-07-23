@@ -193,18 +193,26 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     private func loadStatusBarIcon() -> NSImage? {
-        // First try to load from bundle resources (PNG format)
+        // Method 1: Try Bundle.module (for Swift Package Manager)
+        #if SWIFT_PACKAGE
+        if let url = Bundle.module.url(forResource: "bongo-simple", withExtension: "png"),
+           let image = NSImage(contentsOf: url) {
+            return resizeIconForStatusBar(image, fromPath: "Bundle.module: bongo-simple.png")
+        }
+        #endif
+
+        // Method 2: Try Bundle.main.path (for packaged app)
         if let bundlePath = Bundle.main.path(forResource: "bongo-simple", ofType: "png"),
            let bundleImage = NSImage(contentsOfFile: bundlePath) {
-            return resizeIconForStatusBar(bundleImage, fromPath: "bundle: \(bundlePath)")
+            return resizeIconForStatusBar(bundleImage, fromPath: "Bundle.main path: \(bundlePath)")
         }
 
-        // Try NSImage named loading (without extension)
+        // Method 3: Try NSImage named loading (without extension)
         if let bundleImage = NSImage(named: "bongo-simple") {
-            return resizeIconForStatusBar(bundleImage, fromPath: "bundle named resource")
+            return resizeIconForStatusBar(bundleImage, fromPath: "NSImage named resource")
         }
 
-        // Fallback to file system paths (for development)
+        // Method 4: Try direct file paths (development fallback)
         let iconPaths = [
             "bongo-simple.png",
             "./bongo-simple.png",
@@ -213,18 +221,18 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         for path in iconPaths {
             if let image = NSImage(contentsOfFile: path) {
-                return resizeIconForStatusBar(image, fromPath: path)
+                return resizeIconForStatusBar(image, fromPath: "file path: \(path)")
             }
         }
 
-        // Try loading from current working directory
+        // Method 5: Try loading from current working directory
         let currentDir = FileManager.default.currentDirectoryPath
         let currentDirPath = "\(currentDir)/bongo-simple.png"
         if let image = NSImage(contentsOfFile: currentDirPath) {
-            return resizeIconForStatusBar(image, fromPath: currentDirPath)
+            return resizeIconForStatusBar(image, fromPath: "current dir: \(currentDirPath)")
         }
 
-        print("❌ Failed to load bongo-simple.png from any path")
+        print("❌ Failed to load bongo-simple.png from all attempted methods")
         return nil
     }
 

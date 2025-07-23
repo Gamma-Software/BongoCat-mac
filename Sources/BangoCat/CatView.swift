@@ -457,28 +457,45 @@ struct BangoCatSprite: View {
 
     // Helper function to load images from bundle resources
     private func loadImage(_ name: String) -> NSImage? {
-        // Try to load from bundle resources
-        if let url = Bundle.main.url(forResource: name, withExtension: "png"),
+        // Method 1: Try Bundle.module (for Swift Package Manager)
+        #if SWIFT_PACKAGE
+        if let url = Bundle.module.url(forResource: name, withExtension: "png", subdirectory: "Images"),
            let image = NSImage(contentsOf: url) {
-            print("✅ Loaded image: \(name).png")
+            print("✅ Loaded image from Bundle.module: Images/\(name).png")
+            return image
+        }
+        #endif
+
+        // Method 2: Try Bundle.main with Images subdirectory (for packaged app)
+        if let url = Bundle.main.url(forResource: name, withExtension: "png", subdirectory: "Images"),
+           let image = NSImage(contentsOf: url) {
+            print("✅ Loaded image from Bundle.main Images subdirectory: Images/\(name).png")
             return image
         }
 
-        // Try alternative paths
+        // Method 3: Try Bundle.main at root level (fallback for packaged app)
+        if let url = Bundle.main.url(forResource: name, withExtension: "png"),
+           let image = NSImage(contentsOf: url) {
+            print("✅ Loaded image from Bundle.main root: \(name).png")
+            return image
+        }
+
+        // Method 4: Try direct file paths (development fallback)
         let possiblePaths = [
             "Sources/BangoCat/Resources/Images/\(name).png",
             "Resources/Images/\(name).png",
+            "Images/\(name).png",
             "\(name).png"
         ]
 
         for path in possiblePaths {
             if let image = NSImage(contentsOfFile: path) {
-                print("✅ Loaded image from path: \(path)")
+                print("✅ Loaded image from file path: \(path)")
                 return image
             }
         }
 
-        print("❌ Failed to load image: \(name).png")
+        print("❌ Failed to load image: \(name).png from all attempted methods")
         return nil
     }
 }
