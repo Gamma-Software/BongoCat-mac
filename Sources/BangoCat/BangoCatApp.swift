@@ -13,7 +13,7 @@ enum CornerPosition: String, CaseIterable {
     }
 }
 
-class AppDelegate: NSObject, NSApplicationDelegate {
+class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     var overlayWindow: OverlayWindow?
     var inputMonitor: InputMonitor?
     var statusBarItem: NSStatusItem?
@@ -30,6 +30,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var currentRotation: Double = 0.0
     private let rotationKey = "BangoCatRotation"
 
+    // Horizontal flip management
+    private var isFlippedHorizontally: Bool = false
+    private let flipKey = "BangoCatFlipHorizontally"
+
     // Position management
     private var snapToCornerEnabled: Bool = false
     private let snapToCornerKey = "BangoCatSnapToCorner"
@@ -44,6 +48,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         loadSavedScale()
         loadScaleOnInputPreference()
         loadSavedRotation()
+        loadSavedFlip()
         loadPositionPreferences()
         setupStatusBarItem()
         setupOverlayWindow()
@@ -111,6 +116,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         menu.addItem(NSMenuItem.separator())
 
+        // Horizontal flip option
+        menu.addItem(NSMenuItem(title: "Flip Horizontally", action: #selector(toggleHorizontalFlip), keyEquivalent: ""))
+
+        menu.addItem(NSMenuItem.separator())
+
+        // Stroke counter section
+        let strokeCounterItem = NSMenuItem(title: "Loading stroke count...", action: nil, keyEquivalent: "")
+        strokeCounterItem.tag = 999 // Special tag to identify this item for updates
+        menu.addItem(strokeCounterItem)
+        menu.addItem(NSMenuItem(title: "Reset Stroke Counter", action: #selector(resetStrokeCounter), keyEquivalent: ""))
+
+        menu.addItem(NSMenuItem.separator())
+
         // Position submenu
         let positionSubmenu = NSMenu()
 
@@ -143,6 +161,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         statusBarItem?.menu = menu
+        menu.delegate = self  // Set delegate to update stroke counter when menu opens
         print("🔧 Menu attached to status bar item")
 
         // Set initial checkmarks
@@ -150,6 +169,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         updateScalePulseMenuItem()
         updatePositionMenuItems()
         updateRotationMenuItem()
+        updateFlipMenuItem()
+
+        // Update stroke counter after a short delay to ensure overlay window is ready
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            self.updateStrokeCounterMenuItem()
+        }
+
         print("🔧 Status bar setup complete")
     }
 
@@ -220,6 +246,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         overlayWindow?.showWindow()
         overlayWindow?.updateScale(currentScale)  // Apply the loaded scale
         overlayWindow?.updateRotation(currentRotation)  // Apply the loaded rotation
+        overlayWindow?.updateFlip(isFlippedHorizontally)  // Apply the loaded flip
         overlayWindow?.catAnimationController?.setScaleOnInputEnabled(scaleOnInputEnabled)  // Apply pulse preference
 
         // Apply saved position
@@ -299,6 +326,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         print("Loaded rotation: \(currentRotation)")
     }
 
+    private func loadSavedFlip() {
+        if UserDefaults.standard.object(forKey: flipKey) != nil {
+            isFlippedHorizontally = UserDefaults.standard.bool(forKey: flipKey)
+        } else {
+            isFlippedHorizontally = false // Default not flipped
+        }
+        print("Loaded horizontal flip: \(isFlippedHorizontally)")
+    }
+
     private func saveScale() {
         UserDefaults.standard.set(currentScale, forKey: scaleKey)
         print("Saved scale: \(currentScale)")
@@ -312,6 +348,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func saveRotation() {
         UserDefaults.standard.set(currentRotation, forKey: rotationKey)
         print("Saved rotation: \(currentRotation)")
+    }
+
+    private func saveFlip() {
+        UserDefaults.standard.set(isFlippedHorizontally, forKey: flipKey)
+        print("Saved horizontal flip: \(isFlippedHorizontally)")
     }
 
     @objc private func setScale065() {
@@ -397,11 +438,66 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         print("Bango Cat rotated to: \(currentRotation) degrees")
     }
 
+    @objc private func toggleHorizontalFlip() {
+        isFlippedHorizontally.toggle()
+        saveFlip()
+        overlayWindow?.updateFlip(isFlippedHorizontally)
+        updateFlipMenuItem()
+        print("Cat horizontal flip toggled to: \(isFlippedHorizontally)")
+    }
+
+    // MARK: - Stroke Counter Management
+
+    @objc private func resetStrokeCounter() {
+        let alert = NSAlert()
+        alert.messageText = "Reset Stroke Counter"
+        alert.informativeText = "Are you sure you want to reset the stroke counter? This action cannot be undone."
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: "Reset")
+        alert.addButton(withTitle: "Cancel")
+
+        let response = alert.runModal()
+        if response == .alertFirstButtonReturn {
+            overlayWindow?.catAnimationController?.strokeCounter.reset()
+            updateStrokeCounterMenuItem()
+            print("Stroke counter reset by user")
+        }
+    }
+
+    private func updateStrokeCounterMenuItem() {
+        guard let menu = statusBarItem?.menu else { return }
+
+        // Find the stroke counter menu item by its tag
+        for item in menu.items {
+            if item.tag == 999 {
+                if let strokeCounter = overlayWindow?.catAnimationController?.strokeCounter {
+                    let total = strokeCounter.totalStrokes
+                    let keys = strokeCounter.keystrokes
+                    let clicks = strokeCounter.mouseClicks
+                    item.title = "Strokes: \(total) (Keys: \(keys), Clicks: \(clicks))"
+                } else {
+                    item.title = "Strokes: Loading..."
+                }
+                break
+            }
+        }
+    }
+
     private func updateRotationMenuItem() {
         guard let menu = statusBarItem?.menu else { return }
         for item in menu.items {
             if item.title == "Bango Cat Rotate" {
                 item.state = (currentRotation != 0.0) ? .on : .off
+                break
+            }
+        }
+    }
+
+    private func updateFlipMenuItem() {
+        guard let menu = statusBarItem?.menu else { return }
+        for item in menu.items {
+            if item.title == "Flip Horizontally" {
+                item.state = isFlippedHorizontally ? .on : .off
                 break
             }
         }
@@ -520,5 +616,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         case .custom:
             return savedPosition
         }
+    }
+
+    // MARK: - NSMenuDelegate
+
+    func menuWillOpen(_ menu: NSMenu) {
+        // Update stroke counter display when menu is about to open
+        updateStrokeCounterMenuItem()
     }
 }

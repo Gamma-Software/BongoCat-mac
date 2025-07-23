@@ -1,5 +1,55 @@
 import SwiftUI
 
+// MARK: - Stroke Counter
+class StrokeCounter: ObservableObject {
+    @Published private(set) var totalStrokes: Int = 0
+    @Published private(set) var keystrokes: Int = 0
+    @Published private(set) var mouseClicks: Int = 0
+
+    private let strokesKey = "BangoCatTotalStrokes"
+    private let keystrokesKey = "BangoCatKeystrokes"
+    private let mouseClicksKey = "BangoCatMouseClicks"
+
+    init() {
+        loadSavedCounts()
+    }
+
+    func incrementKeystrokes() {
+        keystrokes += 1
+        totalStrokes += 1
+        saveCounts()
+        print("🔢 Keystroke count: \(keystrokes), Total: \(totalStrokes)")
+    }
+
+    func incrementMouseClicks() {
+        mouseClicks += 1
+        totalStrokes += 1
+        saveCounts()
+        print("🔢 Mouse click count: \(mouseClicks), Total: \(totalStrokes)")
+    }
+
+    func reset() {
+        totalStrokes = 0
+        keystrokes = 0
+        mouseClicks = 0
+        saveCounts()
+        print("🔢 Stroke counter reset")
+    }
+
+    private func loadSavedCounts() {
+        totalStrokes = UserDefaults.standard.integer(forKey: strokesKey)
+        keystrokes = UserDefaults.standard.integer(forKey: keystrokesKey)
+        mouseClicks = UserDefaults.standard.integer(forKey: mouseClicksKey)
+        print("🔢 Loaded stroke counts - Total: \(totalStrokes), Keys: \(keystrokes), Mouse: \(mouseClicks)")
+    }
+
+    private func saveCounts() {
+        UserDefaults.standard.set(totalStrokes, forKey: strokesKey)
+        UserDefaults.standard.set(keystrokes, forKey: keystrokesKey)
+        UserDefaults.standard.set(mouseClicks, forKey: mouseClicksKey)
+    }
+}
+
 enum CatState {
     case idle
     case leftPawDown
@@ -27,6 +77,10 @@ class CatAnimationController: ObservableObject {
     @Published var viewScale: Double = 1.0  // New scale property for view size
     @Published var scaleOnInputEnabled: Bool = true  // Control scale pulse on input
     @Published var rotation: Double = 0.0  // New rotation property for cat rotation
+    @Published var isFlippedHorizontally: Bool = false  // New property for horizontal flip
+
+    // Stroke counter
+    let strokeCounter = StrokeCounter()
 
     private var animationTimer: Timer?
     private var useLeftPaw: Bool = true  // Track which paw to use next
@@ -51,6 +105,11 @@ class CatAnimationController: ObservableObject {
         print("Cat rotation updated to: \(newRotation) degrees")
     }
 
+    func setHorizontalFlip(_ flipped: Bool) {
+        isFlippedHorizontally = flipped
+        print("Cat horizontal flip updated to: \(flipped)")
+    }
+
     func triggerAnimation(for inputType: InputType) {
         // Debug logging
         print("🐱 Animation triggered for: \(inputType), current state: \(currentState)")
@@ -58,22 +117,25 @@ class CatAnimationController: ObservableObject {
         // Cancel existing timer
         animationTimer?.invalidate()
 
-        // Trigger appropriate animation
+        // Trigger appropriate animation and count strokes
         switch inputType {
         case .keyboardDown(let key):
             print("⌨️ Keyboard down detected - key: \(key)")
+            strokeCounter.incrementKeystrokes()
             triggerKeyboardDown(for: key)
         case .keyboardUp(let key):
             print("⌨️ Keyboard up detected - key: \(key)")
             triggerKeyboardUp(for: key)
         case .leftClickDown:
             print("🖱️ Left click down detected - left paw animation")
+            strokeCounter.incrementMouseClicks()
             triggerPawAnimation(.leftPawDown)
         case .leftClickUp:
             print("🖱️ Left click up detected - left paw up animation")
             triggerPawAnimation(.leftPawUp)
         case .rightClickDown:
             print("🖱️ Right click down detected - right paw animation")
+            strokeCounter.incrementMouseClicks()
             triggerPawAnimation(.rightPawDown)
         case .rightClickUp:
             print("🖱️ Right click up detected - right paw up animation")
@@ -387,10 +449,12 @@ struct CatView: View {
             // The authentic BangoCat sprite using real images
             BangoCatSprite(state: animationController.currentState)
                 .scaleEffect(animationController.scale)
+                .scaleEffect(x: animationController.isFlippedHorizontally ? -1 : 1, y: 1)  // Apply horizontal flip
                 .rotationEffect(.degrees(animationController.rotation))  // Apply rotation
                 .animation(.easeInOut(duration: 0.08), value: animationController.currentState)
                 .animation(.easeInOut(duration: 0.1), value: animationController.scale)
                 .animation(.easeInOut(duration: 0.3), value: animationController.rotation)  // Smooth rotation transitions
+                .animation(.easeInOut(duration: 0.3), value: animationController.isFlippedHorizontally)  // Smooth flip transitions
         }
         .scaleEffect(animationController.viewScale)  // Apply view scaling
         .animation(.easeInOut(duration: 0.3), value: animationController.viewScale)  // Smooth scale transitions

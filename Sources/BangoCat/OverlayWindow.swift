@@ -105,6 +105,15 @@ class OverlayWindow: NSWindowController, NSWindowDelegate {
         print("Cat rotation updated to: \(rotation) degrees")
     }
 
+    func updateFlip(_ flipped: Bool) {
+        guard let animationController = catAnimationController else { return }
+
+        // Update the cat horizontal flip
+        animationController.setHorizontalFlip(flipped)
+
+        print("Cat horizontal flip updated to: \(flipped)")
+    }
+
     func windowDidMove(_ notification: Notification) {
         if let window = window {
             appDelegate?.saveManualPosition(window.frame.origin)
