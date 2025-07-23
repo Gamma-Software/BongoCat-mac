@@ -64,4 +64,31 @@ class OverlayWindow: NSWindowController {
             showWindow()
         }
     }
+
+    func updateScale(_ scale: Double) {
+        guard let animationController = catAnimationController else { return }
+
+        // Update the cat view scale
+        animationController.updateViewScale(scale)
+
+        // Calculate new window size based on scale
+        let baseWidth: CGFloat = 175
+        let baseHeight: CGFloat = 150
+        let newWidth = baseWidth * scale
+        let newHeight = baseHeight * scale
+
+        // Update window size
+        if let window = window {
+            let currentFrame = window.frame
+            let newFrame = NSRect(
+                x: currentFrame.origin.x,
+                y: currentFrame.origin.y,
+                width: newWidth,
+                height: newHeight
+            )
+            window.setFrame(newFrame, display: true, animate: true)
+        }
+
+        print("Window scale updated to: \(scale)")
+    }
 }

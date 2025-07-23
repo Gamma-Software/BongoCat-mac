@@ -6,8 +6,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var inputMonitor: InputMonitor?
     var statusBarItem: NSStatusItem?
 
+    // Scale management
+    private var currentScale: Double = 1.0
+    private let scaleKey = "BangoCatScale"
+
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         print("BangoCat starting...")
+        loadSavedScale()
         setupStatusBarItem()
         setupOverlayWindow()
         setupInputMonitoring()
@@ -26,29 +31,55 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func setupStatusBarItem() {
+        print("🔧 Setting up status bar item...")
         statusBarItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        print("🔧 Status bar item created: \(statusBarItem != nil)")
 
         if let button = statusBarItem?.button {
             button.title = "🐱"
             button.toolTip = "BangoCat - Click for menu"
+            print("🔧 Status bar button configured")
+        } else {
+            print("❌ Failed to get status bar button")
         }
 
         let menu = NSMenu()
         menu.addItem(NSMenuItem(title: "Show/Hide Overlay", action: #selector(toggleOverlay), keyEquivalent: ""))
+        menu.addItem(NSMenuItem.separator())
+
+        // Scale submenu
+        let scaleSubmenu = NSMenu()
+        scaleSubmenu.addItem(NSMenuItem(title: "50%", action: #selector(setScale050), keyEquivalent: ""))
+        scaleSubmenu.addItem(NSMenuItem(title: "75%", action: #selector(setScale075), keyEquivalent: ""))
+        scaleSubmenu.addItem(NSMenuItem(title: "100%", action: #selector(setScale100), keyEquivalent: ""))
+
+        let scaleMenuItem = NSMenuItem(title: "Scale", action: nil, keyEquivalent: "")
+        scaleMenuItem.submenu = scaleSubmenu
+        menu.addItem(scaleMenuItem)
+
         menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Quit BangoCat", action: #selector(quitApp), keyEquivalent: "q"))
 
         // Set targets for menu items
         menu.items.forEach { item in
             item.target = self
+            item.submenu?.items.forEach { subItem in
+                subItem.target = self
+            }
         }
 
         statusBarItem?.menu = menu
+        print("🔧 Menu attached to status bar item")
+
+        // Set initial checkmarks
+        updateScaleMenuItems()
+        print("🔧 Status bar setup complete")
     }
 
     private func setupOverlayWindow() {
         overlayWindow = OverlayWindow()
         overlayWindow?.showWindow()
+        overlayWindow?.updateScale(currentScale)  // Apply the loaded scale
         print("Overlay window created")
     }
 
@@ -92,5 +123,73 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func quitApp() {
         NSApplication.shared.terminate(self)
+    }
+
+    // MARK: - Scale Management
+
+    private func loadSavedScale() {
+        if UserDefaults.standard.object(forKey: scaleKey) != nil {
+            currentScale = UserDefaults.standard.double(forKey: scaleKey)
+        } else {
+            currentScale = 1.0 // Default scale
+        }
+        print("Loaded scale: \(currentScale)")
+    }
+
+    private func saveScale() {
+        UserDefaults.standard.set(currentScale, forKey: scaleKey)
+        print("Saved scale: \(currentScale)")
+    }
+
+    @objc private func setScale050() {
+        setScale(0.5)
+    }
+
+    @objc private func setScale075() {
+        setScale(0.75)
+    }
+
+    @objc private func setScale100() {
+        setScale(1.0)
+    }
+
+    @objc private func setScale125() {
+        setScale(1.25)
+    }
+
+    @objc private func setScale150() {
+        setScale(1.5)
+    }
+
+    @objc private func setScale200() {
+        setScale(2.0)
+    }
+
+    private func setScale(_ scale: Double) {
+        currentScale = scale
+        saveScale()
+        overlayWindow?.updateScale(scale)
+        updateScaleMenuItems()
+        print("Scale changed to: \(scale)")
+    }
+
+    private func updateScaleMenuItems() {
+        // Update checkmarks on scale menu items
+        guard let menu = statusBarItem?.menu else { return }
+
+        // Find the scale submenu
+        for item in menu.items {
+            if item.title == "Scale", let submenu = item.submenu {
+                for subItem in submenu.items {
+                    let title = subItem.title
+                    if title.hasSuffix("%") {
+                        let scaleString = String(title.dropLast())
+                        if let itemScale = Double(scaleString) {
+                            subItem.state = (itemScale / 100 == currentScale) ? .on : .off
+                        }
+                    }
+                }
+            }
+        }
     }
 }

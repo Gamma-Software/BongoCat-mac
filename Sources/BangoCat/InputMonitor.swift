@@ -30,11 +30,19 @@ class InputMonitor {
         keyboardEventMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.keyDown, .keyUp]) { [weak self] event in
             switch event.type {
             case .keyDown:
-                print("⌨️ Keyboard DOWN event detected: \(event.charactersIgnoringModifiers ?? "unknown")")
-                self?.callback(.keyboardDown)
+                if event.isARepeat {
+                    print("🔄 Key is being held down (repeat event)")
+                    // Key is being held - do nothing or handle differently
+                    return
+                } else {
+                    print("⌨️ New key press detected: \(event.charactersIgnoringModifiers ?? "unknown")")
+                    self?.callback(.keyboardDown)
+                }
+
             case .keyUp:
-                print("⌨️ Keyboard UP event detected: \(event.charactersIgnoringModifiers ?? "unknown")")
+                print("⌨️ Key released: \(event.charactersIgnoringModifiers ?? "unknown")")
                 self?.callback(.keyboardUp)
+
             default:
                 break
             }
@@ -56,9 +64,9 @@ class InputMonitor {
             case .rightMouseUp:
                 print("🖱️ Right mouse UP detected")
                 self?.callback(.rightClickUp)
-            case .scrollWheel:
-                print("🔄 Mouse scroll detected")
-                self?.callback(.scroll)
+            //case .scrollWheel:
+            //    print("🔄 Mouse scroll detected")
+            //    self?.callback(.scroll)
             default:
                 break
             }

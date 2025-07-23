@@ -24,11 +24,24 @@ enum InputType {
 class CatAnimationController: ObservableObject {
     @Published var currentState: CatState = .idle
     @Published var scale: Double = 1.0
+    @Published var viewScale: Double = 1.0  // New scale property for view size
+    @Published var scaleOnInputEnabled: Bool = true  // Control scale pulse on input
 
     private var animationTimer: Timer?
     private var useLeftPaw: Bool = true  // Track which paw to use next
     private var lastPawDownTime: Date = Date()  // Track when paw went down
-    private var minimumAnimationDuration: TimeInterval = 2.0  // Minimum animation duration
+    private var minimumAnimationDuration: TimeInterval = 0.1  // Minimum animation duration
+    private var keyHeldDown: Bool = false  // Track if a key is currently held down
+
+    func updateViewScale(_ newScale: Double) {
+        viewScale = newScale
+        print("Cat view scale updated to: \(newScale)")
+    }
+
+    func setScaleOnInputEnabled(_ enabled: Bool) {
+        scaleOnInputEnabled = enabled
+        print("Scale on input \(enabled ? "enabled" : "disabled")")
+    }
 
     func triggerAnimation(for inputType: InputType) {
         // Debug logging
@@ -65,14 +78,16 @@ class CatAnimationController: ObservableObject {
             break
         }
 
-        // Scale animation for feedback
-        withAnimation(.easeInOut(duration: 0.1)) {
-            scale = 1.1
-        }
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+        // Scale animation for feedback - only if enabled
+        if scaleOnInputEnabled {
             withAnimation(.easeInOut(duration: 0.1)) {
-                self.scale = 1.0
+                scale = 1.1
+            }
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                withAnimation(.easeInOut(duration: 0.1)) {
+                    self.scale = 1.0
+                }
             }
         }
     }
@@ -358,6 +373,8 @@ struct CatView: View {
                 .animation(.easeInOut(duration: 0.08), value: animationController.currentState)
                 .animation(.easeInOut(duration: 0.1), value: animationController.scale)
         }
+        .scaleEffect(animationController.viewScale)  // Apply view scaling
+        .animation(.easeInOut(duration: 0.3), value: animationController.viewScale)  // Smooth scale transitions
         .frame(maxWidth: 175, maxHeight: 150)  // Accommodate real image dimensions
         .background(Color.clear)
         .onAppear {
