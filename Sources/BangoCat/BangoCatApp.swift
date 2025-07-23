@@ -1,6 +1,18 @@
 import Cocoa
 import SwiftUI
 
+enum CornerPosition: String, CaseIterable {
+    case topLeft = "Top Left"
+    case topRight = "Top Right"
+    case bottomLeft = "Bottom Left"
+    case bottomRight = "Bottom Right"
+    case custom = "Custom"
+
+    var displayName: String {
+        return self.rawValue
+    }
+}
+
 class AppDelegate: NSObject, NSApplicationDelegate {
     var overlayWindow: OverlayWindow?
     var inputMonitor: InputMonitor?
@@ -14,10 +26,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var scaleOnInputEnabled: Bool = true
     private let scaleOnInputKey = "BangoCatScaleOnInput"
 
+    // Position management
+    private var snapToCornerEnabled: Bool = false
+    private let snapToCornerKey = "BangoCatSnapToCorner"
+    private var savedPosition: NSPoint = NSPoint(x: 100, y: 100)
+    private let savedPositionXKey = "BangoCatPositionX"
+    private let savedPositionYKey = "BangoCatPositionY"
+    private var currentCornerPosition: CornerPosition = .custom
+    private let cornerPositionKey = "BangoCatCornerPosition"
+
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         print("BangoCat starting...")
         loadSavedScale()
         loadScaleOnInputPreference()
+        loadPositionPreferences()
         setupStatusBarItem()
         setupOverlayWindow()
         setupInputMonitoring()
@@ -68,6 +90,28 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(NSMenuItem(title: "Scale Pulse on Input", action: #selector(toggleScalePulse), keyEquivalent: ""))
 
         menu.addItem(NSMenuItem.separator())
+
+        // Position submenu
+        let positionSubmenu = NSMenu()
+
+        // Corner position options
+        for corner in CornerPosition.allCases {
+            if corner != .custom {
+                let item = NSMenuItem(title: corner.displayName, action: #selector(setCornerPosition(_:)), keyEquivalent: "")
+                item.representedObject = corner
+                positionSubmenu.addItem(item)
+            }
+        }
+
+        positionSubmenu.addItem(NSMenuItem.separator())
+        positionSubmenu.addItem(NSMenuItem(title: "Save Current Position", action: #selector(saveCurrentPositionAction), keyEquivalent: ""))
+        positionSubmenu.addItem(NSMenuItem(title: "Restore Saved Position", action: #selector(restoreSavedPosition), keyEquivalent: ""))
+
+        let positionMenuItem = NSMenuItem(title: "Position", action: nil, keyEquivalent: "")
+        positionMenuItem.submenu = positionSubmenu
+        menu.addItem(positionMenuItem)
+
+        menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Quit BangoCat", action: #selector(quitApp), keyEquivalent: "q"))
 
         // Set targets for menu items
@@ -84,14 +128,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Set initial checkmarks
         updateScaleMenuItems()
         updateScalePulseMenuItem()
+        updatePositionMenuItems()
         print("🔧 Status bar setup complete")
     }
 
     private func setupOverlayWindow() {
         overlayWindow = OverlayWindow()
+        overlayWindow?.appDelegate = self // Set reference for position saving
         overlayWindow?.showWindow()
         overlayWindow?.updateScale(currentScale)  // Apply the loaded scale
         overlayWindow?.catAnimationController?.setScaleOnInputEnabled(scaleOnInputEnabled)  // Apply pulse preference
+
+        // Apply saved position
+        overlayWindow?.window?.setFrameOrigin(savedPosition)
+
         print("Overlay window created")
     }
 
@@ -236,6 +286,121 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 item.state = scaleOnInputEnabled ? .on : .off
                 break
             }
+        }
+    }
+
+    private func updatePositionMenuItems() {
+        guard let menu = statusBarItem?.menu else { return }
+
+        // Find the position submenu and update checkmarks
+        for item in menu.items {
+            if item.title == "Position", let submenu = item.submenu {
+                for subItem in submenu.items {
+                    if let corner = subItem.representedObject as? CornerPosition {
+                        subItem.state = (corner == currentCornerPosition) ? .on : .off
+                    }
+                }
+            }
+        }
+    }
+
+    func saveManualPosition(_ position: NSPoint) {
+        savedPosition = position
+        currentCornerPosition = .custom
+        savePositionPreferences()
+        updatePositionMenuItems()
+        print("Manual position saved: \(position)")
+    }
+
+    private func loadPositionPreferences() {
+        // Load snap to corner preference
+        if UserDefaults.standard.object(forKey: snapToCornerKey) != nil {
+            snapToCornerEnabled = UserDefaults.standard.bool(forKey: snapToCornerKey)
+        } else {
+            snapToCornerEnabled = false // Default disabled
+        }
+
+        // Load saved position
+        if UserDefaults.standard.object(forKey: savedPositionXKey) != nil {
+            let x = UserDefaults.standard.double(forKey: savedPositionXKey)
+            let y = UserDefaults.standard.double(forKey: savedPositionYKey)
+            savedPosition = NSPoint(x: x, y: y)
+        } else {
+            savedPosition = NSPoint(x: 100, y: 100) // Default position
+        }
+
+        // Load corner position preference
+        if let cornerString = UserDefaults.standard.string(forKey: cornerPositionKey),
+           let corner = CornerPosition(rawValue: cornerString) {
+            currentCornerPosition = corner
+        } else {
+            currentCornerPosition = .custom // Default to custom
+        }
+
+        print("Loaded position preferences - snap: \(snapToCornerEnabled), position: \(savedPosition), corner: \(currentCornerPosition)")
+    }
+
+    private func savePositionPreferences() {
+        UserDefaults.standard.set(snapToCornerEnabled, forKey: snapToCornerKey)
+        UserDefaults.standard.set(savedPosition.x, forKey: savedPositionXKey)
+        UserDefaults.standard.set(savedPosition.y, forKey: savedPositionYKey)
+        UserDefaults.standard.set(currentCornerPosition.rawValue, forKey: cornerPositionKey)
+        print("Saved position preferences - snap: \(snapToCornerEnabled), position: \(savedPosition), corner: \(currentCornerPosition)")
+    }
+
+    @objc private func saveCurrentPositionAction() {
+        saveManualPosition(overlayWindow?.window?.frame.origin ?? NSPoint.zero)
+    }
+
+    @objc private func restoreSavedPosition() {
+        overlayWindow?.window?.setFrameOrigin(savedPosition)
+        currentCornerPosition = .custom // Assuming saved position is custom
+        updatePositionMenuItems()
+        print("Restored saved position: \(savedPosition)")
+    }
+
+    @objc private func setCornerPosition(_ sender: NSMenuItem) {
+        guard let corner = sender.representedObject as? CornerPosition else { return }
+        let position = getCornerPosition(for: corner)
+        overlayWindow?.window?.setFrameOrigin(position)
+        currentCornerPosition = corner
+        saveManualPosition(position)
+        updatePositionMenuItems()
+        print("Moved cat to \(corner.displayName) at position: \(position)")
+    }
+
+    private func getCornerPosition(for corner: CornerPosition) -> NSPoint {
+        guard let screen = NSScreen.main else {
+            return NSPoint(x: 100, y: 100)
+        }
+
+        let screenFrame = screen.visibleFrame
+        let windowSize = overlayWindow?.window?.frame.size ?? NSSize(width: 175, height: 150)
+        let margin: CGFloat = 20 // Distance from screen edges
+
+        switch corner {
+        case .topLeft:
+            return NSPoint(
+                x: screenFrame.minX + margin,
+                y: screenFrame.maxY - windowSize.height - margin
+            )
+        case .topRight:
+            return NSPoint(
+                x: screenFrame.maxX - windowSize.width - margin,
+                y: screenFrame.maxY - windowSize.height - margin
+            )
+        case .bottomLeft:
+            return NSPoint(
+                x: screenFrame.minX + margin,
+                y: screenFrame.minY + margin
+            )
+        case .bottomRight:
+            return NSPoint(
+                x: screenFrame.maxX - windowSize.width - margin,
+                y: screenFrame.minY + margin
+            )
+        case .custom:
+            return savedPosition
         }
     }
 }

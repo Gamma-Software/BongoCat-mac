@@ -1,9 +1,10 @@
 import Cocoa
 import SwiftUI
 
-class OverlayWindow: NSWindowController {
+class OverlayWindow: NSWindowController, NSWindowDelegate {
     var catAnimationController: CatAnimationController?
     private var isVisible = true
+    weak var appDelegate: AppDelegate? // Reference to save position changes
 
     override init(window: NSWindow?) {
         let window = NSWindow(
@@ -42,6 +43,9 @@ class OverlayWindow: NSWindowController {
 
         // Make window draggable
         window.isMovableByWindowBackground = true
+
+        // Set up window delegate to track position changes
+        window.delegate = self
 
         // Center window on screen
         window.center()
@@ -90,5 +94,11 @@ class OverlayWindow: NSWindowController {
         }
 
         print("Window scale updated to: \(scale)")
+    }
+
+    func windowDidMove(_ notification: Notification) {
+        if let window = window {
+            appDelegate?.saveManualPosition(window.frame.origin)
+        }
     }
 }
