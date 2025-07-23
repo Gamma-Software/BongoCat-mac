@@ -600,6 +600,16 @@ struct CatView: View {
 
                     Divider()
 
+                    Button("Visit Website") {
+                        animationController.appDelegate?.visitWebsitePublic()
+                    }
+
+                    Button("About BangoCat") {
+                        animationController.appDelegate?.showCreditsPublic()
+                    }
+
+                    Divider()
+
                     Button("Quit BangoCat") {
                         animationController.appDelegate?.quitAppPublic()
                     }
@@ -607,20 +617,36 @@ struct CatView: View {
 
             // Miaou text overlay
             if animationController.showMiaou {
-                Text("miaou!")
-                    .font(.system(size: 18, weight: .bold))
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(Color.black.opacity(0.9))
-                            .shadow(color: .black.opacity(0.3), radius: 4, x: 2, y: 2)
-                    )
-                    .offset(y: -60) // Position above the cat, closer to avoid clipping
-                    .transition(.scale.combined(with: .opacity))
-                    .animation(.spring(response: 0.4, dampingFraction: 0.6), value: animationController.showMiaou)
-                    .zIndex(1) // Ensure it appears on top
+                VStack(spacing: 4) {
+                    Text("miaou!")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(.white)
+
+                    Text("Strokes: \(animationController.strokeCounter.totalStrokes)")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.white.opacity(0.9))
+
+                    HStack(spacing: 8) {
+                        Text("Keys: \(animationController.strokeCounter.keystrokes)")
+                            .font(.system(size: 12, weight: .regular))
+                            .foregroundColor(.white.opacity(0.8))
+
+                        Text("Clicks: \(animationController.strokeCounter.mouseClicks)")
+                            .font(.system(size: 12, weight: .regular))
+                            .foregroundColor(.white.opacity(0.8))
+                    }
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color.black.opacity(0.9))
+                        .shadow(color: .black.opacity(0.3), radius: 4, x: 2, y: 2)
+                )
+                .offset(y: -80) // Position above the cat, moved up a bit more for the larger bubble
+                .transition(.scale.combined(with: .opacity))
+                .animation(.spring(response: 0.4, dampingFraction: 0.6), value: animationController.showMiaou)
+                .zIndex(1) // Ensure it appears on top
             }
         }
         .scaleEffect(animationController.viewScale)  // Apply view scaling

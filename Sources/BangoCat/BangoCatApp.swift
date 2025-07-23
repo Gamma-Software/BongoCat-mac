@@ -162,6 +162,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Reset to Factory Defaults", action: #selector(resetToFactoryDefaults), keyEquivalent: ""))
         menu.addItem(NSMenuItem.separator())
+        menu.addItem(NSMenuItem(title: "Visit Website", action: #selector(visitWebsite), keyEquivalent: ""))
+        menu.addItem(NSMenuItem(title: "About BangoCat", action: #selector(showCredits), keyEquivalent: ""))
+        menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Quit BangoCat", action: #selector(quitApp), keyEquivalent: "q"))
 
         // Set targets for menu items
@@ -376,6 +379,52 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
     }
 
+    @objc private func showCredits() {
+        let alert = NSAlert()
+        alert.messageText = "About BangoCat"
+        alert.informativeText = """
+        BangoCat for macOS
+
+        Created by Valentin Rudloff
+
+        Inspired by Irox Games Studio on Steam and the Bango Cat phenomenon. The original Steam game was only compatible with Windows, so I created this Mac version to bring the joy of Bango Cat to macOS users.
+
+        Enjoy your typing companion! 🐱
+        """
+        alert.alertStyle = .informational
+        alert.addButton(withTitle: "OK")
+
+        // Try to set the app icon if available
+        if let iconImage = loadStatusBarIcon() {
+            // Create a larger version for the dialog
+            let dialogIconSize = NSSize(width: 64, height: 64)
+            let dialogIcon = NSImage(size: dialogIconSize)
+
+            dialogIcon.lockFocus()
+            let context = NSGraphicsContext.current
+            context?.imageInterpolation = .high
+
+            iconImage.draw(in: NSRect(origin: .zero, size: dialogIconSize),
+                          from: NSRect(origin: .zero, size: iconImage.size),
+                          operation: .sourceOver,
+                          fraction: 1.0)
+            dialogIcon.unlockFocus()
+
+            alert.icon = dialogIcon
+        }
+
+        alert.runModal()
+    }
+
+    @objc private func visitWebsite() {
+        if let url = URL(string: "https://valentin.pival.fr") {
+            NSWorkspace.shared.open(url)
+            print("Opening website: https://valentin.pival.fr")
+        } else {
+            print("Failed to create URL for website")
+        }
+    }
+
     @objc private func quitApp() {
         NSApplication.shared.terminate(self)
     }
@@ -425,6 +474,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     func restoreSavedPositionPublic() {
         restoreSavedPosition()
+    }
+
+    func visitWebsitePublic() {
+        visitWebsite()
+    }
+
+    func showCreditsPublic() {
+        showCredits()
     }
 
     func quitAppPublic() {
