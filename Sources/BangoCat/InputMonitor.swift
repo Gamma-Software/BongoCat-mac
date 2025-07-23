@@ -28,20 +28,22 @@ class InputMonitor {
 
     private func startKeyboardMonitoring() {
         keyboardEventMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.keyDown, .keyUp]) { [weak self] event in
+            let key = event.charactersIgnoringModifiers ?? "unknown"
+
             switch event.type {
             case .keyDown:
                 if event.isARepeat {
-                    print("🔄 Key is being held down (repeat event)")
+                    print("🔄 Key is being held down (repeat event): \(key)")
                     // Key is being held - do nothing or handle differently
                     return
                 } else {
-                    print("⌨️ New key press detected: \(event.charactersIgnoringModifiers ?? "unknown")")
-                    self?.callback(.keyboardDown)
+                    print("⌨️ New key press detected: \(key)")
+                    self?.callback(.keyboardDown(key: key))
                 }
 
             case .keyUp:
-                print("⌨️ Key released: \(event.charactersIgnoringModifiers ?? "unknown")")
-                self?.callback(.keyboardUp)
+                print("⌨️ Key released: \(key)")
+                self?.callback(.keyboardUp(key: key))
 
             default:
                 break

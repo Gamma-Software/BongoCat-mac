@@ -11,8 +11,8 @@ enum CatState {
 }
 
 enum InputType {
-    case keyboardDown
-    case keyboardUp
+    case keyboardDown(key: String)
+    case keyboardUp(key: String)
     case leftClickDown
     case leftClickUp
     case rightClickDown
@@ -29,6 +29,8 @@ class CatAnimationController: ObservableObject {
 
     private var animationTimer: Timer?
     private var useLeftPaw: Bool = true  // Track which paw to use next
+    private var lastPressedKey: String = ""  // Track the last pressed key
+    private var keyToPawMapping: [String: Bool] = [:]  // Track which paw each key uses (true = left, false = right)
     private var lastPawDownTime: Date = Date()  // Track when paw went down
     private var minimumAnimationDuration: TimeInterval = 0.1  // Minimum animation duration
     private var keyHeldDown: Bool = false  // Track if a key is currently held down
@@ -52,12 +54,12 @@ class CatAnimationController: ObservableObject {
 
         // Trigger appropriate animation
         switch inputType {
-        case .keyboardDown:
-            print("⌨️ Keyboard down detected - paws down")
-            triggerKeyboardDown()
-        case .keyboardUp:
-            print("⌨️ Keyboard up detected - paws up")
-            triggerKeyboardUp()
+        case .keyboardDown(let key):
+            print("⌨️ Keyboard down detected - key: \(key)")
+            triggerKeyboardDown(for: key)
+        case .keyboardUp(let key):
+            print("⌨️ Keyboard up detected - key: \(key)")
+            triggerKeyboardUp(for: key)
         case .leftClickDown:
             print("🖱️ Left click down detected - left paw animation")
             triggerPawAnimation(.leftPawDown)
@@ -92,29 +94,45 @@ class CatAnimationController: ObservableObject {
         }
     }
 
-    private func triggerKeyboardDown() {
+    private func triggerKeyboardDown(for key: String) {
         // Cancel any existing animation timer
         animationTimer?.invalidate()
 
         // Record the time when paw goes down
         lastPawDownTime = Date()
 
-        // Alternate between left and right paw for each keystroke
-        let pawState: CatState = useLeftPaw ? .leftPawDown : .rightPawDown
-        let pawName = useLeftPaw ? "left" : "right"
+        // Check if this key has been used before
+        let pawToUse: Bool
+        if let existingPaw = keyToPawMapping[key] {
+            // Same key pressed again - use the same paw
+            pawToUse = existingPaw
+            print("🎯 Same key '\(key)' pressed again - using same paw: \(pawToUse ? "left" : "right")")
+        } else {
+            // New key - use the next available paw and store the mapping
+            pawToUse = useLeftPaw
+            keyToPawMapping[key] = pawToUse
+            useLeftPaw.toggle()  // Alternate for the next new key
+            print("🎯 New key '\(key)' pressed - assigning \(pawToUse ? "left" : "right") paw")
+        }
 
-        print("🎯 Setting \(pawName) paw down (keyboard pressed)")
+        // Set the appropriate paw state
+        let pawState: CatState = pawToUse ? .leftPawDown : .rightPawDown
+        let pawName = pawToUse ? "left" : "right"
+
+        print("🎯 Setting \(pawName) paw down for key '\(key)'")
         currentState = pawState
 
-        // Toggle for next keystroke
-        useLeftPaw.toggle()
+        // Store the last pressed key
+        lastPressedKey = key
 
         // No automatic return to idle - paws stay down until keyboardUp
     }
 
-    private func triggerKeyboardUp() {
+    private func triggerKeyboardUp(for key: String) {
         // Cancel any existing animation timer
         animationTimer?.invalidate()
+
+        print("🎯 Key '\(key)' released")
 
         // Calculate how long the paw has been down
         let elapsedTime = Date().timeIntervalSince(lastPawDownTime)
@@ -165,14 +183,7 @@ class CatAnimationController: ObservableObject {
                 }
             }
         case .leftPawDown, .rightPawDown:
-            // Down states stay down until corresponding up event occurs
-            // Add timeout for safety in case up event is missed (longer timeout)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                print("🎯 Timeout: returning to idle from down position")
-                if self.currentState == paw { // Only change if still in same state
-                    self.currentState = .idle
-                }
-            }
+            break
         default:
             // Other states return to idle after minimum duration
             DispatchQueue.main.asyncAfter(deadline: .now() + minimumAnimationDuration) {
