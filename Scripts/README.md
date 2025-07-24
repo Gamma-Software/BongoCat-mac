@@ -17,10 +17,17 @@ Simple build script for development convenience.
 - Provides next steps after successful build
 
 ### 📦 `package_app.sh`
-Creates a professional, distributable DMG with drag-and-drop installation.
+Creates a professional, distributable DMG with drag-and-drop installation and optional GitHub delivery.
 
 ```bash
+# Create DMG locally
 ./Scripts/package_app.sh
+
+# Create DMG and upload to GitHub Releases
+./Scripts/package_app.sh --deliver
+
+# Show help
+./Scripts/package_app.sh --help
 ```
 
 **What it does:**
@@ -31,6 +38,7 @@ Creates a professional, distributable DMG with drag-and-drop installation.
 - **🎨 Generates professional DMG background with BangoCat branding**
 - **📏 Customizes DMG window layout and icon arrangement**
 - Creates compressed, read-only DMG for distribution
+- **🚀 Optionally uploads to GitHub Releases with `--deliver` flag**
 - Outputs to `Build/` directory
 
 **Professional DMG Features:**
@@ -45,10 +53,24 @@ Creates a professional, distributable DMG with drag-and-drop installation.
 - Project must build successfully
 - Optional: Python 3 + PIL (for professional background)
 - Optional: ImageMagick (for enhanced graphics)
+- **For GitHub delivery (--deliver):**
+  - GitHub CLI (`gh`) installed: `brew install gh`
+  - GitHub authentication: `gh auth login`
+  - Write access to the repository
+
+**GitHub Delivery Features (`--deliver`):**
+- ✨ Automatically creates GitHub releases with proper versioning
+- 📋 Generates professional release notes with installation instructions
+- 🔄 Handles both new releases and updates to existing releases
+- 🎯 Uses version from Info.plist (e.g., v1.0.0)
+- 📦 Uploads DMG as release asset for easy downloading
+- 🔗 Provides direct download URLs and release page links
+- 🛡️ Includes safety checks for GitHub CLI and authentication
 
 **Output:**
 - `Build/package/BangoCat.app` - Ready-to-install app bundle
 - `Build/BangoCat-{version}.dmg` - Professional distribution DMG
+- **With `--deliver`:** GitHub Release at https://github.com/Gamma-Software/BangoCat-mac/releases
 
 ### 🏷️ `bump_version.sh`
 Updates version numbers across the entire project.
@@ -197,10 +219,11 @@ git commit -m "Bump version to 2.0.0"
 git push
 git push origin v2.0.0              # Push the tag
 
-# 4. Create distribution package
-./Scripts/package_app.sh
+# 4. Create and deliver distribution package
+./Scripts/package_app.sh --deliver   # Creates DMG and uploads to GitHub Releases
 
-# 5. Upload DMG from Build/ directory
+# Alternative: Create locally only
+./Scripts/package_app.sh             # Manual upload from Build/ directory
 ```
 
 ### Version Management Best Practices
@@ -252,6 +275,14 @@ Build/
 - Use `./Scripts/bump_version.sh` to fix all at once
 - Check CHANGELOG.md has the correct latest version entry
 - Verify all files are writable and not corrupted
+
+### GitHub delivery fails (`--deliver`)
+- Install GitHub CLI: `brew install gh`
+- Authenticate with GitHub: `gh auth login`
+- Ensure you have write access to the repository
+- Check that the DMG was created successfully before delivery
+- Verify your internet connection for uploading to GitHub
+- Check GitHub API rate limits if multiple releases fail
 
 ## Script Requirements
 
