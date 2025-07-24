@@ -69,6 +69,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     internal var isPerAppPositioningEnabled: Bool = true
     private let perAppPositioningKey = "BangoCatPerAppPositioning"
 
+    // Milestone notifications management
+    private let milestoneManager = MilestoneNotificationManager.shared
+
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         print("BangoCat starting...")
         loadSavedScale()
@@ -85,6 +88,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         setupInputMonitoring()
         setupAppSwitchMonitoring()
         requestAccessibilityPermissions()
+
+        // Request notification permissions for milestone notifications
+        milestoneManager.requestNotificationPermission()
     }
 
     func applicationWillTerminate(_ aNotification: Notification) {
@@ -182,6 +188,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         menu.addItem(NSMenuItem.separator())
 
+        // Milestone notifications section
+        menu.addItem(NSMenuItem(title: "Milestone Notifications 🔔", action: #selector(toggleMilestoneNotifications), keyEquivalent: ""))
+
+        menu.addItem(NSMenuItem.separator())
+
         // Position submenu
         let positionSubmenu = NSMenu()
 
@@ -248,6 +259,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             self.updateStrokeCounterMenuItem()
         }
+
+        // Update milestone notifications menu item
+        updateMilestoneNotificationsMenuItem()
 
         print("🔧 Status bar setup complete")
     }
@@ -771,6 +785,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         resetStrokeCounter()
     }
 
+    func toggleMilestoneNotificationsPublic() {
+        toggleMilestoneNotifications()
+    }
+
     func saveCurrentPositionActionPublic() {
         saveCurrentPositionAction()
     }
@@ -1077,6 +1095,25 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 } else {
                     item.title = "Strokes: Loading..."
                 }
+                break
+            }
+        }
+    }
+
+    // MARK: - Milestone Notifications Management
+
+    @objc private func toggleMilestoneNotifications() {
+        let currentlyEnabled = milestoneManager.isNotificationsEnabled()
+        milestoneManager.setNotificationsEnabled(!currentlyEnabled)
+        updateMilestoneNotificationsMenuItem()
+        print("Milestone notifications toggled to: \(!currentlyEnabled)")
+    }
+
+    private func updateMilestoneNotificationsMenuItem() {
+        guard let menu = statusBarItem?.menu else { return }
+        for item in menu.items {
+            if item.title == "Milestone Notifications 🔔" {
+                item.state = milestoneManager.isNotificationsEnabled() ? .on : .off
                 break
             }
         }

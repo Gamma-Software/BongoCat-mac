@@ -10,6 +10,9 @@ class StrokeCounter: ObservableObject {
     private let keystrokesKey: String
     private let mouseClicksKey: String
 
+    // Milestone notification manager
+    private let milestoneManager = MilestoneNotificationManager.shared
+
     init(strokesKey: String = "BangoCatTotalStrokes",
          keystrokesKey: String = "BangoCatKeystrokes",
          mouseClicksKey: String = "BangoCatMouseClicks") {
@@ -24,6 +27,10 @@ class StrokeCounter: ObservableObject {
         totalStrokes += 1
         saveCounts()
         print("🔢 Keystroke count: \(keystrokes), Total: \(totalStrokes)")
+
+        // Check for milestone notifications
+        milestoneManager.checkKeystrokeMilestone(keystrokes)
+        milestoneManager.checkTotalStrokeMilestone(totalStrokes)
     }
 
     func incrementMouseClicks() {
@@ -31,6 +38,10 @@ class StrokeCounter: ObservableObject {
         totalStrokes += 1
         saveCounts()
         print("🔢 Mouse click count: \(mouseClicks), Total: \(totalStrokes)")
+
+        // Check for milestone notifications
+        milestoneManager.checkMouseClickMilestone(mouseClicks)
+        milestoneManager.checkTotalStrokeMilestone(totalStrokes)
     }
 
     func reset() {
@@ -38,6 +49,10 @@ class StrokeCounter: ObservableObject {
         keystrokes = 0
         mouseClicks = 0
         saveCounts()
+
+        // Reset milestone tracking as well
+        milestoneManager.resetMilestoneTracking()
+
         print("🔢 Stroke counter reset")
     }
 
@@ -682,6 +697,11 @@ struct CatView: View {
                             Button("Toggle Click Through (Hold ⌘ to Drag)") {
                                 print("🔧 Context menu: Toggling click through, appDelegate: \(animationController.appDelegate != nil)")
                                 animationController.appDelegate?.toggleClickThroughPublic()
+                            }
+
+                            Button("Milestone Notifications 🔔") {
+                                print("🔧 Context menu: Toggling milestone notifications, appDelegate: \(animationController.appDelegate != nil)")
+                                animationController.appDelegate?.toggleMilestoneNotificationsPublic()
                             }
 
                             Divider()
