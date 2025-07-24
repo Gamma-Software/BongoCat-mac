@@ -8,8 +8,7 @@ final class BangoCatTests: XCTestCase {
     func testCatViewInitialization() throws {
         let catView = CatView()
         XCTAssertNotNil(catView)
-        // CatView should be a SwiftUI view
-        XCTAssertTrue(catView is CatView)
+        // CatView should be a SwiftUI view - conformance verified by compilation
     }
 
     func testInputTypeEnum() throws {
