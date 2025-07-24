@@ -59,8 +59,7 @@ class OverlayWindow: NSWindowController, NSWindowDelegate {
         window.center()
     }
 
-        func updateIgnoreMouseEvents(_ ignoreClicks: Bool) {
-        guard let window = window else { return }
+    func updateIgnoreMouseEvents(_ ignoreClicks: Bool) {
 
         clickThroughEnabled = ignoreClicks
         updateMouseEventHandling()
