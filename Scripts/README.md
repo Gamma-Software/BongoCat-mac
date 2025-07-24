@@ -70,6 +70,7 @@ Updates version numbers across the entire project.
 - Updates `package_app.sh` VERSION variable
 - Updates DMG background Python script version
 - Updates README.md version badge
+- **Verifies all versions are consistent** before tagging
 - Provides colored, detailed output
 - Optionally creates git tags
 - Creates backups and rolls back on failure
@@ -174,8 +175,7 @@ swift run                            # Test the app
 # Ready to release?
 ./Scripts/test.sh                     # Final test run
 ./Scripts/check_version.sh --verbose # Detailed version check
-./Scripts/bump_version.sh 1.0.2     # Update version
-./Scripts/check_version.sh           # Confirm all versions updated
+./Scripts/bump_version.sh 1.0.2     # Update version (includes automatic verification)
 git add . && git commit -m "Release 1.0.2"
 git push
 
@@ -188,22 +188,19 @@ git push
 ./Scripts/check_version.sh --verbose # Check current version consistency
 ./Scripts/test.sh                    # Run full test suite
 
-# 2. Bump version and create tag
+# 2. Bump version and create tag (includes automatic verification)
 ./Scripts/bump_version.sh 2.0.0     # Follow prompts for git tag
 
-# 3. Verify everything updated correctly
-./Scripts/check_version.sh --verbose # Ensure all files updated
-
-# 4. Commit version changes
+# 3. Commit version changes
 git add .
 git commit -m "Bump version to 2.0.0"
 git push
 git push origin v2.0.0              # Push the tag
 
-# 5. Create distribution package
+# 4. Create distribution package
 ./Scripts/package_app.sh
 
-# 6. Upload DMG from Build/ directory
+# 5. Upload DMG from Build/ directory
 ```
 
 ### Version Management Best Practices
@@ -215,8 +212,7 @@ git push origin v2.0.0              # Push the tag
 ./Scripts/check_version.sh --fix     # Get fix suggestions
 
 # Automated version bumping (recommended)
-./Scripts/bump_version.sh 1.0.3     # Updates everything at once
-./Scripts/check_version.sh           # Verify success
+./Scripts/bump_version.sh 1.0.3     # Updates everything at once + auto-verification
 
 # Before major releases
 ./Scripts/check_version.sh --verbose # Detailed pre-release check

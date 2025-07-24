@@ -193,7 +193,7 @@ fi
 
 # README version badge
 if [ -f "$PROJECT_ROOT/README.md" ]; then
-    readme_version=$(grep -o 'Version-[0-9]\+\.[0-9]\+\.[0-9]\+-blue' "$PROJECT_ROOT/README.md" | sed 's/Version-\([^-]*\)-blue/\1/' || echo "")
+    readme_version=$(grep -o 'Version-[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*-blue' "$PROJECT_ROOT/README.md" | sed 's/Version-\([^-]*\)-blue/\1/' || echo "")
 
     if [ -n "$readme_version" ]; then
         add_version "README.md badge" "$readme_version" "$PROJECT_ROOT/README.md"
@@ -204,7 +204,7 @@ fi
 
 # CHANGELOG latest version
 if [ -f "$PROJECT_ROOT/CHANGELOG.md" ]; then
-    changelog_version=$(grep -m 1 -o '## \[[0-9]\+\.[0-9]\+\.[0-9]\+\]' "$PROJECT_ROOT/CHANGELOG.md" | sed 's/## \[\([^]]*\)\]/\1/' || echo "")
+    changelog_version=$(grep -m 1 -o '## \[[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\]' "$PROJECT_ROOT/CHANGELOG.md" | sed 's/## \[\([^]]*\)\]/\1/' || echo "")
 
     if [ -n "$changelog_version" ]; then
         add_version "CHANGELOG latest" "$changelog_version" "$PROJECT_ROOT/CHANGELOG.md"

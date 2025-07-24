@@ -38,6 +38,7 @@ show_usage() {
     echo "  • Update package_app.sh VERSION variable"
     echo "  • Update DMG background Python script version"
     echo "  • Update README.md version badge"
+    echo "  • Verify all versions are consistent"
     echo "  • Optionally create a git tag"
     echo "  • Show a summary of changes"
 }
@@ -210,7 +211,7 @@ if [ ! -f "$README_FILE" ]; then
 else
     create_backup "$README_FILE"
 
-    if sed -i '' "s/Version-[0-9]\+\.[0-9]\+\.[0-9]\+-blue/Version-$VERSION-blue/" "$README_FILE"; then
+    if sed -i '' "s/Version-[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*-blue/Version-$VERSION-blue/" "$README_FILE"; then
         print_success "Updated version badge in README.md to $VERSION"
     else
         print_error "Failed to update version badge in README.md"
@@ -235,6 +236,30 @@ echo "• Swift code → appBuild: $BUILD"
 echo "• package_app.sh → VERSION: $VERSION"
 echo "• create_background.py → version_text: v$VERSION"
 echo "• README.md → version badge: $VERSION"
+echo ""
+
+# Verify version consistency before tagging
+print_info "Verifying version consistency..."
+CHECK_SCRIPT="$SCRIPT_DIR/check_version.sh"
+
+if [ -f "$CHECK_SCRIPT" ]; then
+    if "$CHECK_SCRIPT" >/dev/null 2>&1; then
+        print_success "✅ Version consistency check passed!"
+    else
+        print_error "❌ Version consistency check failed!"
+        print_warning "Some versions may not have been updated correctly."
+        print_info "Running detailed check to show issues:"
+        echo ""
+        "$CHECK_SCRIPT" --fix
+        echo ""
+        print_error "Please fix the version inconsistencies before creating a git tag."
+        exit 1
+    fi
+else
+    print_warning "Version check script not found at $CHECK_SCRIPT"
+    print_info "Skipping consistency verification"
+fi
+
 echo ""
 
 # Ask about git tag
