@@ -31,7 +31,7 @@ class OverlayWindow: NSWindowController, NSWindowDelegate {
         window.backgroundColor = .clear
         //window.backgroundColor = .blue // DEBUG
         window.level = .screenSaver
-        window.ignoresMouseEvents = false
+        window.ignoresMouseEvents = false // Will be updated based on ignore clicks setting
         window.collectionBehavior = [.canJoinAllSpaces, .stationary]
 
         // Create the animation controller and cat view
@@ -44,7 +44,7 @@ class OverlayWindow: NSWindowController, NSWindowDelegate {
 
         window.contentView = hostingView
 
-        // Make window draggable
+        // Make window draggable (will be disabled when ignoring mouse events)
         window.isMovableByWindowBackground = true
 
         // Set up window delegate to track position changes
@@ -52,6 +52,15 @@ class OverlayWindow: NSWindowController, NSWindowDelegate {
 
         // Center window on screen
         window.center()
+    }
+
+    func updateIgnoreMouseEvents(_ ignoreClicks: Bool) {
+        guard let window = window else { return }
+
+        window.ignoresMouseEvents = ignoreClicks
+        window.isMovableByWindowBackground = !ignoreClicks
+
+        print("Window mouse events - ignoring: \(ignoreClicks), draggable: \(!ignoreClicks)")
     }
 
     func updateAppDelegate() {

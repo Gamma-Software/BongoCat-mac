@@ -44,6 +44,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var ignoreClicksEnabled: Bool = false
     private let ignoreClicksKey = "BangoCatIgnoreClicks"
 
+    // Click through management
+    private var clickThroughEnabled: Bool = false
+    private let clickThroughKey = "BangoCatClickThrough"
+
     // Position management - Enhanced for per-app positioning
     private var snapToCornerEnabled: Bool = false
     private let snapToCornerKey = "BangoCatSnapToCorner"
@@ -68,6 +72,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         loadSavedRotation()
         loadSavedFlip()
         loadIgnoreClicksPreference()
+        loadClickThroughPreference()
         loadPositionPreferences()
         loadPerAppPositioning()
         setupStatusBarItem()
@@ -147,6 +152,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         // Ignore clicks option
         menu.addItem(NSMenuItem(title: "Ignore Clicks", action: #selector(toggleIgnoreClicks), keyEquivalent: ""))
 
+        // Click through option
+        menu.addItem(NSMenuItem(title: "Click Through", action: #selector(toggleClickThrough), keyEquivalent: ""))
+
         menu.addItem(NSMenuItem.separator())
 
         // Stroke counter section
@@ -215,6 +223,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         updateRotationMenuItem()
         updateFlipMenuItem()
         updateIgnoreClicksMenuItem()
+        updateClickThroughMenuItem()
         updatePerAppPositioningMenuItem()
 
         // Update stroke counter after a short delay to ensure overlay window is ready
@@ -304,6 +313,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         overlayWindow?.updateFlip(isFlippedHorizontally)  // Apply the loaded flip
         overlayWindow?.catAnimationController?.setScaleOnInputEnabled(scaleOnInputEnabled)  // Apply pulse preference
         overlayWindow?.catAnimationController?.setIgnoreClicksEnabled(ignoreClicksEnabled)  // Apply ignore clicks preference
+        overlayWindow?.updateIgnoreMouseEvents(clickThroughEnabled)  // Apply click through preference
 
         // Apply saved position
         overlayWindow?.setPositionProgrammatically(savedPosition)
@@ -376,7 +386,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     @objc private func resetToFactoryDefaults() {
         let alert = NSAlert()
         alert.messageText = "Reset to Factory Defaults"
-        alert.informativeText = "This will reset all BangoCat settings to their default values:\n\n• Scale: 100%\n• Scale Pulse: Enabled\n• Rotation: Disabled\n• Flip: Disabled\n• Ignore Clicks: Disabled\n• Position: Default location\n• Stroke Counter: Will be reset\n\nThis action cannot be undone."
+        alert.informativeText = "This will reset all BangoCat settings to their default values:\n\n• Scale: 100%\n• Scale Pulse: Enabled\n• Rotation: Disabled\n• Flip: Disabled\n• Ignore Clicks: Disabled\n• Click Through: Disabled\n• Position: Default location\n• Stroke Counter: Will be reset\n\nThis action cannot be undone."
         alert.alertStyle = .warning
         alert.addButton(withTitle: "Reset")
         alert.addButton(withTitle: "Cancel")
@@ -389,6 +399,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             currentRotation = 0.0
             isFlippedHorizontally = false
             ignoreClicksEnabled = false
+            clickThroughEnabled = false
             savedPosition = NSPoint(x: 100, y: 100)
             currentCornerPosition = .custom
             snapToCornerEnabled = false
@@ -401,6 +412,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             saveRotation()
             saveFlip()
             saveIgnoreClicksPreference()
+            saveClickThroughPreference()
             savePositionPreferences()
             savePerAppPositioning()
 
@@ -410,6 +422,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             overlayWindow?.updateFlip(isFlippedHorizontally)
             overlayWindow?.catAnimationController?.setScaleOnInputEnabled(scaleOnInputEnabled)
             overlayWindow?.catAnimationController?.setIgnoreClicksEnabled(ignoreClicksEnabled)
+            overlayWindow?.updateIgnoreMouseEvents(clickThroughEnabled)
             overlayWindow?.setPositionProgrammatically(savedPosition)
 
             // Reset stroke counter
@@ -421,6 +434,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             updateRotationMenuItem()
             updateFlipMenuItem()
             updateIgnoreClicksMenuItem()
+            updateClickThroughMenuItem()
             updatePositionMenuItems()
             updatePerAppPositioningMenuItem()
             updateStrokeCounterMenuItem()
@@ -710,6 +724,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         toggleIgnoreClicks()
     }
 
+    func toggleClickThroughPublic() {
+        toggleClickThrough()
+    }
+
     func toggleOverlayPublic() {
         toggleOverlay()
     }
@@ -797,6 +815,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         print("Loaded ignore clicks preference: \(ignoreClicksEnabled)")
     }
 
+    private func loadClickThroughPreference() {
+        if UserDefaults.standard.object(forKey: clickThroughKey) != nil {
+            clickThroughEnabled = UserDefaults.standard.bool(forKey: clickThroughKey)
+        } else {
+            clickThroughEnabled = false // Default disabled
+        }
+        print("Loaded click through preference: \(clickThroughEnabled)")
+    }
+
     private func saveScale() {
         UserDefaults.standard.set(currentScale, forKey: scaleKey)
         print("Saved scale: \(currentScale)")
@@ -820,6 +847,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private func saveIgnoreClicksPreference() {
         UserDefaults.standard.set(ignoreClicksEnabled, forKey: ignoreClicksKey)
         print("Saved ignore clicks preference: \(ignoreClicksEnabled)")
+    }
+
+    private func saveClickThroughPreference() {
+        UserDefaults.standard.set(clickThroughEnabled, forKey: clickThroughKey)
+        print("Saved click through preference: \(clickThroughEnabled)")
     }
 
     @objc private func setScale065() {
@@ -935,6 +967,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         print("Ignore clicks toggled to: \(ignoreClicksEnabled)")
     }
 
+    @objc private func toggleClickThrough() {
+        clickThroughEnabled.toggle()
+        saveClickThroughPreference()
+        overlayWindow?.updateIgnoreMouseEvents(clickThroughEnabled)
+        updateClickThroughMenuItem()
+        print("Click through toggled to: \(clickThroughEnabled)")
+    }
+
     // MARK: - Stroke Counter Management
 
     @objc private func resetStrokeCounter() {
@@ -997,6 +1037,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         for item in menu.items {
             if item.title == "Ignore Clicks" {
                 item.state = ignoreClicksEnabled ? .on : .off
+                break
+            }
+        }
+    }
+
+    private func updateClickThroughMenuItem() {
+        guard let menu = statusBarItem?.menu else { return }
+        for item in menu.items {
+            if item.title == "Click Through" {
+                item.state = clickThroughEnabled ? .on : .off
                 break
             }
         }

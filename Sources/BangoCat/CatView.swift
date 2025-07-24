@@ -621,6 +621,12 @@ struct CatView: View {
                                 animationController.appDelegate?.toggleIgnoreClicksPublic()
                             }
 
+                            // Get click through state from appDelegate - this is a bit of a workaround since we don't have direct access
+                            Button("Toggle Click Through") {
+                                print("🔧 Context menu: Toggling click through, appDelegate: \(animationController.appDelegate != nil)")
+                                animationController.appDelegate?.toggleClickThroughPublic()
+                            }
+
                             Divider()
 
                             // Position options
