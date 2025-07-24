@@ -6,6 +6,8 @@ class OverlayWindow: NSWindowController, NSWindowDelegate {
     private var isVisible = true
     weak var appDelegate: AppDelegate? // Reference to save position changes
     private var isMovingProgrammatically = false // Flag to prevent saving during automatic moves
+    private var clickThroughEnabled = true // Track click through state
+    private var commandKeyMonitor: Any? // Monitor for command key events
 
     override init(window: NSWindow?) {
         let window = NSWindow(
@@ -50,17 +52,65 @@ class OverlayWindow: NSWindowController, NSWindowDelegate {
         // Set up window delegate to track position changes
         window.delegate = self
 
+        // Set up command key monitoring for conditional dragging
+        setupCommandKeyMonitoring()
+
         // Center window on screen
         window.center()
     }
 
-    func updateIgnoreMouseEvents(_ ignoreClicks: Bool) {
+        func updateIgnoreMouseEvents(_ ignoreClicks: Bool) {
         guard let window = window else { return }
 
-        window.ignoresMouseEvents = ignoreClicks
-        window.isMovableByWindowBackground = !ignoreClicks
+        clickThroughEnabled = ignoreClicks
+        updateMouseEventHandling()
 
-        print("Window mouse events - ignoring: \(ignoreClicks), draggable: \(!ignoreClicks)")
+        print("Click through enabled: \(ignoreClicks)")
+    }
+
+    private func setupCommandKeyMonitoring() {
+        // Monitor for command key events globally
+        commandKeyMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.flagsChanged]) { [weak self] event in
+            self?.handleFlagsChanged(event)
+        }
+
+        // Also monitor local events when window is key
+        NSEvent.addLocalMonitorForEvents(matching: [.flagsChanged]) { [weak self] event in
+            self?.handleFlagsChanged(event)
+            return event
+        }
+    }
+
+    private func handleFlagsChanged(_ event: NSEvent) {
+        let commandPressed = event.modifierFlags.contains(.command)
+        updateMouseEventHandling(commandKeyPressed: commandPressed)
+    }
+
+    private func updateMouseEventHandling(commandKeyPressed: Bool = false) {
+        guard let window = window else { return }
+
+        if clickThroughEnabled {
+            // If click through is enabled, only allow interaction when command is pressed
+            let allowInteraction = commandKeyPressed
+            window.ignoresMouseEvents = !allowInteraction
+            window.isMovableByWindowBackground = allowInteraction
+
+            if allowInteraction {
+                print("Command held - cat is draggable")
+            } else {
+                print("Command released - click through active")
+            }
+        } else {
+            // If click through is disabled, always allow interaction
+            window.ignoresMouseEvents = false
+            window.isMovableByWindowBackground = true
+        }
+    }
+
+    deinit {
+        if let monitor = commandKeyMonitor {
+            NSEvent.removeMonitor(monitor)
+        }
     }
 
     func updateAppDelegate() {

@@ -622,7 +622,7 @@ struct CatView: View {
                             }
 
                             // Get click through state from appDelegate - this is a bit of a workaround since we don't have direct access
-                            Button("Toggle Click Through") {
+                            Button("Toggle Click Through (Hold ⌘ to Drag)") {
                                 print("🔧 Context menu: Toggling click through, appDelegate: \(animationController.appDelegate != nil)")
                                 animationController.appDelegate?.toggleClickThroughPublic()
                             }

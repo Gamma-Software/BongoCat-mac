@@ -45,7 +45,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let ignoreClicksKey = "BangoCatIgnoreClicks"
 
     // Click through management
-    private var clickThroughEnabled: Bool = false
+    private var clickThroughEnabled: Bool = true  // Default enabled
     private let clickThroughKey = "BangoCatClickThrough"
 
     // Position management - Enhanced for per-app positioning
@@ -153,7 +153,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(NSMenuItem(title: "Ignore Clicks", action: #selector(toggleIgnoreClicks), keyEquivalent: ""))
 
         // Click through option
-        menu.addItem(NSMenuItem(title: "Click Through", action: #selector(toggleClickThrough), keyEquivalent: ""))
+        menu.addItem(NSMenuItem(title: "Click Through (Hold ⌘ to Drag)", action: #selector(toggleClickThrough), keyEquivalent: ""))
 
         menu.addItem(NSMenuItem.separator())
 
@@ -386,7 +386,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     @objc private func resetToFactoryDefaults() {
         let alert = NSAlert()
         alert.messageText = "Reset to Factory Defaults"
-        alert.informativeText = "This will reset all BangoCat settings to their default values:\n\n• Scale: 100%\n• Scale Pulse: Enabled\n• Rotation: Disabled\n• Flip: Disabled\n• Ignore Clicks: Disabled\n• Click Through: Disabled\n• Position: Default location\n• Stroke Counter: Will be reset\n\nThis action cannot be undone."
+        alert.informativeText = "This will reset all BangoCat settings to their default values:\n\n• Scale: 100%\n• Scale Pulse: Enabled\n• Rotation: Disabled\n• Flip: Disabled\n• Ignore Clicks: Disabled\n• Click Through: Enabled\n• Position: Default location\n• Stroke Counter: Will be reset\n\nThis action cannot be undone."
         alert.alertStyle = .warning
         alert.addButton(withTitle: "Reset")
         alert.addButton(withTitle: "Cancel")
@@ -399,7 +399,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             currentRotation = 0.0
             isFlippedHorizontally = false
             ignoreClicksEnabled = false
-            clickThroughEnabled = false
+            clickThroughEnabled = true
             savedPosition = NSPoint(x: 100, y: 100)
             currentCornerPosition = .custom
             snapToCornerEnabled = false
@@ -819,7 +819,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         if UserDefaults.standard.object(forKey: clickThroughKey) != nil {
             clickThroughEnabled = UserDefaults.standard.bool(forKey: clickThroughKey)
         } else {
-            clickThroughEnabled = false // Default disabled
+            clickThroughEnabled = true // Default enabled
         }
         print("Loaded click through preference: \(clickThroughEnabled)")
     }
@@ -1045,7 +1045,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private func updateClickThroughMenuItem() {
         guard let menu = statusBarItem?.menu else { return }
         for item in menu.items {
-            if item.title == "Click Through" {
+            if item.title == "Click Through (Hold ⌘ to Drag)" {
                 item.state = clickThroughEnabled ? .on : .off
                 break
             }
