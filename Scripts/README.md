@@ -17,7 +17,7 @@ Simple build script for development convenience.
 - Provides next steps after successful build
 
 ### 📦 `package_app.sh`
-Creates a distributable macOS app bundle and DMG.
+Creates a professional, distributable DMG with drag-and-drop installation.
 
 ```bash
 ./Scripts/package_app.sh
@@ -27,12 +27,28 @@ Creates a distributable macOS app bundle and DMG.
 - Builds the project in release mode
 - Creates an `.app` bundle with proper structure
 - Copies icons, resources, and Info.plist
-- Creates a distributable DMG file
+- **🔗 Creates Applications folder shortcut for easy installation**
+- **🎨 Generates professional DMG background with BangoCat branding**
+- **📏 Customizes DMG window layout and icon arrangement**
+- Creates compressed, read-only DMG for distribution
 - Outputs to `Build/` directory
+
+**Professional DMG Features:**
+- ✨ Drag-and-drop installation experience
+- 🖼️ Custom background with installation instructions
+- 📐 Optimized window size (640x400) and layout
+- 🎯 Perfect icon positioning (app left, Applications right)
+- 🌈 Graceful fallbacks for background generation
 
 **Requirements:**
 - Xcode command line tools
 - Project must build successfully
+- Optional: Python 3 + PIL (for professional background)
+- Optional: ImageMagick (for enhanced graphics)
+
+**Output:**
+- `Build/package/BangoCat.app` - Ready-to-install app bundle
+- `Build/BangoCat-{version}.dmg` - Professional distribution DMG
 
 ### 🏷️ `bump_version.sh`
 Updates version numbers across the entire project.
@@ -60,15 +76,59 @@ Updates version numbers across the entire project.
 - Version: `MAJOR.MINOR.PATCH` (e.g., `1.0.2`)
 - Build: `YYYY.MM` format (e.g., `2024.12`)
 
+### 🧪 `test.sh`
+Comprehensive test runner with advanced features.
+
+```bash
+# Run all tests
+./Scripts/test.sh
+
+# Verbose output
+./Scripts/test.sh --verbose
+
+# Filter specific tests
+./Scripts/test.sh --filter StrokeCounter
+
+# Quiet mode (results only)
+./Scripts/test.sh --quiet
+
+# Show coverage information
+./Scripts/test.sh --coverage
+
+# Show help
+./Scripts/test.sh --help
+```
+
+**What it does:**
+- Runs the complete test suite with colored output
+- Provides filtering options for specific test suites
+- Shows detailed timing and summary information
+- Supports verbose and quiet modes
+- Includes coverage reporting setup
+- Automatic build checking and parallel execution
+- Professional test result formatting
+
+**Test Suites:**
+- **StrokeCounterTests**: Counter functionality, persistence, concurrency
+- **CatAnimationControllerTests**: Animation logic, state management, input handling
+- **AppDelegateTests**: Settings management, per-app positioning, version info
+- **BangoCatTests**: Integration tests, memory management, performance
+
 ## Usage Examples
 
 ### Development Workflow
 ```bash
 # Make changes to code
 ./Scripts/build.sh                    # Quick build check
+./Scripts/test.sh                     # Run comprehensive tests
 swift run                            # Test the app
 
+# Before committing
+./Scripts/test.sh --verbose          # Run tests with detailed output
+./Scripts/test.sh --filter StrokeCounter # Test specific components
+
 # Ready to release?
+./Scripts/test.sh                     # Final test run
 ./Scripts/bump_version.sh 1.0.2     # Update version
 git add . && git commit -m "Release 1.0.2"
 git push

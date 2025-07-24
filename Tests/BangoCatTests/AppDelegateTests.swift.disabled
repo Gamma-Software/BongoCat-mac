@@ -1,0 +1,334 @@
+import XCTest
+@testable import BangoCat
+
+final class AppDelegateTests: XCTestCase {
+    var appDelegate: AppDelegate!
+    let testKeys = [
+        "TestBangoCatScale",
+        "TestBangoCatScaleOnInput",
+        "TestBangoCatRotation",
+        "TestBangoCatFlipHorizontally",
+        "TestBangoCatIgnoreClicks",
+        "TestBangoCatPerAppPositioning",
+        "TestBangoCatPerAppPositions"
+    ]
+
+    override func setUp() {
+        super.setUp()
+
+        // Clean up any existing test data
+        testKeys.forEach { key in
+            UserDefaults.standard.removeObject(forKey: key)
+        }
+
+        appDelegate = AppDelegate()
+    }
+
+    override func tearDown() {
+        // Clean up test data
+        testKeys.forEach { key in
+            UserDefaults.standard.removeObject(forKey: key)
+        }
+
+        appDelegate = nil
+        super.tearDown()
+    }
+
+    // MARK: - Version Information Tests
+
+    func testVersionString() {
+        let versionString = appDelegate.getVersionString()
+        XCTAssertFalse(versionString.isEmpty)
+
+        // Should contain version and build information
+        XCTAssertTrue(versionString.contains("("))
+        XCTAssertTrue(versionString.contains(")"))
+    }
+
+    func testBundleIdentifier() {
+        let bundleId = appDelegate.getBundleIdentifier()
+        XCTAssertFalse(bundleId.isEmpty)
+
+        // Should be a valid bundle identifier format
+        XCTAssertTrue(bundleId.contains("."))
+    }
+
+    // MARK: - Per-App Positioning Tests
+
+    func testGetCurrentActiveApp() {
+        let activeApp = appDelegate.getCurrentActiveApp()
+        XCTAssertFalse(activeApp.isEmpty)
+
+        // Should return a bundle identifier or "unknown"
+        XCTAssertTrue(activeApp.contains(".") || activeApp == "unknown")
+    }
+
+    func testPerAppPositioningSaveLoad() {
+        // Test position saving and loading
+        let testPosition = NSPoint(x: 100, y: 200)
+        let testBundleId = "com.test.app"
+
+        // Save position for test app
+        appDelegate.perAppPositions[testBundleId] = testPosition
+        appDelegate.savePerAppPositioning()
+
+        // Create new delegate and check if position is loaded
+        let newDelegate = AppDelegate()
+        newDelegate.loadPerAppPositioning()
+
+        XCTAssertEqual(newDelegate.perAppPositions[testBundleId]?.x, testPosition.x)
+        XCTAssertEqual(newDelegate.perAppPositions[testBundleId]?.y, testPosition.y)
+    }
+
+    func testPerAppPositioningToggle() {
+        // Initially disabled
+        XCTAssertFalse(appDelegate.isPerAppPositioningEnabled)
+
+        // Toggle on
+        appDelegate.togglePerAppPositioning()
+        XCTAssertTrue(appDelegate.isPerAppPositioningEnabled)
+
+        // Toggle off
+        appDelegate.togglePerAppPositioning()
+        XCTAssertFalse(appDelegate.isPerAppPositioningEnabled)
+    }
+
+    func testHandleAppSwitch() {
+        let oldApp = "com.test.old"
+        let newApp = "com.test.new"
+        let savedPosition = NSPoint(x: 150, y: 250)
+
+        // Set up initial position for new app
+        appDelegate.perAppPositions[newApp] = savedPosition
+
+        // Mock overlay window
+        let mockWindow = MockOverlayWindow()
+        appDelegate.overlayWindow = mockWindow
+
+        // Test app switch
+        appDelegate.handleAppSwitch(from: oldApp, to: newApp)
+
+        // Verify position was restored for new app
+        XCTAssertEqual(mockWindow.lastSetPosition?.x, savedPosition.x)
+        XCTAssertEqual(mockWindow.lastSetPosition?.y, savedPosition.y)
+    }
+
+    // MARK: - Settings Persistence Tests
+
+    func testScaleSettingsPersistence() {
+        let testScale = 1.5
+
+        // Set scale
+        appDelegate.currentScale = testScale
+        appDelegate.saveScale()
+
+        // Create new delegate
+        let newDelegate = AppDelegate()
+        newDelegate.loadSavedScale()
+
+        XCTAssertEqual(newDelegate.currentScale, testScale)
+    }
+
+    func testRotationSettingsPersistence() {
+        let testRotation = 13.0
+
+        // Set rotation
+        appDelegate.currentRotation = testRotation
+        appDelegate.saveRotation()
+
+        // Create new delegate
+        let newDelegate = AppDelegate()
+        newDelegate.loadSavedRotation()
+
+        XCTAssertEqual(newDelegate.currentRotation, testRotation)
+    }
+
+    func testFlipSettingsPersistence() {
+        let testFlip = true
+
+        // Set flip
+        appDelegate.isFlippedHorizontally = testFlip
+        appDelegate.saveFlip()
+
+        // Create new delegate
+        let newDelegate = AppDelegate()
+        newDelegate.loadSavedFlip()
+
+        XCTAssertEqual(newDelegate.isFlippedHorizontally, testFlip)
+    }
+
+    // MARK: - Corner Position Tests
+
+    func testGetCornerPosition() {
+        // Test all corner positions
+        let corners: [CornerPosition] = [.topLeft, .topRight, .bottomLeft, .bottomRight]
+
+        for corner in corners {
+            let position = appDelegate.getCornerPosition(for: corner)
+
+            // Position should be valid (not negative)
+            XCTAssertGreaterThanOrEqual(position.x, 0)
+            XCTAssertGreaterThanOrEqual(position.y, 0)
+        }
+    }
+
+    func testCustomCornerPosition() {
+        let savedPosition = NSPoint(x: 300, y: 400)
+        appDelegate.savedPosition = savedPosition
+
+        let customPosition = appDelegate.getCornerPosition(for: .custom)
+
+        XCTAssertEqual(customPosition.x, savedPosition.x)
+        XCTAssertEqual(customPosition.y, savedPosition.y)
+    }
+
+    // MARK: - Settings Default Values Tests
+
+    func testDefaultSettingsValues() {
+        let delegate = AppDelegate()
+
+        XCTAssertEqual(delegate.currentScale, 1.0)
+        XCTAssertTrue(delegate.scaleOnInputEnabled)
+        XCTAssertEqual(delegate.currentRotation, 0.0)
+        XCTAssertFalse(delegate.isFlippedHorizontally)
+        XCTAssertFalse(delegate.ignoreClicksEnabled)
+        XCTAssertFalse(delegate.isPerAppPositioningEnabled)
+    }
+
+    // MARK: - Settings Validation Tests
+
+    func testScaleValidation() {
+        // Test valid scales
+        let validScales = [0.5, 0.65, 0.75, 1.0, 1.25, 1.5, 2.0]
+
+        for scale in validScales {
+            appDelegate.setScale(scale)
+            XCTAssertEqual(appDelegate.currentScale, scale)
+        }
+    }
+
+    func testRotationValues() {
+        // Test common rotation values
+        let rotations = [0.0, 13.0, -13.0, 45.0, -45.0]
+
+        for rotation in rotations {
+            appDelegate.currentRotation = rotation
+            appDelegate.saveRotation()
+
+            let newDelegate = AppDelegate()
+            newDelegate.loadSavedRotation()
+
+            XCTAssertEqual(newDelegate.currentRotation, rotation)
+        }
+    }
+
+    // MARK: - Save Manual Position Tests
+
+    func testSaveManualPositionWithPerAppDisabled() {
+        let testPosition = NSPoint(x: 500, y: 600)
+        appDelegate.isPerAppPositioningEnabled = false
+
+        appDelegate.saveManualPosition(testPosition)
+
+        XCTAssertEqual(appDelegate.savedPosition.x, testPosition.x)
+        XCTAssertEqual(appDelegate.savedPosition.y, testPosition.y)
+        XCTAssertEqual(appDelegate.currentCornerPosition, .custom)
+    }
+
+    func testSaveManualPositionWithPerAppEnabled() {
+        let testPosition = NSPoint(x: 700, y: 800)
+        let currentApp = "com.test.current"
+
+        appDelegate.isPerAppPositioningEnabled = true
+        appDelegate.currentActiveApp = currentApp
+
+        appDelegate.saveManualPosition(testPosition)
+
+        XCTAssertEqual(appDelegate.perAppPositions[currentApp]?.x, testPosition.x)
+        XCTAssertEqual(appDelegate.perAppPositions[currentApp]?.y, testPosition.y)
+    }
+
+    // MARK: - Factory Reset Tests
+
+    func testFactoryReset() {
+        // Set non-default values
+        appDelegate.currentScale = 2.0
+        appDelegate.scaleOnInputEnabled = false
+        appDelegate.currentRotation = 13.0
+        appDelegate.isFlippedHorizontally = true
+        appDelegate.ignoreClicksEnabled = true
+        appDelegate.isPerAppPositioningEnabled = true
+        appDelegate.perAppPositions["test.app"] = NSPoint(x: 100, y: 100)
+
+        // Reset to factory defaults
+        appDelegate.resetToFactoryDefaults()
+
+        // Verify defaults are restored
+        XCTAssertEqual(appDelegate.currentScale, 1.0)
+        XCTAssertTrue(appDelegate.scaleOnInputEnabled)
+        XCTAssertEqual(appDelegate.currentRotation, 0.0)
+        XCTAssertFalse(appDelegate.isFlippedHorizontally)
+        XCTAssertFalse(appDelegate.ignoreClicksEnabled)
+        XCTAssertFalse(appDelegate.isPerAppPositioningEnabled)
+        XCTAssertTrue(appDelegate.perAppPositions.isEmpty)
+    }
+
+    // MARK: - Thread Safety Tests
+
+    func testConcurrentPositionSaving() {
+        let expectation = XCTestExpectation(description: "Concurrent position saving")
+        let iterations = 100
+        var completedOperations = 0
+
+        DispatchQueue.concurrentPerform(iterations: iterations) { i in
+            let position = NSPoint(x: Double(i), y: Double(i * 2))
+            appDelegate.saveManualPosition(position)
+
+            DispatchQueue.main.async {
+                completedOperations += 1
+                if completedOperations == iterations {
+                    expectation.fulfill()
+                }
+            }
+        }
+
+        wait(for: [expectation], timeout: 5.0)
+    }
+
+    // MARK: - Edge Cases Tests
+
+    func testSavePositionWithUnknownApp() {
+        let testPosition = NSPoint(x: 123, y: 456)
+
+        appDelegate.isPerAppPositioningEnabled = true
+        appDelegate.currentActiveApp = "unknown"
+
+        appDelegate.saveManualPosition(testPosition)
+
+        // Should fall back to global position when app is unknown
+        XCTAssertEqual(appDelegate.savedPosition.x, testPosition.x)
+        XCTAssertEqual(appDelegate.savedPosition.y, testPosition.y)
+    }
+
+    func testPerAppPositionsWithEmptyBundleId() {
+        appDelegate.isPerAppPositioningEnabled = true
+        appDelegate.currentActiveApp = ""
+
+        let testPosition = NSPoint(x: 789, y: 012)
+        appDelegate.saveManualPosition(testPosition)
+
+        // Should handle empty bundle ID gracefully
+        XCTAssertEqual(appDelegate.savedPosition.x, testPosition.x)
+        XCTAssertEqual(appDelegate.savedPosition.y, testPosition.y)
+    }
+}
+
+// MARK: - Mock Classes
+
+class MockOverlayWindow: OverlayWindow {
+    var lastSetPosition: NSPoint?
+
+    override func setPositionProgrammatically(_ position: NSPoint) {
+        lastSetPosition = position
+    }
+}

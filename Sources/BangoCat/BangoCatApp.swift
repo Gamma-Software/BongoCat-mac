@@ -54,11 +54,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let cornerPositionKey = "BangoCatCornerPosition"
 
     // Per-app position management
-    private var perAppPositions: [String: NSPoint] = [:]
+    internal var perAppPositions: [String: NSPoint] = [:]
     private let perAppPositionsKey = "BangoCatPerAppPositions"
-    private var currentActiveApp: String = ""
+    internal var currentActiveApp: String = ""
     private var appSwitchTimer: Timer?
-    private var isPerAppPositioningEnabled: Bool = false
+    internal var isPerAppPositioningEnabled: Bool = false
     private let perAppPositioningKey = "BangoCatPerAppPositioning"
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
@@ -182,6 +182,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Reset to Factory Defaults", action: #selector(resetToFactoryDefaults), keyEquivalent: ""))
         menu.addItem(NSMenuItem.separator())
+        menu.addItem(NSMenuItem(title: "Buy me a coffee ☕", action: #selector(buyMeACoffee), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "Visit Website", action: #selector(visitWebsite), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "About BangoCat", action: #selector(showCredits), keyEquivalent: ""))
 
@@ -319,26 +320,50 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     private func requestAccessibilityPermissions() {
+        // First check without prompting
+        let accessEnabled = AXIsProcessTrusted()
+
+        if accessEnabled {
+            print("✅ Accessibility access already granted")
+            return
+        }
+
+        print("⚠️ Accessibility access required")
+
+        // Check if we should show the system prompt
         let options: NSDictionary = [kAXTrustedCheckOptionPrompt.takeRetainedValue(): true]
-        let accessEnabled = AXIsProcessTrustedWithOptions(options)
+        let accessEnabledWithPrompt = AXIsProcessTrustedWithOptions(options)
 
-        if !accessEnabled {
-            print("Accessibility access required")
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                let alert = NSAlert()
-                alert.messageText = "Accessibility Access Required"
-                alert.informativeText = "BangoCat needs accessibility access to detect your keyboard input. Please grant access in System Preferences."
-                alert.alertStyle = .warning
-                alert.addButton(withTitle: "Open System Preferences")
-                alert.addButton(withTitle: "Continue")
-
-                let response = alert.runModal()
-                if response == .alertFirstButtonReturn {
-                    NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!)
+        if !accessEnabledWithPrompt {
+            // Give the system a moment to show the system dialog first
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                // Only show our custom dialog if system dialog didn't handle it
+                if !AXIsProcessTrusted() {
+                    self.showAccessibilityAlert()
                 }
             }
-        } else {
-            print("Accessibility access already granted")
+        }
+    }
+
+    private func showAccessibilityAlert() {
+        let alert = NSAlert()
+        alert.messageText = "Accessibility Access Required"
+        alert.informativeText = """
+        BangoCat needs accessibility access to detect your keyboard input.
+
+        If you already granted access but still see this message, try:
+        1. Remove BangoCat from Accessibility list in System Preferences
+        2. Re-add it by running the app again
+
+        This happens when running from different build locations.
+        """
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: "Open System Preferences")
+        alert.addButton(withTitle: "Continue Anyway")
+
+        let response = alert.runModal()
+        if response == .alertFirstButtonReturn {
+            NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!)
         }
     }
 
@@ -483,13 +508,22 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
     }
 
+    @objc private func buyMeACoffee() {
+        if let url = URL(string: "https://coff.ee/valentinrudloff") {
+            NSWorkspace.shared.open(url)
+            print("Opening Buy me a coffee: https://coff.ee/valentinrudloff")
+        } else {
+            print("Failed to create URL for Buy me a coffee")
+        }
+    }
+
     @objc private func quitApp() {
         NSApplication.shared.terminate(self)
     }
 
     // MARK: - Version Information
 
-    private func getVersionString() -> String {
+    internal func getVersionString() -> String {
         // Try to get version from bundle first, fallback to hardcoded
         if let bundleVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String,
            let bundleBuild = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String {
@@ -499,7 +533,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
     }
 
-    private func getBundleIdentifier() -> String {
+    internal func getBundleIdentifier() -> String {
         return Bundle.main.bundleIdentifier ?? "com.bangocat.mac"
     }
 
@@ -552,6 +586,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     func visitWebsitePublic() {
         visitWebsite()
+    }
+
+    func buyMeACoffeePublic() {
+        buyMeACoffee()
     }
 
     func showCreditsPublic() {
@@ -939,7 +977,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     // MARK: - Per-App Position Management
 
-    private func getCurrentActiveApp() -> String {
+    internal func getCurrentActiveApp() -> String {
         if let frontmostApp = NSWorkspace.shared.frontmostApplication {
             let bundleID = frontmostApp.bundleIdentifier ?? "unknown"
             let appName = frontmostApp.localizedName ?? "Unknown App"
@@ -949,7 +987,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         return "unknown"
     }
 
-    private func loadPerAppPositioning() {
+    internal func loadPerAppPositioning() {
         // Load per-app positioning preference
         if UserDefaults.standard.object(forKey: perAppPositioningKey) != nil {
             isPerAppPositioningEnabled = UserDefaults.standard.bool(forKey: perAppPositioningKey)
@@ -972,7 +1010,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         print("Loaded per-app positioning - enabled: \(isPerAppPositioningEnabled), positions: \(perAppPositions)")
     }
 
-    private func savePerAppPositioning() {
+    internal func savePerAppPositioning() {
         UserDefaults.standard.set(isPerAppPositioningEnabled, forKey: perAppPositioningKey)
 
         // Convert NSPoint dictionary to saveable format
@@ -1006,7 +1044,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
     }
 
-        private func handleAppSwitch(from oldApp: String, to newApp: String) {
+        internal func handleAppSwitch(from oldApp: String, to newApp: String) {
         // Save current position for the old app (if it's not "unknown")
         if oldApp != "unknown", let currentPosition = overlayWindow?.window?.frame.origin {
             perAppPositions[oldApp] = currentPosition
@@ -1026,7 +1064,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         savePerAppPositioning()
     }
 
-    @objc private func togglePerAppPositioning() {
+    @objc internal func togglePerAppPositioning() {
         isPerAppPositioningEnabled.toggle()
         savePerAppPositioning()
 

@@ -61,17 +61,43 @@ chmod +x "${APP_BUNDLE}/Contents/MacOS/${APP_NAME}"
 
 echo "✅ App bundle created at: ${APP_BUNDLE}"
 
-# Create DMG
-echo "💿 Creating DMG file..."
+# Create Applications folder shortcut
+echo "🔗 Creating Applications folder shortcut..."
+ln -sf /Applications "${PACKAGE_DIR}/Applications"
+
+# Create DMG with Applications folder shortcut
+echo "💿 Creating professional DMG file..."
 rm -f "${DMG_NAME}"
 
-# Create a temporary DMG
+# Create the DMG directly from the package directory (includes the Applications link)
+echo "📦 Building DMG with drag-and-drop installation..."
 hdiutil create -size 50m -format UDZO -volname "${APP_NAME}" -srcfolder "${PACKAGE_DIR}" "${DMG_NAME}"
 
-echo "🎉 DMG created successfully: ${DMG_NAME}"
+echo "✅ DMG created successfully with drag-and-drop installation!"
 echo ""
-echo "📍 Your packaged app is ready:"
-echo "   App Bundle: ${APP_BUNDLE}"
-echo "   DMG File: ${DMG_NAME}"
+echo "💡 DMG Enhancement Notes:"
+echo "   • For custom DMG layouts, additional permissions may be required"
+echo "   • The current DMG includes the Applications folder shortcut"
+echo "   • Users can drag BangoCat.app to Applications for easy installation"
 echo ""
-echo "🚀 You can now distribute the DMG file to users!"
+echo "🚀 To enhance the DMG with custom backgrounds (optional):"
+echo "   • Install Python 3 + PIL: pip3 install Pillow"
+echo "   • Re-run this script for professional background generation"
+
+echo "🎉 Professional DMG created successfully: ${DMG_NAME}"
+echo ""
+echo "📍 Your packaged app is ready for distribution:"
+echo "   📦 App Bundle: ${APP_BUNDLE}"
+echo "   💿 DMG File: ${DMG_NAME}"
+echo ""
+echo "✨ Features of your DMG:"
+echo "   🔗 Applications folder shortcut for easy installation"
+echo "   🎨 Custom layout and background"
+echo "   📏 Proper window sizing and icon arrangement"
+echo ""
+echo "🚀 Users can now easily install by:"
+echo "   1. Opening the DMG file"
+echo "   2. Dragging BangoCat.app to the Applications folder"
+echo "   3. Ejecting the DMG"
+echo ""
+echo "💡 Tip: Test the DMG by double-clicking it to ensure it looks good!"

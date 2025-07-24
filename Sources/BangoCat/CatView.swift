@@ -6,11 +6,16 @@ class StrokeCounter: ObservableObject {
     @Published private(set) var keystrokes: Int = 0
     @Published private(set) var mouseClicks: Int = 0
 
-    private let strokesKey = "BangoCatTotalStrokes"
-    private let keystrokesKey = "BangoCatKeystrokes"
-    private let mouseClicksKey = "BangoCatMouseClicks"
+    private let strokesKey: String
+    private let keystrokesKey: String
+    private let mouseClicksKey: String
 
-    init() {
+    init(strokesKey: String = "BangoCatTotalStrokes",
+         keystrokesKey: String = "BangoCatKeystrokes",
+         mouseClicksKey: String = "BangoCatMouseClicks") {
+        self.strokesKey = strokesKey
+        self.keystrokesKey = keystrokesKey
+        self.mouseClicksKey = mouseClicksKey
         loadSavedCounts()
     }
 
@@ -36,14 +41,14 @@ class StrokeCounter: ObservableObject {
         print("🔢 Stroke counter reset")
     }
 
-    private func loadSavedCounts() {
+    internal func loadSavedCounts() {
         totalStrokes = UserDefaults.standard.integer(forKey: strokesKey)
         keystrokes = UserDefaults.standard.integer(forKey: keystrokesKey)
         mouseClicks = UserDefaults.standard.integer(forKey: mouseClicksKey)
         print("🔢 Loaded stroke counts - Total: \(totalStrokes), Keys: \(keystrokes), Mouse: \(mouseClicks)")
     }
 
-    private func saveCounts() {
+    internal func saveCounts() {
         UserDefaults.standard.set(totalStrokes, forKey: strokesKey)
         UserDefaults.standard.set(keystrokes, forKey: keystrokesKey)
         UserDefaults.standard.set(mouseClicks, forKey: mouseClicksKey)
@@ -582,6 +587,10 @@ struct CatView: View {
                             }
 
                             Divider()
+
+                            Button("Buy me a coffee ☕") {
+                                animationController.appDelegate?.buyMeACoffeePublic()
+                            }
 
                             Button("Visit Website") {
                                 animationController.appDelegate?.visitWebsitePublic()
