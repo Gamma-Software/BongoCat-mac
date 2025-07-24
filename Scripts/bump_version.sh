@@ -35,6 +35,9 @@ show_usage() {
     echo "This script will:"
     echo "  • Update Info.plist version strings"
     echo "  • Update hardcoded versions in Swift source"
+    echo "  • Update package_app.sh VERSION variable"
+    echo "  • Update DMG background Python script version"
+    echo "  • Update README.md version badge"
     echo "  • Optionally create a git tag"
     echo "  • Show a summary of changes"
 }
@@ -75,6 +78,34 @@ if [ ! -f "$PROJECT_ROOT/Package.swift" ]; then
     exit 1
 fi
 
+# Function to create backup and restore on failure
+backup_files=()
+create_backup() {
+    local file="$1"
+    if [ -f "$file" ]; then
+        cp "$file" "$file.backup"
+        backup_files+=("$file")
+        echo "📋 Created backup: $file.backup"
+    fi
+}
+
+cleanup_backups() {
+    for file in "${backup_files[@]}"; do
+        if [ -f "$file.backup" ]; then
+            rm "$file.backup"
+        fi
+    done
+}
+
+restore_backups() {
+    for file in "${backup_files[@]}"; do
+        if [ -f "$file.backup" ]; then
+            mv "$file.backup" "$file"
+            print_warning "Restored backup: $file"
+        fi
+    done
+}
+
 # Update Info.plist
 print_info "Updating Info.plist..."
 INFO_PLIST="$PROJECT_ROOT/Info.plist"
@@ -84,15 +115,14 @@ if [ ! -f "$INFO_PLIST" ]; then
     exit 1
 fi
 
-# Backup Info.plist
-cp "$INFO_PLIST" "$INFO_PLIST.backup"
+create_backup "$INFO_PLIST"
 
 # Update CFBundleShortVersionString (version)
 if /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" "$INFO_PLIST" 2>/dev/null; then
     print_success "Updated CFBundleShortVersionString to $VERSION"
 else
     print_error "Failed to update CFBundleShortVersionString"
-    mv "$INFO_PLIST.backup" "$INFO_PLIST"
+    restore_backups
     exit 1
 fi
 
@@ -101,7 +131,7 @@ if /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD" "$INFO_PLIST" 2>/dev
     print_success "Updated CFBundleVersion to $BUILD"
 else
     print_error "Failed to update CFBundleVersion"
-    mv "$INFO_PLIST.backup" "$INFO_PLIST"
+    restore_backups
     exit 1
 fi
 
@@ -111,20 +141,18 @@ SWIFT_FILE="$PROJECT_ROOT/Sources/BangoCat/BangoCatApp.swift"
 
 if [ ! -f "$SWIFT_FILE" ]; then
     print_error "Swift source file not found at $SWIFT_FILE"
-    mv "$INFO_PLIST.backup" "$INFO_PLIST"
+    restore_backups
     exit 1
 fi
 
-# Backup Swift file
-cp "$SWIFT_FILE" "$SWIFT_FILE.backup"
+create_backup "$SWIFT_FILE"
 
 # Update hardcoded version in Swift
 if sed -i '' "s/private let appVersion = \"[^\"]*\"/private let appVersion = \"$VERSION\"/" "$SWIFT_FILE"; then
     print_success "Updated appVersion in Swift to $VERSION"
 else
     print_error "Failed to update appVersion in Swift"
-    mv "$INFO_PLIST.backup" "$INFO_PLIST"
-    mv "$SWIFT_FILE.backup" "$SWIFT_FILE"
+    restore_backups
     exit 1
 fi
 
@@ -133,13 +161,66 @@ if sed -i '' "s/private let appBuild = \"[^\"]*\"/private let appBuild = \"$BUIL
     print_success "Updated appBuild in Swift to $BUILD"
 else
     print_error "Failed to update appBuild in Swift"
-    mv "$INFO_PLIST.backup" "$INFO_PLIST"
-    mv "$SWIFT_FILE.backup" "$SWIFT_FILE"
+    restore_backups
     exit 1
 fi
 
+# Update package_app.sh VERSION variable
+print_info "Updating package_app.sh..."
+PACKAGE_SCRIPT="$PROJECT_ROOT/Scripts/package_app.sh"
+
+if [ ! -f "$PACKAGE_SCRIPT" ]; then
+    print_warning "package_app.sh not found at $PACKAGE_SCRIPT, skipping..."
+else
+    create_backup "$PACKAGE_SCRIPT"
+
+    if sed -i '' "s/VERSION=\"[^\"]*\"/VERSION=\"$VERSION\"/" "$PACKAGE_SCRIPT"; then
+        print_success "Updated VERSION in package_app.sh to $VERSION"
+    else
+        print_error "Failed to update VERSION in package_app.sh"
+        restore_backups
+        exit 1
+    fi
+fi
+
+# Update DMG background Python script
+print_info "Updating DMG background script..."
+DMG_SCRIPT="$PROJECT_ROOT/Assets/DMG/create_background.py"
+
+if [ ! -f "$DMG_SCRIPT" ]; then
+    print_warning "create_background.py not found at $DMG_SCRIPT, skipping..."
+else
+    create_backup "$DMG_SCRIPT"
+
+    if sed -i '' "s/version_text = \"v[^\"]*\"/version_text = \"v$VERSION\"/" "$DMG_SCRIPT"; then
+        print_success "Updated version_text in create_background.py to v$VERSION"
+    else
+        print_error "Failed to update version_text in create_background.py"
+        restore_backups
+        exit 1
+    fi
+fi
+
+# Update README.md version badge
+print_info "Updating README.md version badge..."
+README_FILE="$PROJECT_ROOT/README.md"
+
+if [ ! -f "$README_FILE" ]; then
+    print_warning "README.md not found at $README_FILE, skipping..."
+else
+    create_backup "$README_FILE"
+
+    if sed -i '' "s/Version-[0-9]\+\.[0-9]\+\.[0-9]\+-blue/Version-$VERSION-blue/" "$README_FILE"; then
+        print_success "Updated version badge in README.md to $VERSION"
+    else
+        print_error "Failed to update version badge in README.md"
+        restore_backups
+        exit 1
+    fi
+fi
+
 # Remove backup files if everything succeeded
-rm "$INFO_PLIST.backup" "$SWIFT_FILE.backup"
+cleanup_backups
 
 print_success "All version updates completed successfully!"
 echo ""
@@ -151,6 +232,9 @@ echo "• Info.plist → CFBundleShortVersionString: $VERSION"
 echo "• Info.plist → CFBundleVersion: $BUILD"
 echo "• Swift code → appVersion: $VERSION"
 echo "• Swift code → appBuild: $BUILD"
+echo "• package_app.sh → VERSION: $VERSION"
+echo "• create_background.py → version_text: v$VERSION"
+echo "• README.md → version badge: $VERSION"
 echo ""
 
 # Ask about git tag
