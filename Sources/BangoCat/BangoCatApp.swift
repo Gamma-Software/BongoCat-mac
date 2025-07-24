@@ -533,41 +533,76 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
     }
 
-    @objc private func viewChangelog() {
-        // Try to find the CHANGELOG.md file in various locations
+        @objc private func viewChangelog() {
+        // Try to find and read the CHANGELOG.md file
         let possiblePaths = [
             "CHANGELOG.md",
             "./CHANGELOG.md",
             Bundle.main.path(forResource: "CHANGELOG", ofType: "md")
         ]
 
-        var changelogPath: String?
+        var changelogContent: String?
+        var foundPath: String?
 
-        // Check each possible path
+        // Check each possible path and try to read content
         for path in possiblePaths.compactMap({ $0 }) {
             if FileManager.default.fileExists(atPath: path) {
-                changelogPath = path
-                break
+                do {
+                    changelogContent = try String(contentsOfFile: path, encoding: .utf8)
+                    foundPath = path
+                    break
+                } catch {
+                    print("Failed to read changelog from \(path): \(error)")
+                }
             }
         }
 
-        // Try to get the current working directory path as fallback
-        if changelogPath == nil {
+        // Try current working directory as fallback
+        if changelogContent == nil {
             let currentDir = FileManager.default.currentDirectoryPath
             let currentDirPath = "\(currentDir)/CHANGELOG.md"
             if FileManager.default.fileExists(atPath: currentDirPath) {
-                changelogPath = currentDirPath
+                do {
+                    changelogContent = try String(contentsOfFile: currentDirPath, encoding: .utf8)
+                    foundPath = currentDirPath
+                } catch {
+                    print("Failed to read changelog from \(currentDirPath): \(error)")
+                }
             }
         }
 
-        if let path = changelogPath {
-            let url = URL(fileURLWithPath: path)
-            NSWorkspace.shared.open(url)
-            print("Opening changelog: \(path)")
+        // Create and show the changelog window
+        let alert = NSAlert()
+        alert.messageText = "BangoCat Changelog"
+
+        if let content = changelogContent, let path = foundPath {
+            // Successfully read the changelog file
+            print("Displaying changelog from: \(path)")
+
+            // Create a scrollable text view for the changelog content
+            let scrollView = NSScrollView(frame: NSRect(x: 0, y: 0, width: 600, height: 400))
+            scrollView.hasVerticalScroller = true
+            scrollView.hasHorizontalScroller = false
+            scrollView.autohidesScrollers = false
+
+            let textView = NSTextView(frame: scrollView.bounds)
+            textView.isEditable = false
+            textView.isSelectable = true
+            textView.font = NSFont.monospacedSystemFont(ofSize: 12, weight: .regular)
+            textView.string = content
+            textView.isVerticallyResizable = true
+            textView.isHorizontallyResizable = false
+            textView.textContainer?.widthTracksTextView = true
+            textView.textContainer?.containerSize = NSSize(width: scrollView.bounds.width, height: CGFloat.greatestFiniteMagnitude)
+
+            scrollView.documentView = textView
+            alert.accessoryView = scrollView
+
+            alert.informativeText = "Full changelog loaded from \(path)"
+            alert.addButton(withTitle: "OK")
+            alert.addButton(withTitle: "Visit Repository")
         } else {
-            // If file not found, show an alert with recent changes information
-            let alert = NSAlert()
-            alert.messageText = "Changelog"
+            // Fallback to summary if file not found
             alert.informativeText = """
             📋 BangoCat v\(getVersionString()) - Recent Changes:
 
@@ -587,16 +622,39 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
             For complete changelog, visit the project repository.
             """
-            alert.alertStyle = .informational
-            alert.addButton(withTitle: "Visit Repository")
             alert.addButton(withTitle: "OK")
+            alert.addButton(withTitle: "Visit Repository")
+        }
 
-            let response = alert.runModal()
-            if response == .alertFirstButtonReturn {
-                if let url = URL(string: "https://github.com/Gamma-Software/BangoCat-mac/blob/develop/CHANGELOG.md") {
-                    NSWorkspace.shared.open(url)
-                    print("Opening online changelog")
-                }
+        alert.alertStyle = .informational
+
+        // Try to set the app icon if available
+        if let iconImage = loadStatusBarIcon() {
+            let dialogIconSize = NSSize(width: 64, height: 64)
+            let dialogIcon = NSImage(size: dialogIconSize)
+
+            dialogIcon.lockFocus()
+            let context = NSGraphicsContext.current
+            context?.imageInterpolation = .high
+
+            iconImage.draw(in: NSRect(origin: .zero, size: dialogIconSize),
+                          from: NSRect(origin: .zero, size: iconImage.size),
+                          operation: .sourceOver,
+                          fraction: 1.0)
+            dialogIcon.unlockFocus()
+
+            alert.icon = dialogIcon
+        }
+
+        let response = alert.runModal()
+
+        // Handle button responses
+        if (changelogContent != nil && response == .alertSecondButtonReturn) ||
+           (changelogContent == nil && response == .alertSecondButtonReturn) {
+            // "Visit Repository" button clicked
+            if let url = URL(string: "https://github.com/Gamma-Software/BangoCat-mac/blob/develop/CHANGELOG.md") {
+                NSWorkspace.shared.open(url)
+                print("Opening online changelog")
             }
         }
     }
