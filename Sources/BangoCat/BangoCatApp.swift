@@ -184,6 +184,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Buy me a coffee ☕", action: #selector(buyMeACoffee), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "Visit Website", action: #selector(visitWebsite), keyEquivalent: ""))
+        menu.addItem(NSMenuItem(title: "Report a Bug 🐛", action: #selector(reportBug), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "About BangoCat", action: #selector(showCredits), keyEquivalent: ""))
 
         // Version info
@@ -448,6 +449,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         Created with ❤️ by \(appAuthor)
         Website: \(appWebsite)
+        🐛 Report Bug: github.com/Gamma-Software/BangoCat-mac/issues/new
 
         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -468,6 +470,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         """
         alert.alertStyle = .informational
         alert.addButton(withTitle: "Visit Website")
+        alert.addButton(withTitle: "Report Bug")
         alert.addButton(withTitle: "OK")
 
         // Try to set the app icon if available
@@ -495,8 +498,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         if response == .alertFirstButtonReturn {
             // "Visit Website" button clicked
             visitWebsite()
+        } else if response == .alertSecondButtonReturn {
+            // "Report Bug" button clicked
+            reportBug()
         }
-        // .alertSecondButtonReturn would be "OK" button - no action needed
+        // .alertThirdButtonReturn would be "OK" button - no action needed
     }
 
     @objc private func visitWebsite() {
@@ -514,6 +520,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             print("Opening Buy me a coffee: https://coff.ee/valentinrudloff")
         } else {
             print("Failed to create URL for Buy me a coffee")
+        }
+    }
+
+    @objc private func reportBug() {
+        if let url = URL(string: "https://github.com/Gamma-Software/BangoCat-mac/issues/new") {
+            NSWorkspace.shared.open(url)
+            print("Opening bug report: https://github.com/Gamma-Software/BangoCat-mac/issues/new")
+        } else {
+            print("Failed to create URL for bug report")
         }
     }
 
@@ -590,6 +605,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     func buyMeACoffeePublic() {
         buyMeACoffee()
+    }
+
+    func reportBugPublic() {
+        reportBug()
     }
 
     func showCreditsPublic() {

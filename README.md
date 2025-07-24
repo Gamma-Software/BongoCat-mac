@@ -116,7 +116,7 @@ The **standout feature** that sets BangoCat apart:
 ### 📥 Download Options
 
 #### **🎯 Ready-to-Use (Recommended)**
-1. Download the latest `BangoCat-*.dmg` from [Releases](https://github.com/your-username/BangoCat-mac/releases)
+1. Download the latest `BangoCat-*.dmg` from [Releases](https://github.com/Gamma-Software/BangoCat-mac/releases)
 2. Open the DMG and drag BangoCat to Applications
 3. Launch BangoCat from Applications or Spotlight
 4. Grant accessibility permissions when prompted
@@ -127,7 +127,7 @@ Perfect for developers or those who want the latest features:
 ### Building from Source
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/BangoCat-mac.git
+git clone https://github.com/Gamma-Software/BangoCat-mac.git
 cd BangoCat-mac
 
 # Quick build and test
@@ -296,7 +296,7 @@ Have a feature request? We'd love to hear it! Open an issue with the `enhancemen
 We welcome contributions from the community! Here's how you can help:
 
 #### **🐛 Bug Reports**
-- Use the issue tracker for bug reports
+- [Report a bug](https://github.com/Gamma-Software/BangoCat-mac/issues/new) using our issue tracker
 - Include macOS version, BangoCat version, and steps to reproduce
 - Screenshots/screen recordings are super helpful
 
@@ -380,7 +380,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 If you love BangoCat, please give us a star on GitHub! It helps others discover the project.
 
 ### 🐛 **Report Issues**
-Found a bug? Have a suggestion? [Open an issue](https://github.com/your-username/BangoCat-mac/issues) - we read every one!
+Found a bug? Have a suggestion? [Report a bug](https://github.com/Gamma-Software/BangoCat-mac/issues/new) - we read every one!
 
 ### 📢 **Spread the Word**
 - Share BangoCat with fellow developers, streamers, and cat lovers
@@ -398,7 +398,7 @@ Whether it's code, documentation, or just ideas - every contribution makes Bango
 
 *Bringing joy to developers, streamers, and cat lovers everywhere* 🐱
 
-[🌐 Website](https://valentin.pival.fr) • [🐛 Issues](https://github.com/your-username/BangoCat-mac/issues) • [📖 Documentation](Scripts/README.md) • [📦 Releases](https://github.com/your-username/BangoCat-mac/releases)
+[🌐 Website](https://valentin.pival.fr) • [🐛 Report a Bug](https://github.com/Gamma-Software/BangoCat-mac/issues/new) • [📖 Documentation](Scripts/README.md) • [📦 Releases](https://github.com/Gamma-Software/BangoCat-mac/releases)
 
 </div>
 

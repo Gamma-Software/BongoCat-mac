@@ -596,6 +596,10 @@ struct CatView: View {
                                 animationController.appDelegate?.visitWebsitePublic()
                             }
 
+                            Button("Report a Bug 🐛") {
+                                animationController.appDelegate?.reportBugPublic()
+                            }
+
                             Button("About BangoCat") {
                                 animationController.appDelegate?.showCreditsPublic()
                             }
