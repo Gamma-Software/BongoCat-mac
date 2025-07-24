@@ -667,6 +667,10 @@ struct CatView: View {
                                 animationController.appDelegate?.visitWebsitePublic()
                             }
 
+                            Button("View Changelog 📋") {
+                                animationController.appDelegate?.viewChangelogPublic()
+                            }
+
                             Button("Report a Bug 🐛") {
                                 animationController.appDelegate?.reportBugPublic()
                             }

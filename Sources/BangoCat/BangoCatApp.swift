@@ -184,6 +184,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Buy me a coffee ☕", action: #selector(buyMeACoffee), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "Visit Website", action: #selector(visitWebsite), keyEquivalent: ""))
+        menu.addItem(NSMenuItem(title: "View Changelog 📋", action: #selector(viewChangelog), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "Report a Bug 🐛", action: #selector(reportBug), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "About BangoCat", action: #selector(showCredits), keyEquivalent: ""))
 
@@ -532,6 +533,74 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
     }
 
+    @objc private func viewChangelog() {
+        // Try to find the CHANGELOG.md file in various locations
+        let possiblePaths = [
+            "CHANGELOG.md",
+            "./CHANGELOG.md",
+            Bundle.main.path(forResource: "CHANGELOG", ofType: "md")
+        ]
+
+        var changelogPath: String?
+
+        // Check each possible path
+        for path in possiblePaths.compactMap({ $0 }) {
+            if FileManager.default.fileExists(atPath: path) {
+                changelogPath = path
+                break
+            }
+        }
+
+        // Try to get the current working directory path as fallback
+        if changelogPath == nil {
+            let currentDir = FileManager.default.currentDirectoryPath
+            let currentDirPath = "\(currentDir)/CHANGELOG.md"
+            if FileManager.default.fileExists(atPath: currentDirPath) {
+                changelogPath = currentDirPath
+            }
+        }
+
+        if let path = changelogPath {
+            let url = URL(fileURLWithPath: path)
+            NSWorkspace.shared.open(url)
+            print("Opening changelog: \(path)")
+        } else {
+            // If file not found, show an alert with recent changes information
+            let alert = NSAlert()
+            alert.messageText = "Changelog"
+            alert.informativeText = """
+            📋 BangoCat v\(getVersionString()) - Recent Changes:
+
+            🎯 Latest Features:
+            • Keyboard layout-based paw mapping for realistic typing
+            • Enhanced bug reporting and debugging features
+            • Per-app positioning - cat remembers positions for each app
+            • Comprehensive stroke counter with persistent statistics
+            • Advanced visual customization (scale, rotation, flip)
+            • Professional menu system with all settings accessible
+
+            🏗️ Technical Improvements:
+            • Native Swift/SwiftUI implementation
+            • Optimized performance and resource usage
+            • Enhanced accessibility permissions handling
+            • Professional DMG packaging and distribution
+
+            For complete changelog, visit the project repository.
+            """
+            alert.alertStyle = .informational
+            alert.addButton(withTitle: "Visit Repository")
+            alert.addButton(withTitle: "OK")
+
+            let response = alert.runModal()
+            if response == .alertFirstButtonReturn {
+                if let url = URL(string: "https://github.com/Gamma-Software/BangoCat-mac/blob/develop/CHANGELOG.md") {
+                    NSWorkspace.shared.open(url)
+                    print("Opening online changelog")
+                }
+            }
+        }
+    }
+
     @objc private func quitApp() {
         NSApplication.shared.terminate(self)
     }
@@ -609,6 +678,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     func reportBugPublic() {
         reportBug()
+    }
+
+    func viewChangelogPublic() {
+        viewChangelog()
     }
 
     func showCreditsPublic() {
