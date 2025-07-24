@@ -58,7 +58,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let perAppPositionsKey = "BangoCatPerAppPositions"
     internal var currentActiveApp: String = ""
     private var appSwitchTimer: Timer?
-    internal var isPerAppPositioningEnabled: Bool = false
+    internal var isPerAppPositioningEnabled: Bool = true
     private let perAppPositioningKey = "BangoCatPerAppPositioning"
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
