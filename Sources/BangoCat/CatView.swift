@@ -92,12 +92,69 @@ class CatAnimationController: ObservableObject {
     let strokeCounter = StrokeCounter()
 
     private var animationTimer: Timer?
-    private var useLeftPaw: Bool = true  // Track which paw to use next
     private var lastPressedKey: String = ""  // Track the last pressed key
-    private var keyToPawMapping: [String: Bool] = [:]  // Track which paw each key uses (true = left, false = right)
     private var lastPawDownTime: Date = Date()  // Track when paw went down
     private var minimumAnimationDuration: TimeInterval = 0.1  // Minimum animation duration
     private var keyHeldDown: Bool = false  // Track if a key is currently held down
+
+    // MARK: - Keyboard Layout-Based Paw Mapping
+    private let leftPawKeys: Set<String> = [
+        // Numbers (left side)
+        "1", "2", "3", "4", "5",
+        // Top row (left side)
+        "q", "w", "e", "r", "t",
+        "Q", "W", "E", "R", "T",
+        // Middle row (left side)
+        "a", "s", "d", "f", "g",
+        "A", "S", "D", "F", "G",
+        // Bottom row (left side)
+        "z", "x", "c", "v", "b",
+        "Z", "X", "C", "V", "B",
+        // Special keys typically used by left hand
+        "\t",    // Tab
+        " ",     // Space (left thumb)
+        "`", "~", // Backtick/Tilde
+        "-", "_", // Minus/Underscore (though on right side, often typed with left pinky)
+                                // Special keys (left side)
+        "Escape", "ESC", "esc",     // Escape key
+        // Modifier key symbols (if they come through as characters)
+        "⇧", "shift", "Shift",     // Shift (left)
+        "⌃", "ctrl", "Ctrl", "control", "Control",   // Control (left)
+        "⌥", "alt", "Alt", "option", "Option",       // Option/Alt (left)
+        "⌘", "cmd", "Cmd", "command", "Command",     // Command (left)
+    ]
+
+    private let rightPawKeys: Set<String> = [
+        // Numbers (right side)
+        "6", "7", "8", "9", "0",
+        // Top row (right side)
+        "y", "u", "i", "o", "p",
+        "Y", "U", "I", "O", "P",
+        // Middle row (right side)
+        "h", "j", "k", "l",
+        "H", "J", "K", "L",
+        // Bottom row (right side)
+        "n", "m",
+        "N", "M",
+        // Punctuation typically typed with right hand
+        ";", ":", "'", "\"",
+        ",", "<", ".", ">", "/", "?",
+        "[", "{", "]", "}", "\\", "|",
+        "=", "+",
+        // Special keys
+        "\r",    // Enter/Return
+        "\u{7f}", // Delete/Backspace
+        "\u{8}",  // Backspace (alternative code)
+        // Arrow keys (typically right hand)
+        "←", "→", "↑", "↓",           // Arrow symbols
+        // Page navigation keys (typically right hand)
+        "Home", "End", "PageUp", "PageDown",
+        // Modifier keys (right side) - if they come through as text
+        "⇧R", "shiftR", "ShiftR",     // Right Shift
+        "⌃R", "ctrlR", "CtrlR",       // Right Control
+        "⌥R", "altR", "AltR",         // Right Option/Alt
+        "⌘R", "cmdR", "CmdR",         // Right Command
+    ]
 
     func updateViewScale(_ newScale: Double) {
         viewScale = newScale
@@ -122,6 +179,30 @@ class CatAnimationController: ObservableObject {
     func setIgnoreClicksEnabled(_ enabled: Bool) {
         ignoreClicksEnabled = enabled
         print("Ignore clicks \(enabled ? "enabled" : "disabled")")
+    }
+
+    // MARK: - Keyboard Layout-Based Paw Assignment
+    private func getPawForKey(_ key: String) -> Bool {
+        // Check if key is in left paw set
+        if leftPawKeys.contains(key) {
+            return true  // Left paw
+        }
+        // Check if key is in right paw set
+        else if rightPawKeys.contains(key) {
+            return false  // Right paw
+        }
+        // For unknown keys, use a simple rule based on first character
+        else {
+            // For special characters or unknown keys, try to be smart about assignment
+            let firstChar = key.first ?? "a"
+            let asciiValue = firstChar.asciiValue ?? 97
+
+            // Use ASCII value to determine paw (even = left, odd = right)
+            // This ensures consistent assignment for unknown keys
+            let isLeftPaw = (asciiValue % 2 == 0)
+            print("🎯 Unknown key '\(key)' - assigning to \(isLeftPaw ? "left" : "right") paw based on ASCII value")
+            return isLeftPaw
+        }
     }
 
     func triggerAnimation(for inputType: InputType) {
@@ -199,25 +280,15 @@ class CatAnimationController: ObservableObject {
         // Record the time when paw goes down
         lastPawDownTime = Date()
 
-        // Check if this key has been used before
-        let pawToUse: Bool
-        if let existingPaw = keyToPawMapping[key] {
-            // Same key pressed again - use the same paw
-            pawToUse = existingPaw
-            print("🎯 Same key '\(key)' pressed again - using same paw: \(pawToUse ? "left" : "right")")
-        } else {
-            // New key - use the next available paw and store the mapping
-            pawToUse = useLeftPaw
-            keyToPawMapping[key] = pawToUse
-            useLeftPaw.toggle()  // Alternate for the next new key
-            print("🎯 New key '\(key)' pressed - assigning \(pawToUse ? "left" : "right") paw")
-        }
+        // Determine which paw to use based on keyboard layout
+        let pawToUse = getPawForKey(key)
+        let pawName = pawToUse ? "left" : "right"
+        let handSide = pawToUse ? "left side" : "right side"
+
+        print("🎯 Key '\(key)' on \(handSide) of keyboard - using \(pawName) paw")
 
         // Set the appropriate paw state
         let pawState: CatState = pawToUse ? .leftPawDown : .rightPawDown
-        let pawName = pawToUse ? "left" : "right"
-
-        print("🎯 Setting \(pawName) paw down for key '\(key)'")
         currentState = pawState
 
         // Store the last pressed key
