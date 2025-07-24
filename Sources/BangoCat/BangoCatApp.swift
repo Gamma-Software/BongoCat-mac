@@ -48,6 +48,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var clickThroughEnabled: Bool = true  // Default enabled
     private let clickThroughKey = "BangoCatClickThrough"
 
+    // Paw behavior management
+    private var pawBehaviorMode: PawBehaviorMode = .keyboardLayout  // Default to keyboard layout
+    private let pawBehaviorKey = "BangoCatPawBehavior"
+
     // Position management - Enhanced for per-app positioning
     private var snapToCornerEnabled: Bool = false
     private let snapToCornerKey = "BangoCatSnapToCorner"
@@ -73,6 +77,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         loadSavedFlip()
         loadIgnoreClicksPreference()
         loadClickThroughPreference()
+        loadPawBehaviorPreference()
         loadPositionPreferences()
         loadPerAppPositioning()
         setupStatusBarItem()
@@ -149,6 +154,18 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         menu.addItem(NSMenuItem.separator())
 
+        // Paw behavior submenu
+        let pawBehaviorSubmenu = NSMenu()
+        pawBehaviorSubmenu.addItem(NSMenuItem(title: "Keyboard Layout", action: #selector(setPawBehaviorKeyboardLayout), keyEquivalent: ""))
+        pawBehaviorSubmenu.addItem(NSMenuItem(title: "Random", action: #selector(setPawBehaviorRandom), keyEquivalent: ""))
+        pawBehaviorSubmenu.addItem(NSMenuItem(title: "Alternating", action: #selector(setPawBehaviorAlternating), keyEquivalent: ""))
+
+        let pawBehaviorMenuItem = NSMenuItem(title: "Paw Behavior", action: nil, keyEquivalent: "")
+        pawBehaviorMenuItem.submenu = pawBehaviorSubmenu
+        menu.addItem(pawBehaviorMenuItem)
+
+        menu.addItem(NSMenuItem.separator())
+
         // Ignore clicks option
         menu.addItem(NSMenuItem(title: "Ignore Clicks", action: #selector(toggleIgnoreClicks), keyEquivalent: ""))
 
@@ -222,6 +239,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         updatePositionMenuItems()
         updateRotationMenuItem()
         updateFlipMenuItem()
+        updatePawBehaviorMenuItems()
         updateIgnoreClicksMenuItem()
         updateClickThroughMenuItem()
         updatePerAppPositioningMenuItem()
@@ -313,6 +331,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         overlayWindow?.updateFlip(isFlippedHorizontally)  // Apply the loaded flip
         overlayWindow?.catAnimationController?.setScaleOnInputEnabled(scaleOnInputEnabled)  // Apply pulse preference
         overlayWindow?.catAnimationController?.setIgnoreClicksEnabled(ignoreClicksEnabled)  // Apply ignore clicks preference
+        overlayWindow?.catAnimationController?.setPawBehaviorMode(pawBehaviorMode)  // Apply paw behavior preference
         overlayWindow?.updateIgnoreMouseEvents(clickThroughEnabled)  // Apply click through preference
 
         // Apply saved position
@@ -400,6 +419,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             isFlippedHorizontally = false
             ignoreClicksEnabled = false
             clickThroughEnabled = true
+            pawBehaviorMode = .keyboardLayout
             savedPosition = NSPoint(x: 100, y: 100)
             currentCornerPosition = .custom
             snapToCornerEnabled = false
@@ -413,6 +433,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             saveFlip()
             saveIgnoreClicksPreference()
             saveClickThroughPreference()
+            savePawBehaviorPreference()
             savePositionPreferences()
             savePerAppPositioning()
 
@@ -422,6 +443,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             overlayWindow?.updateFlip(isFlippedHorizontally)
             overlayWindow?.catAnimationController?.setScaleOnInputEnabled(scaleOnInputEnabled)
             overlayWindow?.catAnimationController?.setIgnoreClicksEnabled(ignoreClicksEnabled)
+            overlayWindow?.catAnimationController?.setPawBehaviorMode(pawBehaviorMode)
             overlayWindow?.updateIgnoreMouseEvents(clickThroughEnabled)
             overlayWindow?.setPositionProgrammatically(savedPosition)
 
@@ -435,6 +457,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             updateFlipMenuItem()
             updateIgnoreClicksMenuItem()
             updateClickThroughMenuItem()
+            updatePawBehaviorMenuItems()
             updatePositionMenuItems()
             updatePerAppPositioningMenuItem()
             updateStrokeCounterMenuItem()
@@ -728,6 +751,18 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         toggleClickThrough()
     }
 
+    func setPawBehaviorKeyboardLayoutPublic() {
+        setPawBehaviorKeyboardLayout()
+    }
+
+    func setPawBehaviorRandomPublic() {
+        setPawBehaviorRandom()
+    }
+
+    func setPawBehaviorAlternatingPublic() {
+        setPawBehaviorAlternating()
+    }
+
     func toggleOverlayPublic() {
         toggleOverlay()
     }
@@ -824,6 +859,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         print("Loaded click through preference: \(clickThroughEnabled)")
     }
 
+    private func loadPawBehaviorPreference() {
+        if let behaviorString = UserDefaults.standard.string(forKey: pawBehaviorKey),
+           let behavior = PawBehaviorMode(rawValue: behaviorString) {
+            pawBehaviorMode = behavior
+        } else {
+            pawBehaviorMode = .keyboardLayout // Default to keyboard layout
+        }
+        print("Loaded paw behavior preference: \(pawBehaviorMode.displayName)")
+    }
+
     private func saveScale() {
         UserDefaults.standard.set(currentScale, forKey: scaleKey)
         print("Saved scale: \(currentScale)")
@@ -852,6 +897,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private func saveClickThroughPreference() {
         UserDefaults.standard.set(clickThroughEnabled, forKey: clickThroughKey)
         print("Saved click through preference: \(clickThroughEnabled)")
+    }
+
+    private func savePawBehaviorPreference() {
+        UserDefaults.standard.set(pawBehaviorMode.rawValue, forKey: pawBehaviorKey)
+        print("Saved paw behavior preference: \(pawBehaviorMode.displayName)")
     }
 
     @objc private func setScale065() {
@@ -975,6 +1025,26 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         print("Click through toggled to: \(clickThroughEnabled)")
     }
 
+    @objc private func setPawBehaviorKeyboardLayout() {
+        setPawBehavior(.keyboardLayout)
+    }
+
+    @objc private func setPawBehaviorRandom() {
+        setPawBehavior(.random)
+    }
+
+    @objc private func setPawBehaviorAlternating() {
+        setPawBehavior(.alternating)
+    }
+
+    private func setPawBehavior(_ behavior: PawBehaviorMode) {
+        pawBehaviorMode = behavior
+        savePawBehaviorPreference()
+        overlayWindow?.catAnimationController?.setPawBehaviorMode(pawBehaviorMode)
+        updatePawBehaviorMenuItems()
+        print("Paw behavior changed to: \(behavior.displayName)")
+    }
+
     // MARK: - Stroke Counter Management
 
     @objc private func resetStrokeCounter() {
@@ -1048,6 +1118,25 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             if item.title == "Click Through (Hold ⌘ to Drag)" {
                 item.state = clickThroughEnabled ? .on : .off
                 break
+            }
+        }
+    }
+
+    private func updatePawBehaviorMenuItems() {
+        guard let menu = statusBarItem?.menu else { return }
+
+        // Find the paw behavior submenu
+        for item in menu.items {
+            if item.title == "Paw Behavior", let submenu = item.submenu {
+                for subItem in submenu.items {
+                    if subItem.title == "Keyboard Layout" {
+                        subItem.state = (pawBehaviorMode == .keyboardLayout) ? .on : .off
+                    } else if subItem.title == "Random" {
+                        subItem.state = (pawBehaviorMode == .random) ? .on : .off
+                    } else if subItem.title == "Alternating" {
+                        subItem.state = (pawBehaviorMode == .alternating) ? .on : .off
+                    }
+                }
             }
         }
     }

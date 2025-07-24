@@ -55,6 +55,17 @@ class StrokeCounter: ObservableObject {
     }
 }
 
+// MARK: - Paw Behavior Modes
+enum PawBehaviorMode: String, CaseIterable {
+    case keyboardLayout = "Keyboard Layout"
+    case random = "Random"
+    case alternating = "Alternating"
+
+    var displayName: String {
+        return self.rawValue
+    }
+}
+
 enum CatState {
     case idle
     case leftPawDown
@@ -84,6 +95,7 @@ class CatAnimationController: ObservableObject {
     @Published var rotation: Double = 0.0  // New rotation property for cat rotation
     @Published var isFlippedHorizontally: Bool = false  // New property for horizontal flip
     @Published var ignoreClicksEnabled: Bool = false  // Control whether to ignore mouse clicks
+    @Published var pawBehaviorMode: PawBehaviorMode = .keyboardLayout  // Control paw behavior mode
 
     // Reference to AppDelegate for context menu actions
     weak var appDelegate: AppDelegate?
@@ -96,6 +108,7 @@ class CatAnimationController: ObservableObject {
     private var lastPawDownTime: Date = Date()  // Track when paw went down
     private var minimumAnimationDuration: TimeInterval = 0.1  // Minimum animation duration
     private var keyHeldDown: Bool = false  // Track if a key is currently held down
+    private var isAlternatingLeft: Bool = true  // Track alternating paw state (starts with left)
 
     // MARK: - Keyboard Layout-Based Paw Mapping
     private let leftPawKeys: Set<String> = [
@@ -181,8 +194,24 @@ class CatAnimationController: ObservableObject {
         print("Ignore clicks \(enabled ? "enabled" : "disabled")")
     }
 
-    // MARK: - Keyboard Layout-Based Paw Assignment
+    func setPawBehaviorMode(_ mode: PawBehaviorMode) {
+        pawBehaviorMode = mode
+        print("Paw behavior mode set to: \(mode.displayName)")
+    }
+
+    // MARK: - Paw Assignment Based on Behavior Mode
     private func getPawForKey(_ key: String) -> Bool {
+        switch pawBehaviorMode {
+        case .keyboardLayout:
+            return getKeyboardLayoutPaw(for: key)
+        case .random:
+            return getRandomPaw(for: key)
+        case .alternating:
+            return getAlternatingPaw()
+        }
+    }
+
+    private func getKeyboardLayoutPaw(for key: String) -> Bool {
         // Check if key is in left paw set
         if leftPawKeys.contains(key) {
             return true  // Left paw
@@ -203,6 +232,19 @@ class CatAnimationController: ObservableObject {
             print("🎯 Unknown key '\(key)' - assigning to \(isLeftPaw ? "left" : "right") paw based on ASCII value")
             return isLeftPaw
         }
+    }
+
+    private func getRandomPaw(for key: String) -> Bool {
+        let isLeftPaw = Bool.random()
+        print("🎲 Random paw for key '\(key)' - using \(isLeftPaw ? "left" : "right") paw")
+        return isLeftPaw
+    }
+
+    private func getAlternatingPaw() -> Bool {
+        let currentPaw = isAlternatingLeft
+        isAlternatingLeft.toggle()  // Switch for next key
+        print("🔄 Alternating paw - using \(currentPaw ? "left" : "right") paw")
+        return currentPaw
     }
 
     func triggerAnimation(for inputType: InputType) {
@@ -614,6 +656,21 @@ struct CatView: View {
                             Button(animationController.isFlippedHorizontally ? "Unflip Horizontally" : "Flip Horizontally") {
                                 print("🔧 Context menu: Toggling horizontal flip, appDelegate: \(animationController.appDelegate != nil)")
                                 animationController.appDelegate?.toggleHorizontalFlipPublic()
+                            }
+
+                            Menu("Paw Behavior") {
+                                Button("Keyboard Layout") {
+                                    print("🔧 Context menu: Setting paw behavior to keyboard layout")
+                                    animationController.appDelegate?.setPawBehaviorKeyboardLayoutPublic()
+                                }
+                                Button("Random") {
+                                    print("🔧 Context menu: Setting paw behavior to random")
+                                    animationController.appDelegate?.setPawBehaviorRandomPublic()
+                                }
+                                Button("Alternating") {
+                                    print("🔧 Context menu: Setting paw behavior to alternating")
+                                    animationController.appDelegate?.setPawBehaviorAlternatingPublic()
+                                }
                             }
 
                             Button(animationController.ignoreClicksEnabled ? "Enable Clicks" : "Ignore Clicks") {
