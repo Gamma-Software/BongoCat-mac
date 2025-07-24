@@ -1,6 +1,78 @@
 import Cocoa
 import SwiftUI
 
+class TouchDetectionView: NSView {
+    weak var catAnimationController: CatAnimationController?
+    private var activeTouchCount: Int = 0
+
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        setupTouchDetection()
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        setupTouchDetection()
+    }
+
+    private func setupTouchDetection() {
+        // Accept touch events on this view using the newer API
+        self.allowedTouchTypes = [.indirect] // Trackpad touches are indirect
+        self.wantsRestingTouches = false // We don't need resting touches for this use case
+    }
+
+    override func touchesBegan(with event: NSEvent) {
+        print("👆 Trackpad touches began")
+
+        // Track new touches
+        let touches = event.touches(matching: .began, in: self)
+        activeTouchCount += touches.count
+
+        catAnimationController?.triggerAnimation(for: .trackpadTouch)
+        super.touchesBegan(with: event)
+    }
+
+    override func touchesMoved(with event: NSEvent) {
+        // Continuous trackpad contact - keep paws down
+        catAnimationController?.triggerAnimation(for: .trackpadTouch)
+        super.touchesMoved(with: event)
+    }
+
+    override func touchesEnded(with event: NSEvent) {
+        print("👆 Trackpad touches ended")
+
+        // Remove ended touches
+        let touches = event.touches(matching: .ended, in: self)
+        activeTouchCount -= touches.count
+
+        // If no more active touches, immediately return to idle
+        if activeTouchCount <= 0 {
+            activeTouchCount = 0 // Ensure it doesn't go negative
+            print("👆 All trackpad touches ended - returning to idle immediately")
+            catAnimationController?.returnToIdleFromTrackpad()
+        }
+
+        super.touchesEnded(with: event)
+    }
+
+    override func touchesCancelled(with event: NSEvent) {
+        print("👆 Trackpad touches cancelled")
+
+        // Remove cancelled touches
+        let touches = event.touches(matching: .cancelled, in: self)
+        activeTouchCount -= touches.count
+
+        // If no more active touches, immediately return to idle
+        if activeTouchCount <= 0 {
+            activeTouchCount = 0 // Ensure it doesn't go negative
+            print("👆 All trackpad touches cancelled - returning to idle immediately")
+            catAnimationController?.returnToIdleFromTrackpad()
+        }
+
+        super.touchesCancelled(with: event)
+    }
+}
+
 class OverlayWindow: NSWindowController, NSWindowDelegate {
     var catAnimationController: CatAnimationController?
     private var isVisible = true
@@ -39,12 +111,20 @@ class OverlayWindow: NSWindowController, NSWindowDelegate {
         // Create the animation controller and cat view
         catAnimationController = CatAnimationController()
         // Note: appDelegate will be set later in updateAppDelegate()
+
+        // Create touch detection view as container
+        let touchDetectionView = TouchDetectionView(frame: window.contentView?.bounds ?? NSRect.zero)
+        touchDetectionView.catAnimationController = catAnimationController
+        touchDetectionView.autoresizingMask = [.width, .height]
+
+        // Create SwiftUI hosting view and add it as subview
         let catView = CatView().environmentObject(catAnimationController!)
         let hostingView = NSHostingView(rootView: catView)
-        hostingView.frame = window.contentView?.bounds ?? NSRect.zero
+        hostingView.frame = touchDetectionView.bounds
         hostingView.autoresizingMask = [.width, .height]
+        touchDetectionView.addSubview(hostingView)
 
-        window.contentView = hostingView
+        window.contentView = touchDetectionView
 
         // Make window draggable (will be disabled when ignoring mouse events)
         window.isMovableByWindowBackground = true

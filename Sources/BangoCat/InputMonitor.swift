@@ -52,11 +52,16 @@ class InputMonitor {
     }
 
     private func startMouseMonitoring() {
-        mouseEventMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .leftMouseUp, .rightMouseDown, .rightMouseUp, .scrollWheel]) { [weak self] event in
+        mouseEventMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .leftMouseUp, .rightMouseDown, .rightMouseUp, .scrollWheel, .mouseMoved]) { [weak self] event in
             switch event.type {
             case .leftMouseDown:
-                print("🖱️ Left mouse DOWN detected")
-                self?.callback(.leftClickDown)
+                if event.subtype == .touch {
+                    print("👆 Trackpad touch detected (via mouse down subtype)")
+                    self?.callback(.trackpadTouch)
+                } else {
+                    print("🖱️ Left mouse DOWN detected")
+                    self?.callback(.leftClickDown)
+                }
             case .leftMouseUp:
                 print("🖱️ Left mouse UP detected")
                 self?.callback(.leftClickUp)
@@ -66,9 +71,15 @@ class InputMonitor {
             case .rightMouseUp:
                 print("🖱️ Right mouse UP detected")
                 self?.callback(.rightClickUp)
-            //case .scrollWheel:
-            //    print("🔄 Mouse scroll detected")
-            //    self?.callback(.scroll)
+            case .scrollWheel:
+                print("🔄 Scroll wheel detected (likely trackpad)")
+                self?.callback(.trackpadTouch)
+            case .mouseMoved:
+                if event.subtype == .touch {
+                    print("👆 Trackpad touch detected (via mouse movement)")
+                    self?.callback(.trackpadTouch)
+                }
+                // Don't print for regular mouse movements to avoid spam
             default:
                 break
             }

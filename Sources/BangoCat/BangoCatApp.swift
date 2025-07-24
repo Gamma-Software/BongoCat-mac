@@ -69,6 +69,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     internal var isPerAppPositioningEnabled: Bool = true
     private let perAppPositioningKey = "BangoCatPerAppPositioning"
 
+    // Per-app hiding management
+    internal var perAppHiddenApps: Set<String> = []
+    private let perAppHiddenAppsKey = "BangoCatPerAppHiddenApps"
+    internal var isPerAppHidingEnabled: Bool = false
+    private let perAppHidingKey = "BangoCatPerAppHiding"
+
     // Milestone notifications management
     private let milestoneManager = MilestoneNotificationManager.shared
 
@@ -83,20 +89,25 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         loadPawBehaviorPreference()
         loadPositionPreferences()
         loadPerAppPositioning()
+        loadPerAppHiding()
         setupStatusBarItem()
         setupOverlayWindow()
         setupInputMonitoring()
         setupAppSwitchMonitoring()
         requestAccessibilityPermissions()
 
-        // Request notification permissions for milestone notifications
-        milestoneManager.requestNotificationPermission()
+        // Request notification permissions for milestone notifications after a delay
+        // This ensures the app is fully initialized before accessing UserNotifications
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            self.milestoneManager.requestNotificationPermission()
+        }
     }
 
     func applicationWillTerminate(_ aNotification: Notification) {
         inputMonitor?.stop()
         appSwitchTimer?.invalidate()
         savePerAppPositioning()
+        savePerAppHiding()
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
@@ -214,6 +225,21 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let positionMenuItem = NSMenuItem(title: "Position", action: nil, keyEquivalent: "")
         positionMenuItem.submenu = positionSubmenu
         menu.addItem(positionMenuItem)
+
+        menu.addItem(NSMenuItem.separator())
+
+        // Per-app hiding submenu
+        let hidingSubmenu = NSMenu()
+        hidingSubmenu.addItem(NSMenuItem(title: "Per-App Hiding", action: #selector(togglePerAppHiding), keyEquivalent: ""))
+        hidingSubmenu.addItem(NSMenuItem.separator())
+        hidingSubmenu.addItem(NSMenuItem(title: "Hide Cat for Current App", action: #selector(hideForCurrentApp), keyEquivalent: ""))
+        hidingSubmenu.addItem(NSMenuItem(title: "Show Cat for Current App", action: #selector(showForCurrentApp), keyEquivalent: ""))
+        hidingSubmenu.addItem(NSMenuItem.separator())
+        hidingSubmenu.addItem(NSMenuItem(title: "Manage Hidden Apps...", action: #selector(manageHiddenApps), keyEquivalent: ""))
+
+        let hidingMenuItem = NSMenuItem(title: "App Visibility", action: nil, keyEquivalent: "")
+        hidingMenuItem.submenu = hidingSubmenu
+        menu.addItem(hidingMenuItem)
 
         menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Reset to Factory Defaults", action: #selector(resetToFactoryDefaults), keyEquivalent: ""))
@@ -419,7 +445,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     @objc private func resetToFactoryDefaults() {
         let alert = NSAlert()
         alert.messageText = "Reset to Factory Defaults"
-        alert.informativeText = "This will reset all BangoCat settings to their default values:\n\n• Scale: 100%\n• Scale Pulse: Enabled\n• Rotation: Disabled\n• Flip: Disabled\n• Ignore Clicks: Disabled\n• Click Through: Enabled\n• Position: Default location\n• Stroke Counter: Will be reset\n\nThis action cannot be undone."
+        alert.informativeText = "This will reset all BangoCat settings to their default values:\n\n• Scale: 100%\n• Scale Pulse: Enabled\n• Rotation: Disabled\n• Flip: Disabled\n• Ignore Clicks: Disabled\n• Click Through: Enabled\n• Position: Default location\n• Per-App Positioning: Disabled\n• Per-App Hiding: Disabled (all hidden apps cleared)\n• Stroke Counter: Will be reset\n\nThis action cannot be undone."
         alert.alertStyle = .warning
         alert.addButton(withTitle: "Reset")
         alert.addButton(withTitle: "Cancel")
@@ -439,6 +465,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             snapToCornerEnabled = false
             isPerAppPositioningEnabled = false
             perAppPositions.removeAll()
+            isPerAppHidingEnabled = false
+            perAppHiddenApps.removeAll()
 
             // Save all the reset values
             saveScale()
@@ -450,6 +478,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             savePawBehaviorPreference()
             savePositionPreferences()
             savePerAppPositioning()
+            savePerAppHiding()
 
             // Apply changes to the overlay window
             overlayWindow?.updateScale(currentScale)
@@ -472,8 +501,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             updateIgnoreClicksMenuItem()
             updateClickThroughMenuItem()
             updatePawBehaviorMenuItems()
-            updatePositionMenuItems()
+                                updatePositionMenuItems()
             updatePerAppPositioningMenuItem()
+            updatePerAppHidingMenuItem()
+            updateHiddenAppsMenuItems()
             updateStrokeCounterMenuItem()
 
             print("All settings reset to factory defaults")
@@ -819,6 +850,22 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     func quitAppPublic() {
         NSApplication.shared.terminate(self)
+    }
+
+    func togglePerAppHidingPublic() {
+        togglePerAppHiding()
+    }
+
+    func hideForCurrentAppPublic() {
+        hideForCurrentApp()
+    }
+
+    func showForCurrentAppPublic() {
+        showForCurrentApp()
+    }
+
+    func manageHiddenAppsPublic() {
+        manageHiddenApps()
     }
 
     // MARK: - Scale Management
@@ -1349,6 +1396,29 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         print("Saved per-app positioning - enabled: \(isPerAppPositioningEnabled), positions: \(perAppPositions)")
     }
 
+    internal func loadPerAppHiding() {
+        // Load per-app hiding preference
+        if UserDefaults.standard.object(forKey: perAppHidingKey) != nil {
+            isPerAppHidingEnabled = UserDefaults.standard.bool(forKey: perAppHidingKey)
+        } else {
+            isPerAppHidingEnabled = false // Default disabled
+        }
+
+        // Load per-app hidden apps set
+        if let savedHiddenApps = UserDefaults.standard.array(forKey: perAppHiddenAppsKey) as? [String] {
+            perAppHiddenApps = Set(savedHiddenApps)
+        }
+
+        print("Loaded per-app hiding - enabled: \(isPerAppHidingEnabled), hidden apps: \(perAppHiddenApps)")
+    }
+
+    internal func savePerAppHiding() {
+        UserDefaults.standard.set(isPerAppHidingEnabled, forKey: perAppHidingKey)
+        UserDefaults.standard.set(Array(perAppHiddenApps), forKey: perAppHiddenAppsKey)
+
+        print("Saved per-app hiding - enabled: \(isPerAppHidingEnabled), hidden apps: \(perAppHiddenApps)")
+    }
+
     private func setupAppSwitchMonitoring() {
         // Set up a timer to periodically check for app switches
         // Using a timer approach to avoid potential permission issues with workspace notifications
@@ -1360,7 +1430,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     private func checkForAppSwitch() {
-        guard isPerAppPositioningEnabled else { return }
+        guard isPerAppPositioningEnabled || isPerAppHidingEnabled else { return }
 
         let newActiveApp = getCurrentActiveApp()
         if newActiveApp != currentActiveApp && newActiveApp != "unknown" {
@@ -1371,23 +1441,38 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
         internal func handleAppSwitch(from oldApp: String, to newApp: String) {
-        // Save current position for the old app (if it's not "unknown")
-        if oldApp != "unknown", let currentPosition = overlayWindow?.window?.frame.origin {
-            perAppPositions[oldApp] = currentPosition
-            print("💾 Saved position for \(oldApp): \(currentPosition)")
+        // Handle per-app positioning
+        if isPerAppPositioningEnabled {
+            // Save current position for the old app (if it's not "unknown")
+            if oldApp != "unknown", let currentPosition = overlayWindow?.window?.frame.origin {
+                perAppPositions[oldApp] = currentPosition
+                print("💾 Saved position for \(oldApp): \(currentPosition)")
+            }
+
+            // Load and apply position for the new app
+            if let savedPosition = perAppPositions[newApp] {
+                print("📍 Restoring position for \(newApp): \(savedPosition)")
+                overlayWindow?.setPositionProgrammatically(savedPosition)
+            } else {
+                print("🆕 No saved position for \(newApp), using current position")
+                // Optionally, you could set a default position here
+            }
+
+            // Save the updated positions
+            savePerAppPositioning()
         }
 
-        // Load and apply position for the new app
-        if let savedPosition = perAppPositions[newApp] {
-            print("📍 Restoring position for \(newApp): \(savedPosition)")
-            overlayWindow?.setPositionProgrammatically(savedPosition)
-        } else {
-            print("🆕 No saved position for \(newApp), using current position")
-            // Optionally, you could set a default position here
+        // Handle per-app hiding
+        if isPerAppHidingEnabled {
+            let shouldHideForNewApp = perAppHiddenApps.contains(newApp)
+            if shouldHideForNewApp {
+                print("🙈 Hiding cat for \(newApp)")
+                overlayWindow?.hideWindow()
+            } else {
+                print("👁️ Showing cat for \(newApp)")
+                overlayWindow?.showWindow()
+            }
         }
-
-        // Save the updated positions
-        savePerAppPositioning()
     }
 
     @objc internal func togglePerAppPositioning() {
@@ -1407,6 +1492,112 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         print("Per-app positioning toggled to: \(isPerAppPositioningEnabled)")
     }
 
+    @objc internal func togglePerAppHiding() {
+        isPerAppHidingEnabled.toggle()
+        savePerAppHiding()
+
+        if isPerAppHidingEnabled {
+            // When enabling, check if current app should be hidden
+            currentActiveApp = getCurrentActiveApp()
+            let shouldHide = perAppHiddenApps.contains(currentActiveApp)
+            if shouldHide {
+                overlayWindow?.hideWindow()
+            } else {
+                overlayWindow?.showWindow()
+            }
+        } else {
+            // When disabling, always show the cat
+            overlayWindow?.showWindow()
+        }
+
+        updatePerAppHidingMenuItem()
+        print("Per-app hiding toggled to: \(isPerAppHidingEnabled)")
+    }
+
+    @objc internal func hideForCurrentApp() {
+        let currentApp = getCurrentActiveApp()
+        if currentApp != "unknown" {
+            perAppHiddenApps.insert(currentApp)
+            savePerAppHiding()
+
+            if isPerAppHidingEnabled {
+                overlayWindow?.hideWindow()
+            }
+
+            updateHiddenAppsMenuItems()
+            print("Added \(currentApp) to hidden apps list")
+
+            // Show confirmation with app name
+            if let appName = NSWorkspace.shared.frontmostApplication?.localizedName {
+                showNotification(title: "BangoCat Hidden", message: "Cat will now hide when \(appName) is active")
+            }
+        }
+    }
+
+    @objc internal func showForCurrentApp() {
+        let currentApp = getCurrentActiveApp()
+        if currentApp != "unknown" {
+            perAppHiddenApps.remove(currentApp)
+            savePerAppHiding()
+
+            if isPerAppHidingEnabled {
+                overlayWindow?.showWindow()
+            }
+
+            updateHiddenAppsMenuItems()
+            print("Removed \(currentApp) from hidden apps list")
+
+            // Show confirmation with app name
+            if let appName = NSWorkspace.shared.frontmostApplication?.localizedName {
+                showNotification(title: "BangoCat Visible", message: "Cat will now show when \(appName) is active")
+            }
+        }
+    }
+
+    @objc internal func manageHiddenApps() {
+        let alert = NSAlert()
+        alert.messageText = "Manage Hidden Apps"
+
+        if perAppHiddenApps.isEmpty {
+            alert.informativeText = "No apps are currently set to hide the cat.\n\nTo hide the cat for specific apps:\n1. Switch to the app you want to hide the cat for\n2. Use 'Hide Cat for Current App' from the menu\n\nOr enable 'Per-App Hiding' and the hide/show options will become available."
+            alert.addButton(withTitle: "OK")
+        } else {
+            var appNames: [String] = []
+            for bundleID in perAppHiddenApps {
+                // Try to find the app name for this bundle ID
+                if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID),
+                   let bundle = Bundle(url: url),
+                   let appName = bundle.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String ?? bundle.object(forInfoDictionaryKey: "CFBundleName") as? String {
+                    appNames.append("\(appName) (\(bundleID))")
+                } else {
+                    appNames.append(bundleID)
+                }
+            }
+
+            alert.informativeText = "The following apps are set to hide the cat:\n\n• \(appNames.joined(separator: "\n• "))\n\nTo remove apps from this list, switch to the app and use 'Show Cat for Current App' from the menu."
+            alert.addButton(withTitle: "OK")
+            alert.addButton(withTitle: "Clear All")
+        }
+
+        alert.alertStyle = .informational
+
+        let response = alert.runModal()
+        if response == .alertSecondButtonReturn && !perAppHiddenApps.isEmpty {
+            // Clear all hidden apps
+            perAppHiddenApps.removeAll()
+            savePerAppHiding()
+            updateHiddenAppsMenuItems()
+
+            // Show the cat since no apps are hidden now
+            if isPerAppHidingEnabled {
+                overlayWindow?.showWindow()
+            }
+
+            print("Cleared all hidden apps")
+            showNotification(title: "Hidden Apps Cleared", message: "Cat will now show for all applications")
+        }
+    }
+
     private func updatePerAppPositioningMenuItem() {
         guard let menu = statusBarItem?.menu else { return }
 
@@ -1424,10 +1615,59 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
     }
 
+    private func updatePerAppHidingMenuItem() {
+        guard let menu = statusBarItem?.menu else { return }
+
+        // Find the app visibility submenu and update the per-app hiding item
+        for item in menu.items {
+            if item.title == "App Visibility", let submenu = item.submenu {
+                for subItem in submenu.items {
+                    if subItem.title == "Per-App Hiding" {
+                        subItem.state = isPerAppHidingEnabled ? .on : .off
+                        break
+                    }
+                }
+                break
+            }
+        }
+    }
+
+    private func updateHiddenAppsMenuItems() {
+        guard let menu = statusBarItem?.menu else { return }
+        let currentApp = getCurrentActiveApp()
+        let isCurrentAppHidden = perAppHiddenApps.contains(currentApp)
+
+        // Find the app visibility submenu and update the hide/show items
+        for item in menu.items {
+            if item.title == "App Visibility", let submenu = item.submenu {
+                for subItem in submenu.items {
+                    if subItem.title == "Hide Cat for Current App" {
+                        subItem.isEnabled = !isCurrentAppHidden && currentApp != "unknown"
+                    } else if subItem.title == "Show Cat for Current App" {
+                        subItem.isEnabled = isCurrentAppHidden && currentApp != "unknown"
+                    }
+                }
+                break
+            }
+        }
+    }
+
+    private func showNotification(title: String, message: String) {
+        let notification = NSUserNotification()
+        notification.title = title
+        notification.informativeText = message
+        notification.soundName = NSUserNotificationDefaultSoundName
+
+        NSUserNotificationCenter.default.deliver(notification)
+    }
+
     // MARK: - NSMenuDelegate
 
     func menuWillOpen(_ menu: NSMenu) {
         // Update stroke counter display when menu is about to open
         updateStrokeCounterMenuItem()
+
+        // Update per-app hiding menu items based on current app
+        updateHiddenAppsMenuItems()
     }
 }

@@ -1,5 +1,6 @@
 import Foundation
 import UserNotifications
+import AppKit
 
 class MilestoneNotificationManager: NSObject, UNUserNotificationCenterDelegate {
     static let shared = MilestoneNotificationManager()
@@ -21,22 +22,57 @@ class MilestoneNotificationManager: NSObject, UNUserNotificationCenterDelegate {
     private let lastClickMilestoneKey = "BangoCatLastClickMilestone"
     private let lastTotalMilestoneKey = "BangoCatLastTotalMilestone"
 
+    // Track if notifications have been set up
+    private var notificationsSetup: Bool = false
+
     override init() {
         super.init()
         loadSettings()
-        setupNotifications()
+        // Don't setup notifications immediately - defer until needed
     }
 
     // MARK: - Setup and Permissions
 
-    private func setupNotifications() {
+            private func setupNotifications() {
+        guard !notificationsSetup else { return }
+
+        // Check if we can safely access UserNotifications
+        guard canAccessNotifications() else {
+            print("⚠️ UserNotifications not available - running in development mode, notifications disabled")
+            notificationsEnabled = false
+            return
+        }
+
+        // Try to safely access the notification center
         let center = UNUserNotificationCenter.current()
         center.delegate = self
+        notificationsSetup = true
+        print("✅ Notifications setup completed")
+    }
 
-        requestNotificationPermission()
+    private func canAccessNotifications() -> Bool {
+        // Check if we have a proper bundle identifier
+        guard let bundleId = Bundle.main.bundleIdentifier, !bundleId.isEmpty else {
+            return false
+        }
+
+        // Check if we're running in an app context (not just a command line tool)
+        guard NSRunningApplication.current.activationPolicy != .prohibited else {
+            return false
+        }
+
+        return true
     }
 
     func requestNotificationPermission() {
+        // Ensure notifications are setup first
+        setupNotifications()
+
+        guard notificationsSetup else {
+            print("⚠️ Cannot request notification permission - setup failed")
+            return
+        }
+
         let center = UNUserNotificationCenter.current()
         center.requestAuthorization(options: [.alert, .sound, .badge]) { [weak self] granted, error in
             DispatchQueue.main.async {
@@ -170,6 +206,14 @@ class MilestoneNotificationManager: NSObject, UNUserNotificationCenterDelegate {
     }
 
     private func sendMilestoneNotification(type: String, count: Int, icon: String, message: String) {
+        // Ensure notifications are setup first
+        setupNotifications()
+
+        guard notificationsSetup else {
+            print("⚠️ Cannot send notification - setup failed")
+            return
+        }
+
         let center = UNUserNotificationCenter.current()
 
         let content = UNMutableNotificationContent()

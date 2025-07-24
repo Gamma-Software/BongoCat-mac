@@ -99,6 +99,7 @@ enum InputType {
     case rightClickDown
     case rightClickUp
     case scroll
+    case trackpadTouch
 }
 
 // MARK: - Observable Cat Animation Controller
@@ -124,6 +125,10 @@ class CatAnimationController: ObservableObject {
     private var minimumAnimationDuration: TimeInterval = 0.1  // Minimum animation duration
     private var keyHeldDown: Bool = false  // Track if a key is currently held down
     private var isAlternatingLeft: Bool = true  // Track alternating paw state (starts with left)
+
+    // Trackpad touch tracking
+    private var trackpadTouchTimer: Timer?
+    private let trackpadTouchTimeout: TimeInterval = 0.3  // Time to wait after last trackpad event before returning to idle
 
     // MARK: - Keyboard Layout-Based Paw Mapping
     private let leftPawKeys: Set<String> = [
@@ -308,6 +313,9 @@ class CatAnimationController: ObservableObject {
             }
             print("🖱️ Right click up detected - right paw up animation")
             triggerPawAnimation(.rightPawUp)
+        case .trackpadTouch:
+            print("👆 Trackpad touch detected - both paws down animation")
+            triggerTrackpadTouch()
         //case .scroll:
         //    print("🔄 Scroll detected - both paws animation")
         //    triggerBothPawsAnimation()
@@ -429,6 +437,31 @@ class CatAnimationController: ObservableObject {
             print("🎯 Returning to idle state")
             self.currentState = .idle
         }
+    }
+
+        private func triggerTrackpadTouch() {
+        // Cancel any existing trackpad timer
+        trackpadTouchTimer?.invalidate()
+
+        // Put both paws down immediately
+        print("🎯 Setting state to: bothPawsDown (trackpad)")
+        currentState = .bothPawsDown
+
+        // Start a new timer to return to idle after no trackpad activity
+        trackpadTouchTimer = Timer.scheduledTimer(withTimeInterval: trackpadTouchTimeout, repeats: false) { [weak self] _ in
+            print("🎯 Trackpad timeout - returning to idle")
+            self?.currentState = .idle
+            self?.trackpadTouchTimer = nil
+        }
+    }
+
+    func returnToIdleFromTrackpad() {
+        // Cancel the trackpad timer and immediately return to idle
+        trackpadTouchTimer?.invalidate()
+        trackpadTouchTimer = nil
+
+        print("🎯 Returning to idle immediately (no more trackpad touches)")
+        currentState = .idle
     }
 
     private func animateAlternatePaws() {
@@ -726,6 +759,26 @@ struct CatView: View {
                                 }
                                 Button("Restore Saved Position") {
                                     animationController.appDelegate?.restoreSavedPositionPublic()
+                                }
+                            }
+
+                            Divider()
+
+                            // App Visibility options
+                            Menu("App Visibility") {
+                                Button("Per-App Hiding") {
+                                    animationController.appDelegate?.togglePerAppHidingPublic()
+                                }
+                                Divider()
+                                Button("Hide for Current App") {
+                                    animationController.appDelegate?.hideForCurrentAppPublic()
+                                }
+                                Button("Show for Current App") {
+                                    animationController.appDelegate?.showForCurrentAppPublic()
+                                }
+                                Divider()
+                                Button("Manage Hidden Apps...") {
+                                    animationController.appDelegate?.manageHiddenAppsPublic()
                                 }
                             }
 
