@@ -67,6 +67,9 @@ Updates version numbers across the entire project.
 **What it does:**
 - Updates `Info.plist` version strings
 - Updates hardcoded versions in Swift source
+- Updates `package_app.sh` VERSION variable
+- Updates DMG background Python script version
+- Updates README.md version badge
 - Provides colored, detailed output
 - Optionally creates git tags
 - Creates backups and rolls back on failure
@@ -75,6 +78,46 @@ Updates version numbers across the entire project.
 **Version Format:**
 - Version: `MAJOR.MINOR.PATCH` (e.g., `1.0.2`)
 - Build: `YYYY.MM` format (e.g., `2024.12`)
+
+### ✅ `check_version.sh`
+Verifies that all version references are consistent across the project.
+
+```bash
+# Quick consistency check
+./Scripts/check_version.sh
+
+# Detailed output with file locations
+./Scripts/check_version.sh --verbose
+
+# Show suggested fixes for inconsistencies
+./Scripts/check_version.sh --fix
+
+# Both verbose and fix suggestions
+./Scripts/check_version.sh --verbose --fix
+
+# Show help
+./Scripts/check_version.sh --help
+```
+
+**What it checks:**
+- **Info.plist** - CFBundleShortVersionString and CFBundleVersion
+- **Swift source** - appVersion and appBuild variables
+- **package_app.sh** - VERSION variable
+- **DMG background script** - version_text variable
+- **README.md** - version badge
+- **CHANGELOG.md** - latest version entry
+
+**Exit Codes:**
+- `0` - All versions are consistent ✅
+- `1` - Version inconsistencies found ❌
+- `2` - Script error or missing files ⚠️
+
+**Features:**
+- **Smart Analysis** - Separates version numbers from build numbers
+- **Detailed Reporting** - Shows exactly which files have mismatches
+- **Fix Suggestions** - Recommends commands to resolve inconsistencies
+- **Changelog Validation** - Ensures latest changelog entry matches current version
+- **Comprehensive Coverage** - Checks all version references in the project
 
 ### 🧪 `test.sh`
 Comprehensive test runner with advanced features.
@@ -126,10 +169,13 @@ swift run                            # Test the app
 # Before committing
 ./Scripts/test.sh --verbose          # Run tests with detailed output
 ./Scripts/test.sh --filter StrokeCounter # Test specific components
+./Scripts/check_version.sh           # Verify version consistency
 
 # Ready to release?
 ./Scripts/test.sh                     # Final test run
+./Scripts/check_version.sh --verbose # Detailed version check
 ./Scripts/bump_version.sh 1.0.2     # Update version
+./Scripts/check_version.sh           # Confirm all versions updated
 git add . && git commit -m "Release 1.0.2"
 git push
 
@@ -138,19 +184,42 @@ git push
 
 ### Release Workflow
 ```bash
-# 1. Bump version and create tag
+# 1. Pre-release checks
+./Scripts/check_version.sh --verbose # Check current version consistency
+./Scripts/test.sh                    # Run full test suite
+
+# 2. Bump version and create tag
 ./Scripts/bump_version.sh 2.0.0     # Follow prompts for git tag
 
-# 2. Commit version changes
+# 3. Verify everything updated correctly
+./Scripts/check_version.sh --verbose # Ensure all files updated
+
+# 4. Commit version changes
 git add .
 git commit -m "Bump version to 2.0.0"
 git push
 git push origin v2.0.0              # Push the tag
 
-# 3. Create distribution package
+# 5. Create distribution package
 ./Scripts/package_app.sh
 
-# 4. Upload DMG from Build/ directory
+# 6. Upload DMG from Build/ directory
+```
+
+### Version Management Best Practices
+```bash
+# Before any version changes
+./Scripts/check_version.sh           # Check current state
+
+# After manual changes to any version references
+./Scripts/check_version.sh --fix     # Get fix suggestions
+
+# Automated version bumping (recommended)
+./Scripts/bump_version.sh 1.0.3     # Updates everything at once
+./Scripts/check_version.sh           # Verify success
+
+# Before major releases
+./Scripts/check_version.sh --verbose # Detailed pre-release check
 ```
 
 ## Output Locations
@@ -181,6 +250,12 @@ Build/
 - Check that you're using proper version format: `X.Y.Z`
 - Ensure no uncommitted changes if creating git tags
 - Verify file permissions on Info.plist and Swift files
+
+### Version inconsistencies
+- Run `./Scripts/check_version.sh --fix` for suggestions
+- Use `./Scripts/bump_version.sh` to fix all at once
+- Check CHANGELOG.md has the correct latest version entry
+- Verify all files are writable and not corrupted
 
 ## Script Requirements
 
