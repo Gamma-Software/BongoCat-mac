@@ -250,33 +250,6 @@ This isn't just another typing cat app – it's the **most comprehensive and pol
 - **🍎 macOS Native**: Uses proper Cocoa APIs and design patterns
 - **🎯 No Dependencies**: Zero external runtime requirements
 
-### 🌈 **Feature-Rich Beyond Alternatives**
-
-| **Feature** | **BangoCat-mac** | **Other Solutions** |
-|-------------|------------------|-------------------|
-| **Per-App Positioning** | ✅ **Unique Feature** | ❌ Not available |
-| **Comprehensive Stroke Counter** | ✅ Full statistics | ⚠️ Basic or none |
-| **Visual Customization** | ✅ Scale, rotate, flip, pulse | ⚠️ Limited options |
-| **Menu Integration** | ✅ Full status bar + context menus | ❌ Minimal UI |
-| **Streaming Ready** | ✅ Perfect OBS transparency | ⚠️ Basic overlay |
-| **Smart Input Handling** | ✅ Consistent paw mapping | ❌ Random assignment |
-| **Position Memory** | ✅ Persistent across restarts | ❌ Resets each launch |
-| **Developer Experience** | ✅ Modern Swift tooling | ⚠️ Python/legacy tools |
-
-### 🔒 **Professional Reliability**
-- **🛡️ Proper Permissions**: Standard macOS accessibility requests (no sudo required)
-- **💾 Data Persistence**: All settings and statistics survive app restarts
-- **🔄 Automatic Recovery**: Handles system events and app switching gracefully
-- **🧪 Tested & Stable**: Thoroughly tested across different macOS versions
-- **📚 Well Documented**: Comprehensive documentation and troubleshooting guides
-
-### 🎨 **Streaming & Content Creator Focused**
-- **📺 OBS Perfect**: Designed specifically for streaming workflows
-- **🎮 Gaming Compatible**: Works flawlessly with full-screen games
-- **🖥️ Multi-Monitor**: Proper support for complex display setups
-- **⚡ Performance Optimized**: Won't impact your stream performance
-- **🎯 Professional Features**: Per-app positioning for consistent streaming layouts
-
 ## 🚀 Roadmap & Future Enhancements
 
 ### 🎯 **Planned Features**
@@ -349,6 +322,10 @@ BangoCat-mac/
 - **Architecture**: MVVM pattern with reactive UI updates
 - **Minimum Target**: macOS 13.0 (Ventura) for latest SwiftUI features
 - **Build System**: Swift Package Manager for dependency management
+
+### Tested on
+
+The app was tested on my MacBook Pro 14 inch M2 Max (2023) with macOS 15.5
 
 ## 📄 License
 
