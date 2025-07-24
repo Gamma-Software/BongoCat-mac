@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # BangoCat Build Script
-set -e
+set -e  # Exit on error
 
 # Colors for output
 GREEN='\033[0;32m'
