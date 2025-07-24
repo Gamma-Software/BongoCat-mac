@@ -5,16 +5,22 @@ set -e
 
 # Parse command line arguments
 DELIVER_TO_GITHUB=false
+INSTALL_LOCAL=false
 while [[ $# -gt 0 ]]; do
     case $1 in
         --deliver)
             DELIVER_TO_GITHUB=true
             shift
             ;;
+        --install_local)
+            INSTALL_LOCAL=true
+            shift
+            ;;
         -h|--help)
-            echo "Usage: $0 [--deliver] [--help]"
-            echo "  --deliver    Upload the DMG to GitHub Releases"
-            echo "  --help       Show this help message"
+            echo "Usage: $0 [--deliver] [--install_local] [--help]"
+            echo "  --deliver       Upload the DMG to GitHub Releases"
+            echo "  --install_local Install the app directly to /Applications"
+            echo "  --help          Show this help message"
             exit 0
             ;;
         *)
@@ -128,6 +134,96 @@ deliver_to_github() {
     echo "✅ Your BangoCat release is now available for download!"
 }
 
+# Function to install app locally
+install_local() {
+    echo ""
+    echo "🏠 Starting local installation process..."
+
+    # Check if app bundle exists
+    if [ ! -d "$APP_BUNDLE" ]; then
+        echo "❌ App bundle not found: $APP_BUNDLE"
+        echo "💡 The app bundle should have been created during packaging"
+        exit 1
+    fi
+
+    local applications_dir="/Applications"
+    local target_app="${applications_dir}/${APP_NAME}.app"
+
+    echo "📍 Installing to: $target_app"
+
+    # Check if app already exists
+    if [ -d "$target_app" ]; then
+        echo "⚠️  Existing installation found"
+        echo "🔄 Replacing existing ${APP_NAME}.app in Applications..."
+
+        # Try to quit the app if it's running
+        if pgrep -f "${APP_NAME}.app" > /dev/null; then
+            echo "🛑 Stopping running ${APP_NAME} processes..."
+            pkill -f "${APP_NAME}.app" || true
+            sleep 2
+        fi
+
+        # Remove existing app (requires sudo if not owned by user)
+        if rm -rf "$target_app" 2>/dev/null; then
+            echo "✅ Removed existing installation"
+        else
+            echo "🔐 Existing app requires administrator privileges to remove"
+            echo "💡 Please enter your password to replace the existing installation:"
+            sudo rm -rf "$target_app"
+            echo "✅ Removed existing installation with admin privileges"
+        fi
+    fi
+
+    # Copy the new app bundle
+    echo "📦 Copying ${APP_NAME}.app to Applications..."
+    if cp -R "$APP_BUNDLE" "$applications_dir/" 2>/dev/null; then
+        echo "✅ Successfully copied app bundle"
+    else
+        echo "🔐 Installation requires administrator privileges"
+        echo "💡 Please enter your password to install to Applications:"
+        sudo cp -R "$APP_BUNDLE" "$applications_dir/"
+        echo "✅ Successfully installed with admin privileges"
+    fi
+
+    # Set proper permissions
+    echo "🔧 Setting proper permissions..."
+    if chmod -R 755 "$target_app" 2>/dev/null; then
+        echo "✅ Permissions set successfully"
+    else
+        sudo chmod -R 755 "$target_app"
+        echo "✅ Permissions set with admin privileges"
+    fi
+
+    # Verify installation
+    if [ -d "$target_app" ] && [ -x "${target_app}/Contents/MacOS/${APP_NAME}" ]; then
+        echo ""
+        echo "🎉 Local installation completed successfully!"
+        echo "📍 Installed at: $target_app"
+        echo "🚀 You can now launch ${APP_NAME} from:"
+        echo "   • Applications folder in Finder"
+        echo "   • Spotlight search (⌘+Space)"
+        echo "   • Dock (if you add it)"
+        echo ""
+        echo "💡 On first launch, you may need to:"
+        echo "   • Allow the app in System Preferences > Security & Privacy"
+        echo "   • Grant accessibility permissions for keyboard monitoring"
+
+        # Offer to launch the app
+        echo ""
+        read -p "🚀 Would you like to launch ${APP_NAME} now? (y/n): " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            echo "🎊 Launching ${APP_NAME}..."
+            open "$target_app"
+            echo "✨ ${APP_NAME} should now be starting!"
+        fi
+    else
+        echo "❌ Installation verification failed"
+        echo "💡 The app bundle may be corrupted or incomplete"
+        exit 1
+    fi
+}
+
 echo "🐱 Starting BangoCat packaging process..."
 echo "📍 Working from: $PROJECT_ROOT"
 
@@ -207,6 +303,11 @@ if [ "$DELIVER_TO_GITHUB" = true ]; then
     deliver_to_github
 fi
 
+# Install locally if requested
+if [ "$INSTALL_LOCAL" = true ]; then
+    install_local
+fi
+
 echo ""
 echo "📍 Your packaged app is ready for distribution:"
 echo "   📦 App Bundle: ${APP_BUNDLE}"
@@ -224,7 +325,16 @@ echo "   3. Ejecting the DMG"
 echo ""
 echo "💡 Tip: Test the DMG by double-clicking it to ensure it looks good!"
 echo ""
-if [ "$DELIVER_TO_GITHUB" = false ]; then
-    echo "🚀 To deliver to GitHub Releases, run with: --deliver"
+
+# Show available options if not used
+if [ "$DELIVER_TO_GITHUB" = false ] && [ "$INSTALL_LOCAL" = false ]; then
+    echo "🚀 Additional options:"
+    echo "   --deliver       Upload to GitHub Releases (https://github.com/${GITHUB_REPO}/releases)"
+    echo "   --install_local Install directly to /Applications for testing"
+elif [ "$DELIVER_TO_GITHUB" = false ] && [ "$INSTALL_LOCAL" = true ]; then
+    echo "🚀 To also deliver to GitHub Releases, run with: --deliver"
     echo "   This will upload the DMG to https://github.com/${GITHUB_REPO}/releases"
+elif [ "$DELIVER_TO_GITHUB" = true ] && [ "$INSTALL_LOCAL" = false ]; then
+    echo "🏠 To also install locally for testing, run with: --install_local"
+    echo "   This will install the app directly to /Applications"
 fi

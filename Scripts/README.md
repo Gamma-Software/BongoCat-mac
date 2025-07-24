@@ -17,7 +17,7 @@ Simple build script for development convenience.
 - Provides next steps after successful build
 
 ### 📦 `package_app.sh`
-Creates a professional, distributable DMG with drag-and-drop installation and optional GitHub delivery.
+Creates a professional, distributable DMG with drag-and-drop installation, optional GitHub delivery, and local installation support.
 
 ```bash
 # Create DMG locally
@@ -25,6 +25,12 @@ Creates a professional, distributable DMG with drag-and-drop installation and op
 
 # Create DMG and upload to GitHub Releases
 ./Scripts/package_app.sh --deliver
+
+# Build and install directly to /Applications
+./Scripts/package_app.sh --install_local
+
+# Combine options (build, install locally, and upload to GitHub)
+./Scripts/package_app.sh --deliver --install_local
 
 # Show help
 ./Scripts/package_app.sh --help
@@ -39,6 +45,7 @@ Creates a professional, distributable DMG with drag-and-drop installation and op
 - **📏 Customizes DMG window layout and icon arrangement**
 - Creates compressed, read-only DMG for distribution
 - **🚀 Optionally uploads to GitHub Releases with `--deliver` flag**
+- **🏠 Optionally installs directly to /Applications with `--install_local` flag**
 - Outputs to `Build/` directory
 
 **Professional DMG Features:**
@@ -66,6 +73,16 @@ Creates a professional, distributable DMG with drag-and-drop installation and op
 - 📦 Uploads DMG as release asset for easy downloading
 - 🔗 Provides direct download URLs and release page links
 - 🛡️ Includes safety checks for GitHub CLI and authentication
+
+**Local Installation Features (`--install_local`):**
+- 🏠 Installs the app directly to `/Applications` folder
+- 🔄 Automatically replaces existing installations
+- 🛑 Safely stops running app processes before replacement
+- 🔐 Handles permission requirements gracefully (prompts for sudo if needed)
+- ✅ Verifies successful installation and proper permissions
+- 🚀 Offers to launch the app immediately after installation
+- 💡 Provides helpful next-steps and permission guidance
+- 🛡️ Perfect for development and testing workflows
 
 **Output:**
 - `Build/package/BangoCat.app` - Ready-to-install app bundle
@@ -187,7 +204,10 @@ Comprehensive test runner with advanced features.
 # Make changes to code
 ./Scripts/build.sh                    # Quick build check
 ./Scripts/test.sh                     # Run comprehensive tests
-swift run                            # Test the app
+swift run                            # Test in development mode
+
+# Test packaged app locally
+./Scripts/package_app.sh --install_local # Build and install to /Applications
 
 # Before committing
 ./Scripts/test.sh --verbose          # Run tests with detailed output
@@ -220,10 +240,12 @@ git push
 git push origin v2.0.0              # Push the tag
 
 # 4. Create and deliver distribution package
-./Scripts/package_app.sh --deliver   # Creates DMG and uploads to GitHub Releases
+./Scripts/package_app.sh --deliver --install_local # Package, upload to GitHub, and install locally
 
-# Alternative: Create locally only
-./Scripts/package_app.sh             # Manual upload from Build/ directory
+# Alternative options:
+./Scripts/package_app.sh --deliver   # Upload to GitHub only
+./Scripts/package_app.sh --install_local # Install locally only
+./Scripts/package_app.sh             # Create DMG only (manual distribution)
 ```
 
 ### Version Management Best Practices
@@ -283,6 +305,15 @@ Build/
 - Check that the DMG was created successfully before delivery
 - Verify your internet connection for uploading to GitHub
 - Check GitHub API rate limits if multiple releases fail
+
+### Local installation fails (`--install_local`)
+- Ensure the app bundle was created successfully during packaging
+- Check available disk space in `/Applications`
+- If permission errors occur, the script will prompt for sudo password
+- Close the app from Activity Monitor if automatic termination fails
+- Try manually removing the existing app: `sudo rm -rf "/Applications/BangoCat.app"`
+- Verify `/Applications` folder exists and is writable
+- On macOS Ventura+, check System Settings > Privacy & Security for blocked apps
 
 ## Script Requirements
 
