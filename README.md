@@ -302,5 +302,3 @@ Whether it's code, documentation, or just ideas - every contribution makes Bango
 [🌐 Website](https://valentin.pival.fr) • [🐛 Report a Bug](https://github.com/Gamma-Software/BangoCat-mac/issues/new) • [📖 Documentation](Scripts/README.md) • [📦 Releases](https://github.com/Gamma-Software/BangoCat-mac/releases)
 
 </div>
-
-

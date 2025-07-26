@@ -132,8 +132,6 @@ parse_changelog() {
         return 1
     fi
 
-    echo "📖 Parsing CHANGELOG.md for version ${version}..."
-
     # Extract the section for the current version
     # Look for ## [VERSION] or ## [VERSION] - DATE pattern
     local version_pattern="## \[${version}\]"
@@ -166,7 +164,6 @@ parse_changelog() {
     # Clean up the changelog content (remove extra newlines, format for GitHub)
     changelog_content=$(echo "$changelog_content" | sed '/^[[:space:]]*$/d' | head -c 8000)
 
-    echo "✅ Successfully parsed changelog for version ${version}"
     echo "$changelog_content"
 }
 

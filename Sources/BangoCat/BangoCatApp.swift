@@ -248,7 +248,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         // Milestone notifications section
         menu.addItem(NSMenuItem(title: "Milestone Notifications 🔔", action: #selector(toggleMilestoneNotifications), keyEquivalent: ""))
-        menu.addItem(NSMenuItem(title: "Update Notifications 🔄", action: #selector(toggleUpdateNotifications), keyEquivalent: ""))
+                menu.addItem(NSMenuItem(title: "Update Notifications 🔄", action: #selector(toggleUpdateNotifications), keyEquivalent: ""))
+        menu.addItem(NSMenuItem(title: "Auto-Update ⚡", action: #selector(toggleAutoUpdate), keyEquivalent: ""))
 
         menu.addItem(NSMenuItem.separator())
 
@@ -351,6 +352,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         // Update milestone notifications menu item
         updateMilestoneNotificationsMenuItem()
         updateUpdateNotificationsMenuItem()
+        updateAutoUpdateMenuItem()
         updateAnalyticsMenuItem()
 
         print("🔧 Status bar setup complete")
@@ -1484,6 +1486,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
     }
 
+    private func updateAutoUpdateMenuItem() {
+        guard let menu = statusBarItem?.menu else { return }
+        for item in menu.items {
+            if item.title == "Auto-Update ⚡" {
+                item.state = UpdateChecker.shared.isAutoUpdateEnabled() ? .on : .off
+                break
+            }
+        }
+    }
+
     private func updateAnalyticsMenuItem() {
         guard let menu = statusBarItem?.menu else { return }
         for item in menu.items {
@@ -2144,5 +2156,23 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         if !settingsChangedThisSession.contains(settingName) {
             settingsChangedThisSession.append(settingName)
         }
+    }
+
+        // MARK: - Auto-Update Menu Action
+
+    @objc private func toggleAutoUpdate(_ sender: NSMenuItem) {
+        let newState = !UpdateChecker.shared.isAutoUpdateEnabled()
+        UpdateChecker.shared.setAutoUpdateEnabled(newState)
+        sender.state = newState ? .on : .off
+
+        // Show user feedback
+        let alert = NSAlert()
+        alert.messageText = "Auto-Update \(newState ? "Enabled" : "Disabled")"
+        alert.informativeText = newState ?
+            "BangoCat will automatically download and install updates when available." :
+            "Updates will require manual download from the GitHub releases page."
+        alert.alertStyle = .informational
+        alert.addButton(withTitle: "OK")
+        alert.runModal()
     }
 }
