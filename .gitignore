@@ -64,3 +64,6 @@ fastlane/test_output
 Build/
 # Note: package/ moved to Build/package/
 .DS_Store
+Demo/demo.mp4
+Demo/SCR-20250726-ntmf.png
+Demo/SCR-20250726-nuuf.png
