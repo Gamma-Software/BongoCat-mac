@@ -214,7 +214,7 @@ class UpdateChecker: NSObject {
         if let bundleVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String {
             return bundleVersion
         }
-        return "1.1.0" // Fallback to current version
+        return "1.0.0" // Fallback to current version
     }
 
     private func isNewerVersion(latest: String, current: String) -> Bool {
