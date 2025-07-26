@@ -7,9 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased] - 2025-07-26
 
+### Added
+
+- **🔄 PostHog Analytics** - Anonymous analytics for feature usage and app behavior
+
 ### Modified
 
 - Commit when bumping version with the script
+- Remove trackpad touch detection
 
 ## [1.2.0] - 2025-07-26
 

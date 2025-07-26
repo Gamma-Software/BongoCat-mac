@@ -84,8 +84,18 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     // Analytics management
     private let analytics = PostHogAnalyticsManager.shared
 
+    // Session tracking
+    private var appLaunchTime = Date()
+    private var settingsChangedThisSession: [String] = []
+    private var featuresUsedThisSession: [String] = []
+
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         print("BangoCat starting...")
+        appLaunchTime = Date()
+
+        // Track app lifecycle
+        analytics.trackConfigurationLoaded("settings", success: true)
+
         loadSavedScale()
         loadScaleOnInputPreference()
         loadSavedRotation()
@@ -115,6 +125,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
             self.updateChecker.startDailyUpdateChecks()
         }
+
+        // Track initial settings combination
+        trackCurrentSettingsCombination()
+
+        // Set up app lifecycle notifications
+        setupAppLifecycleNotifications()
     }
 
     func applicationWillTerminate(_ aNotification: Notification) {
@@ -123,6 +139,19 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         savePerAppPositioning()
         savePerAppHiding()
 
+        // Track session duration and usage patterns
+        let sessionDuration = Date().timeIntervalSince(appLaunchTime)
+        analytics.trackSessionDuration(sessionDuration)
+
+        // Track usage pattern for this session
+        if let inputController = overlayWindow?.catAnimationController {
+            let totalInputs = inputController.strokeCounter.totalStrokes
+            analytics.trackUsagePattern(sessionDuration,
+                                      inputCount: totalInputs,
+                                      settingsChanged: settingsChangedThisSession.count,
+                                      featuresUsed: featuresUsedThisSession)
+        }
+
         // Track app termination
         analytics.trackAppTerminate()
     }
@@ -130,6 +159,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         if !flag {
             overlayWindow?.showWindow()
+            analytics.trackVisibilityToggled(true, method: "dock_click")
         }
         return true
     }
@@ -425,11 +455,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     private func requestAccessibilityPermissions() {
+        // Track permission request
+        analytics.trackAccessibilityPermissionRequested()
+
         // First check without prompting
         let accessEnabled = AXIsProcessTrusted()
 
         if accessEnabled {
             print("✅ Accessibility access already granted")
+            analytics.trackAccessibilityPermissionGranted()
             return
         }
 
@@ -444,9 +478,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
                 // Only show our custom dialog if system dialog didn't handle it
                 if !AXIsProcessTrusted() {
+                    self.analytics.trackAccessibilityPermissionDenied()
                     self.showAccessibilityAlert()
+                } else {
+                    self.analytics.trackAccessibilityPermissionGranted()
                 }
             }
+        } else {
+            analytics.trackAccessibilityPermissionGranted()
         }
     }
 
@@ -474,6 +513,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc private func toggleOverlay() {
         overlayWindow?.toggleVisibility()
+        let isVisible = overlayWindow?.window?.isVisible ?? false
+        analytics.trackVisibilityToggled(isVisible, method: "status_bar")
+        trackFeatureUsed("toggle_overlay")
     }
 
     @objc private func resetToFactoryDefaults() {
@@ -486,6 +528,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         let response = alert.runModal()
         if response == .alertFirstButtonReturn {
+            // Track factory reset
+            analytics.trackFactoryResetPerformed()
+            trackFeatureUsed("factory_reset")
+
             // Reset all settings to factory defaults
             currentScale = 1.0
             scaleOnInputEnabled = true
@@ -535,7 +581,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             updateIgnoreClicksMenuItem()
             updateClickThroughMenuItem()
             updatePawBehaviorMenuItems()
-                                updatePositionMenuItems()
+            updatePositionMenuItems()
             updatePerAppPositioningMenuItem()
             updatePerAppHidingMenuItem()
             updateHiddenAppsMenuItems()
@@ -626,8 +672,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @objc private func visitWebsite() {
-        // Track menu action
+        // Track menu action and support action
         analytics.trackMenuAction("visit_website")
+        analytics.trackSupportActionTaken("website_visit")
+        trackFeatureUsed("visit_website")
 
         if let url = URL(string: "https://valentin.pival.fr") {
             NSWorkspace.shared.open(url)
@@ -638,8 +686,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @objc private func buyMeACoffee() {
-        // Track menu action
+        // Track menu action and social share
         analytics.trackMenuAction("buy_me_coffee")
+        analytics.trackSocialShareInitiated("coffee_donation")
+        trackFeatureUsed("buy_coffee")
 
         if let url = URL(string: "https://coff.ee/valentinrudloff") {
             NSWorkspace.shared.open(url)
@@ -650,6 +700,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @objc private func tweetAboutBangoCat() {
+        // Track social share
+        analytics.trackMenuAction("tweet_about_bangocat")
+        analytics.trackSocialShareInitiated("twitter")
+        trackFeatureUsed("social_share")
+
         let tweetText = "Just discovered BangoCat for macOS! A Bango Cat overlay for your Mac - reacts to typing and clicks in real-time! Perfect for streamers and developers ✨ #BangoCat #macOS #Swift #OpenSource\n\nDownload: https://github.com/Gamma-Software/BangoCat-mac/releases/tag/v1.0.0\nSee it in action: https://youtu.be/ZFw8m6V3qRQ"
         if let encodedText = tweetText.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
            let tweetURL = URL(string: "https://twitter.com/intent/tweet?text=\(encodedText)") {
@@ -661,6 +716,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @objc private func reportBug() {
+        // Track support action
+        analytics.trackMenuAction("report_bug")
+        analytics.trackSupportActionTaken("bug_report")
+        trackFeatureUsed("bug_report")
+
         if let url = URL(string: "https://github.com/Gamma-Software/BangoCat-mac/issues/new") {
             NSWorkspace.shared.open(url)
             print("Opening bug report: https://github.com/Gamma-Software/BangoCat-mac/issues/new")
@@ -669,7 +729,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
     }
 
-        @objc private func viewChangelog() {
+    @objc private func viewChangelog() {
+        // Track support action
+        analytics.trackMenuAction("view_changelog")
+        analytics.trackSupportActionTaken("changelog_view")
+        trackFeatureUsed("view_changelog")
+
         // Try to find and read the CHANGELOG.md file
         let possiblePaths = [
             "CHANGELOG.md",
@@ -798,6 +863,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     @objc private func checkForUpdates() {
         // Track menu action
         analytics.trackMenuAction("check_for_updates")
+        trackFeatureUsed("manual_update_check")
 
         updateChecker.checkForUpdatesManually()
     }
@@ -1122,8 +1188,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         overlayWindow?.updateScale(scale)
         updateScaleMenuItems()
 
-        // Track scale change
+        // Track scale change and setting change
         analytics.trackScaleChanged(scale)
+        trackSettingChanged("scale")
+        trackFeatureUsed("scale_adjustment")
 
         print("Scale changed to: \(scale)")
     }
@@ -1158,6 +1226,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         // Track setting toggle
         analytics.trackSettingToggled("scale_pulse", enabled: scaleOnInputEnabled)
+        trackSettingChanged("scale_pulse")
+        trackFeatureUsed("scale_pulse")
 
         print("Scale pulse on input toggled to: \(scaleOnInputEnabled)")
     }
@@ -1186,6 +1256,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         saveRotation()
         overlayWindow?.updateRotation(currentRotation)
         updateRotationMenuItem()
+
+        // Track setting toggle and setting change
+        analytics.trackSettingToggled("rotation", enabled: currentRotation != 0.0)
+        trackSettingChanged("rotation")
+        trackFeatureUsed("rotation")
+
         print("Bango Cat rotated to: \(currentRotation) degrees")
     }
 
@@ -1205,6 +1281,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         // Track setting toggle
         analytics.trackSettingToggled("horizontal_flip", enabled: isFlippedHorizontally)
+        trackSettingChanged("horizontal_flip")
+        trackFeatureUsed("horizontal_flip")
 
         print("Cat horizontal flip toggled to: \(isFlippedHorizontally)")
     }
@@ -1217,6 +1295,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         // Track setting toggle
         analytics.trackSettingToggled("ignore_clicks", enabled: ignoreClicksEnabled)
+        trackSettingChanged("ignore_clicks")
+        trackFeatureUsed("ignore_clicks")
 
         print("Ignore clicks toggled to: \(ignoreClicksEnabled)")
     }
@@ -1229,6 +1309,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         // Track setting toggle
         analytics.trackSettingToggled("click_through", enabled: clickThroughEnabled)
+        trackSettingChanged("click_through")
+        trackFeatureUsed("click_through")
 
         print("Click through toggled to: \(clickThroughEnabled)")
     }
@@ -1253,6 +1335,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         // Track paw behavior change
         analytics.trackPawBehaviorChanged(behavior.displayName)
+        trackSettingChanged("paw_behavior")
+        trackFeatureUsed("paw_behavior_\(behavior.rawValue.lowercased().replacingOccurrences(of: " ", with: "_"))")
 
         print("Paw behavior changed to: \(behavior.displayName)")
     }
@@ -1274,6 +1358,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
             // Track stroke counter reset
             analytics.trackStrokeCounterReset()
+            trackFeatureUsed("stroke_counter_reset")
 
             print("Stroke counter reset by user")
         }
@@ -1488,6 +1573,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             // Save position for the current active app
             perAppPositions[currentActiveApp] = position
             savePerAppPositioning()
+
+            // Track per-app position save
+            analytics.trackPerAppPositionSaved(currentActiveApp, totalAppsWithPositions: perAppPositions.count)
+            analytics.trackWindowPositionChanged("per_app_manual", method: "manual_drag")
+
             print("Manual position saved for \(currentActiveApp): \(position)")
         } else {
             // Save position globally (original behavior)
@@ -1495,6 +1585,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             currentCornerPosition = .custom
             savePositionPreferences()
             updatePositionMenuItems()
+
+            // Track global position save
+            analytics.trackWindowPositionChanged("global_manual", method: "manual_drag")
+
             print("Manual position saved: \(position)")
         }
     }
@@ -1536,13 +1630,25 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @objc private func saveCurrentPositionAction() {
-        saveManualPosition(overlayWindow?.window?.frame.origin ?? NSPoint.zero)
+        let currentPosition = overlayWindow?.window?.frame.origin ?? NSPoint.zero
+        saveManualPosition(currentPosition)
+
+        // Track position save
+        analytics.trackWindowPositionChanged("custom", method: "save_current")
+        trackFeatureUsed("save_position")
+
+        print("Current position saved: \(currentPosition)")
     }
 
     @objc private func restoreSavedPosition() {
         overlayWindow?.setPositionProgrammatically(savedPosition)
         currentCornerPosition = .custom // Assuming saved position is custom
         updatePositionMenuItems()
+
+        // Track position restore
+        analytics.trackWindowPositionChanged("saved", method: "restore_saved")
+        trackFeatureUsed("restore_position")
+
         print("Restored saved position: \(savedPosition)")
     }
 
@@ -1556,6 +1662,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         // Track position change
         analytics.trackPositionChanged(corner.displayName)
+        analytics.trackWindowPositionChanged(corner.displayName, method: "corner_menu")
+        trackFeatureUsed("corner_positioning")
 
         print("Moved cat to \(corner.displayName) at position: \(position)")
     }
@@ -1693,6 +1801,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             // Save current position for the old app (if it's not "unknown")
             if oldApp != "unknown", let currentPosition = overlayWindow?.window?.frame.origin {
                 perAppPositions[oldApp] = currentPosition
+                analytics.trackPerAppPositionSaved(oldApp, totalAppsWithPositions: perAppPositions.count)
                 print("💾 Saved position for \(oldApp): \(currentPosition)")
             }
 
@@ -1700,6 +1809,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             if let savedPosition = perAppPositions[newApp] {
                 print("📍 Restoring position for \(newApp): \(savedPosition)")
                 overlayWindow?.setPositionProgrammatically(savedPosition)
+                analytics.trackWindowPositionChanged("per_app_restore", method: "per_app_restore")
             } else {
                 print("🆕 No saved position for \(newApp), using current position")
                 // Optionally, you could set a default position here
@@ -1715,9 +1825,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             if shouldHideForNewApp {
                 print("🙈 Hiding cat for \(newApp)")
                 overlayWindow?.hideWindow()
+                analytics.trackVisibilityToggled(false, method: "per_app_hiding")
             } else {
                 print("👁️ Showing cat for \(newApp)")
                 overlayWindow?.showWindow()
+                analytics.trackVisibilityToggled(true, method: "per_app_showing")
             }
         }
     }
@@ -1736,6 +1848,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
 
         updatePerAppPositioningMenuItem()
+
+        // Track per-app positioning toggle
+        analytics.trackPerAppPositioningToggled(isPerAppPositioningEnabled)
+        trackSettingChanged("per_app_positioning")
+        trackFeatureUsed("per_app_positioning")
+
         print("Per-app positioning toggled to: \(isPerAppPositioningEnabled)")
     }
 
@@ -1749,15 +1867,24 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             let shouldHide = perAppHiddenApps.contains(currentActiveApp)
             if shouldHide {
                 overlayWindow?.hideWindow()
+                analytics.trackVisibilityToggled(false, method: "per_app_hiding_enabled")
             } else {
                 overlayWindow?.showWindow()
+                analytics.trackVisibilityToggled(true, method: "per_app_hiding_enabled")
             }
         } else {
             // When disabling, always show the cat
             overlayWindow?.showWindow()
+            analytics.trackVisibilityToggled(true, method: "per_app_hiding_disabled")
         }
 
         updatePerAppHidingMenuItem()
+
+        // Track per-app hiding toggle
+        analytics.trackPerAppHidingToggled(isPerAppHidingEnabled)
+        trackSettingChanged("per_app_hiding")
+        trackFeatureUsed("per_app_hiding")
+
         print("Per-app hiding toggled to: \(isPerAppHidingEnabled)")
     }
 
@@ -1769,9 +1896,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
             if isPerAppHidingEnabled {
                 overlayWindow?.hideWindow()
+                analytics.trackVisibilityToggled(false, method: "hide_for_current_app")
             }
 
             updateHiddenAppsMenuItems()
+
+            // Track app hidden status change
+            analytics.trackAppHiddenStatusChanged(currentApp, hidden: true)
+            trackFeatureUsed("hide_for_current_app")
+
             print("Added \(currentApp) to hidden apps list")
 
             // Show confirmation with app name
@@ -1789,9 +1922,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
             if isPerAppHidingEnabled {
                 overlayWindow?.showWindow()
+                analytics.trackVisibilityToggled(true, method: "show_for_current_app")
             }
 
             updateHiddenAppsMenuItems()
+
+            // Track app hidden status change
+            analytics.trackAppHiddenStatusChanged(currentApp, hidden: false)
+            trackFeatureUsed("show_for_current_app")
+
             print("Removed \(currentApp) from hidden apps list")
 
             // Show confirmation with app name
@@ -1802,6 +1941,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @objc internal func manageHiddenApps() {
+        // Track feature usage
+        trackFeatureUsed("manage_hidden_apps")
+        analytics.trackMenuAction("manage_hidden_apps")
+
         let alert = NSAlert()
         alert.messageText = "Manage Hidden Apps"
 
@@ -1829,7 +1972,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         alert.alertStyle = .informational
 
         let response = alert.runModal()
-        if response == .alertSecondButtonReturn && !perAppHiddenApps.isEmpty {
+                if response == .alertSecondButtonReturn && !perAppHiddenApps.isEmpty {
             // Clear all hidden apps
             perAppHiddenApps.removeAll()
             savePerAppHiding()
@@ -1838,7 +1981,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             // Show the cat since no apps are hidden now
             if isPerAppHidingEnabled {
                 overlayWindow?.showWindow()
+                analytics.trackVisibilityToggled(true, method: "clear_all_hidden_apps")
             }
+
+            // Track clearing all hidden apps
+            analytics.trackAdvancedFeatureUsage("clear_all_hidden_apps", complexity: "basic", success: true)
+            trackFeatureUsed("clear_all_hidden_apps")
 
             print("Cleared all hidden apps")
             showNotification(title: "Hidden Apps Cleared", message: "Cat will now show for all applications")
@@ -1916,5 +2064,85 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         // Update per-app hiding menu items based on current app
         updateHiddenAppsMenuItems()
+    }
+
+    // MARK: - App Lifecycle Tracking
+
+    private func setupAppLifecycleNotifications() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(applicationDidBecomeActive),
+            name: NSApplication.didBecomeActiveNotification,
+            object: nil
+        )
+
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(applicationDidResignActive),
+            name: NSApplication.didResignActiveNotification,
+            object: nil
+        )
+
+        // Track system sleep/wake if available
+        NSWorkspace.shared.notificationCenter.addObserver(
+            self,
+            selector: #selector(systemWillSleep),
+            name: NSWorkspace.willSleepNotification,
+            object: nil
+        )
+
+        NSWorkspace.shared.notificationCenter.addObserver(
+            self,
+            selector: #selector(systemDidWake),
+            name: NSWorkspace.didWakeNotification,
+            object: nil
+        )
+    }
+
+    @objc private func applicationDidBecomeActive() {
+        analytics.trackAppBecameActive()
+    }
+
+    @objc private func applicationDidResignActive() {
+        analytics.trackAppBecameInactive()
+    }
+
+    @objc private func systemWillSleep() {
+        analytics.trackSystemSleepDetected()
+    }
+
+    @objc private func systemDidWake() {
+        analytics.trackSystemWakeDetected()
+    }
+
+    // MARK: - Settings Tracking
+
+    private func trackCurrentSettingsCombination() {
+        let settings: [String: Any] = [
+            "scale": currentScale,
+            "scale_on_input": scaleOnInputEnabled,
+            "rotation": currentRotation,
+            "horizontal_flip": isFlippedHorizontally,
+            "ignore_clicks": ignoreClicksEnabled,
+            "click_through": clickThroughEnabled,
+            "paw_behavior": pawBehaviorMode.rawValue,
+            "per_app_positioning": isPerAppPositioningEnabled,
+            "per_app_hiding": isPerAppHidingEnabled,
+            "corner_position": currentCornerPosition.rawValue
+        ]
+        analytics.trackSettingsCombination(settings)
+    }
+
+    private func trackFeatureUsed(_ featureName: String) {
+        if !featuresUsedThisSession.contains(featureName) {
+            featuresUsedThisSession.append(featureName)
+            analytics.trackFirstTimeFeatureUsed(featureName)
+        }
+    }
+
+    private func trackSettingChanged(_ settingName: String) {
+        if !settingsChangedThisSession.contains(settingName) {
+            settingsChangedThisSession.append(settingName)
+        }
     }
 }

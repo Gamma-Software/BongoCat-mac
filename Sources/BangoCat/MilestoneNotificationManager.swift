@@ -78,15 +78,22 @@ class MilestoneNotificationManager: NSObject, UNUserNotificationCenterDelegate {
             return
         }
 
+        // Track permission request
+        analytics.trackNotificationPermissionRequested()
+
         let center = UNUserNotificationCenter.current()
         center.requestAuthorization(options: [.alert, .sound, .badge]) { [weak self] granted, error in
             DispatchQueue.main.async {
                 if let error = error {
                     print("❌ Notification permission error: \(error.localizedDescription)")
+                    self?.analytics.trackError("Notification permission error", context: ["error": error.localizedDescription])
+                    self?.analytics.trackNotificationPermissionResult(false)
                 } else if granted {
                     print("✅ Notification permission granted")
+                    self?.analytics.trackNotificationPermissionResult(true)
                 } else {
                     print("⚠️ Notification permission denied")
+                    self?.analytics.trackNotificationPermissionResult(false)
                     self?.notificationsEnabled = false
                     self?.saveSettings()
                 }
@@ -112,6 +119,9 @@ class MilestoneNotificationManager: NSObject, UNUserNotificationCenterDelegate {
         lastNotifiedClickMilestone = UserDefaults.standard.integer(forKey: lastClickMilestoneKey)
         lastNotifiedTotalMilestone = UserDefaults.standard.integer(forKey: lastTotalMilestoneKey)
 
+        // Track configuration loading
+        analytics.trackConfigurationLoaded("milestone_manager", success: true)
+
         print("🔔 Loaded milestone settings - enabled: \(notificationsEnabled), intervals: \(milestoneIntervals)")
     }
 
@@ -128,6 +138,10 @@ class MilestoneNotificationManager: NSObject, UNUserNotificationCenterDelegate {
     func setNotificationsEnabled(_ enabled: Bool) {
         notificationsEnabled = enabled
         saveSettings()
+
+        // Track setting change
+        analytics.trackSettingToggled("milestone_notifications", enabled: enabled)
+
         print("🔔 Milestone notifications \(enabled ? "enabled" : "disabled")")
     }
 
@@ -138,6 +152,10 @@ class MilestoneNotificationManager: NSObject, UNUserNotificationCenterDelegate {
     func setMilestoneIntervals(_ intervals: [Int]) {
         milestoneIntervals = intervals.sorted()
         saveSettings()
+
+        // Track advanced feature usage
+        analytics.trackAdvancedFeatureUsage("custom_milestone_intervals", complexity: "advanced", success: true)
+
         print("🔔 Milestone intervals updated: \(milestoneIntervals)")
     }
 
@@ -249,10 +267,14 @@ class MilestoneNotificationManager: NSObject, UNUserNotificationCenterDelegate {
         let identifier = "milestone-\(type.lowercased().replacingOccurrences(of: " ", with: "-"))-\(count)"
         let request = UNNotificationRequest(identifier: identifier, content: content, trigger: nil)
 
+        // Track notification being shown
+        analytics.trackNotificationShown("milestone", milestone: count)
+
         center.add(request) { error in
             DispatchQueue.main.async {
                 if let error = error {
                     print("❌ Failed to send milestone notification: \(error.localizedDescription)")
+                    self.analytics.trackError("Failed to send milestone notification", context: ["error": error.localizedDescription, "type": type, "count": count])
                 } else {
                     print("🔔 Milestone notification sent: \(type) - \(count)")
                 }
@@ -267,13 +289,27 @@ class MilestoneNotificationManager: NSObject, UNUserNotificationCenterDelegate {
         lastNotifiedClickMilestone = 0
         lastNotifiedTotalMilestone = 0
         saveSettings()
+
+        // Track milestone reset
+        analytics.trackAdvancedFeatureUsage("reset_milestone_tracking", complexity: "basic", success: true)
+
         print("🔔 Milestone tracking reset")
     }
 
     // MARK: - UNUserNotificationCenterDelegate
 
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
-        // Handle notification tap if needed
+        // Handle notification tap
+        let userInfo = response.notification.request.content.userInfo
+
+        if let type = userInfo["type"] as? String {
+            if type.contains("milestone") || userInfo["milestone"] as? Bool == true {
+                analytics.trackNotificationClicked("milestone", action: "tap")
+            } else {
+                analytics.trackNotificationClicked(type, action: "tap")
+            }
+        }
+
         print("🔔 Notification tapped: \(response.notification.request.identifier)")
         completionHandler()
     }

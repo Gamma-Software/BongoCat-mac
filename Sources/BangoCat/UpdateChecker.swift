@@ -41,6 +41,9 @@ class UpdateChecker: NSObject {
     private var dailyCheckTimer: Timer?
     private let checkInterval: TimeInterval = 24 * 60 * 60 // 24 hours
 
+    // Analytics
+    private let analytics = PostHogAnalyticsManager.shared
+
     override init() {
         super.init()
         loadSettings()
@@ -51,6 +54,9 @@ class UpdateChecker: NSObject {
     private func loadSettings() {
         updateNotificationsEnabled = UserDefaults.standard.object(forKey: updateNotificationsEnabledKey) == nil ? true : UserDefaults.standard.bool(forKey: updateNotificationsEnabledKey)
         skippedVersion = UserDefaults.standard.string(forKey: skipVersionKey)
+
+        // Track configuration loading
+        analytics.trackConfigurationLoaded("update_checker", success: true)
 
         print("🔄 Loaded update checker settings - notifications: \(updateNotificationsEnabled), skipped version: \(skippedVersion ?? "none")")
     }
@@ -86,12 +92,17 @@ class UpdateChecker: NSObject {
 
     func checkForUpdatesManually() {
         print("🔄 Manual update check requested")
+        analytics.trackUpdateCheckStarted(true)
         checkForUpdates(isManual: true)
     }
 
     func setUpdateNotificationsEnabled(_ enabled: Bool) {
         updateNotificationsEnabled = enabled
         saveSettings()
+
+        // Track setting change
+        analytics.trackSettingToggled("update_notifications", enabled: enabled)
+
         print("🔄 Update notifications \(enabled ? "enabled" : "disabled")")
     }
 
@@ -102,6 +113,10 @@ class UpdateChecker: NSObject {
     func skipVersion(_ version: String) {
         skippedVersion = version
         saveSettings()
+
+        // Track update action
+        analytics.trackUpdateActionTaken("skip", version: version)
+
         print("🔄 Skipping version: \(version)")
     }
 
@@ -121,6 +136,7 @@ class UpdateChecker: NSObject {
 
         // Check if we need to update (first time or more than 24 hours ago)
         if lastCheckDate == nil || now.timeIntervalSince(lastCheckDate!) >= checkInterval {
+            analytics.trackUpdateCheckStarted(false)
             checkForUpdates(isManual: false)
         }
     }
@@ -128,6 +144,7 @@ class UpdateChecker: NSObject {
     private func checkForUpdates(isManual: Bool) {
         guard let url = URL(string: releasesURL) else {
             print("❌ Invalid GitHub API URL")
+            analytics.trackError("Invalid GitHub API URL", context: ["is_manual": isManual])
             return
         }
 
@@ -147,6 +164,9 @@ class UpdateChecker: NSObject {
 
         if let error = error {
             print("❌ Update check failed: \(error.localizedDescription)")
+            analytics.trackError("Update check failed", context: ["error": error.localizedDescription, "is_manual": isManual])
+            analytics.trackUpdateCheckCompleted(false, currentVersion: getCurrentVersion(), latestVersion: nil)
+
             if isManual {
                 showErrorAlert(message: "Failed to check for updates: \(error.localizedDescription)")
             }
@@ -155,6 +175,9 @@ class UpdateChecker: NSObject {
 
         guard let data = data else {
             print("❌ No data received from GitHub API")
+            analytics.trackError("No data from GitHub API", context: ["is_manual": isManual])
+            analytics.trackUpdateCheckCompleted(false, currentVersion: getCurrentVersion(), latestVersion: nil)
+
             if isManual {
                 showErrorAlert(message: "No data received from GitHub")
             }
@@ -166,6 +189,9 @@ class UpdateChecker: NSObject {
             processReleases(releases, isManual: isManual)
         } catch {
             print("❌ Failed to parse GitHub API response: \(error.localizedDescription)")
+            analytics.trackError("Failed to parse update response", context: ["error": error.localizedDescription, "is_manual": isManual])
+            analytics.trackUpdateCheckCompleted(false, currentVersion: getCurrentVersion(), latestVersion: nil)
+
             if isManual {
                 showErrorAlert(message: "Failed to parse update information")
             }
@@ -178,6 +204,8 @@ class UpdateChecker: NSObject {
 
         guard let latestRelease = validReleases.first else {
             print("🔄 No valid releases found")
+            analytics.trackUpdateCheckCompleted(false, currentVersion: getCurrentVersion(), latestVersion: nil)
+
             if isManual {
                 showInfoAlert(title: "No Updates", message: "No releases available.")
             }
@@ -190,6 +218,8 @@ class UpdateChecker: NSObject {
         print("🔄 Current version: \(currentVersion), Latest version: \(latestVersion)")
 
         if isNewerVersion(latest: latestVersion, current: currentVersion) {
+            analytics.trackUpdateCheckCompleted(true, currentVersion: currentVersion, latestVersion: latestVersion)
+
             // Check if this version was skipped
             if let skippedVersion = skippedVersion, skippedVersion == latestVersion {
                 print("🔄 Update available but version \(latestVersion) was skipped")
@@ -202,6 +232,8 @@ class UpdateChecker: NSObject {
             print("🔄 New version available: \(latestVersion)")
             showUpdateAvailable(release: latestRelease, isSkipped: false)
         } else {
+            analytics.trackUpdateCheckCompleted(false, currentVersion: currentVersion, latestVersion: latestVersion)
+
             print("🔄 App is up to date")
             if isManual {
                 showInfoAlert(title: "Up to Date", message: "You have the latest version of BangoCat (\(currentVersion)).")
@@ -265,9 +297,13 @@ class UpdateChecker: NSObject {
         let identifier = "update-\(release.tagName)"
         let request = UNNotificationRequest(identifier: identifier, content: content, trigger: nil)
 
+        // Track notification shown
+        analytics.trackNotificationShown("update")
+
         center.add(request) { error in
             if let error = error {
                 print("❌ Failed to send update notification: \(error.localizedDescription)")
+                self.analytics.trackError("Failed to send update notification", context: ["error": error.localizedDescription])
             } else {
                 print("🔔 Update notification sent for version \(release.tagName)")
             }
@@ -288,12 +324,19 @@ class UpdateChecker: NSObject {
 
         switch response {
         case .alertFirstButtonReturn: // Download Now
+            analytics.trackUpdateActionTaken("download", version: release.tagName)
+            analytics.trackNotificationClicked("update", action: "download")
             openUpdateURL(release.htmlUrl)
         case .alertSecondButtonReturn: // Skip This Version
+            analytics.trackUpdateActionTaken("skip", version: release.tagName)
+            analytics.trackNotificationClicked("update", action: "skip")
             skipVersion(release.tagName.replacingOccurrences(of: "v", with: ""))
         case .alertThirdButtonReturn: // Remind Me Later
+            analytics.trackUpdateActionTaken("later", version: release.tagName)
+            analytics.trackNotificationClicked("update", action: "later")
             break // Do nothing, will check again on next cycle
         default:
+            analytics.trackNotificationDismissed("update")
             break
         }
     }
@@ -319,6 +362,7 @@ class UpdateChecker: NSObject {
     private func openUpdateURL(_ urlString: String) {
         guard let url = URL(string: urlString) else {
             print("❌ Invalid update URL: \(urlString)")
+            analytics.trackError("Invalid update URL", context: ["url": urlString])
             return
         }
 

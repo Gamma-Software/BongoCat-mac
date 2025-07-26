@@ -119,6 +119,9 @@ class CatAnimationController: ObservableObject {
     // Stroke counter
     let strokeCounter = StrokeCounter()
 
+    // Analytics
+    private let analytics = PostHogAnalyticsManager.shared
+
     private var animationTimer: Timer?
     private var lastPressedKey: String = ""  // Track the last pressed key
     private var lastPawDownTime: Date = Date()  // Track when paw went down
@@ -129,6 +132,12 @@ class CatAnimationController: ObservableObject {
     // Trackpad touch tracking
     private var trackpadTouchTimer: Timer?
     private let trackpadTouchTimeout: TimeInterval = 0.3  // Time to wait after last trackpad event before returning to idle
+
+    init() {
+    }
+
+    deinit {
+    }
 
     // MARK: - Keyboard Layout-Based Paw Mapping
     private let leftPawKeys: Set<String> = [
@@ -313,9 +322,10 @@ class CatAnimationController: ObservableObject {
             }
             print("🖱️ Right click up detected - right paw up animation")
             triggerPawAnimation(.rightPawUp)
-        case .trackpadTouch:
-            print("👆 Trackpad touch detected - both paws down animation")
-            triggerTrackpadTouch()
+        //case .trackpadTouch:
+        //    print("👆 Trackpad touch detected - both paws down animation")
+        //    analytics.trackTrackpadGestureDetected("touch")
+        //    triggerTrackpadTouch()
         //case .scroll:
         //    print("🔄 Scroll detected - both paws animation")
         //    triggerBothPawsAnimation()
@@ -603,27 +613,42 @@ struct BangoCatSprite: View {
 
     // Helper function to load images from bundle resources
     private func loadImage(_ name: String) -> NSImage? {
+        let analytics = PostHogAnalyticsManager.shared
+        let loadStartTime = Date()
+
         // Method 1: Try Bundle.module (for Swift Package Manager)
         #if SWIFT_PACKAGE
         if let url = Bundle.module.url(forResource: name, withExtension: "png", subdirectory: "Images"),
            let image = NSImage(contentsOf: url) {
+            let loadTime = Date().timeIntervalSince(loadStartTime)
+            analytics.trackResourceLoadTime("image", loadTime: loadTime)
             print("✅ Loaded image from Bundle.module: Images/\(name).png")
             return image
+        } else {
+            analytics.trackImageLoadError(name, method: "Bundle.module")
         }
         #endif
 
         // Method 2: Try Bundle.main with Images subdirectory (for packaged app)
         if let url = Bundle.main.url(forResource: name, withExtension: "png", subdirectory: "Images"),
            let image = NSImage(contentsOf: url) {
+            let loadTime = Date().timeIntervalSince(loadStartTime)
+            analytics.trackResourceLoadTime("image", loadTime: loadTime)
             print("✅ Loaded image from Bundle.main Images subdirectory: Images/\(name).png")
             return image
+        } else {
+            analytics.trackImageLoadError(name, method: "Bundle.main_subdirectory")
         }
 
         // Method 3: Try Bundle.main at root level (fallback for packaged app)
         if let url = Bundle.main.url(forResource: name, withExtension: "png"),
            let image = NSImage(contentsOf: url) {
+            let loadTime = Date().timeIntervalSince(loadStartTime)
+            analytics.trackResourceLoadTime("image", loadTime: loadTime)
             print("✅ Loaded image from Bundle.main root: \(name).png")
             return image
+        } else {
+            analytics.trackImageLoadError(name, method: "Bundle.main_root")
         }
 
         // Method 4: Try direct file paths (development fallback)
@@ -636,11 +661,15 @@ struct BangoCatSprite: View {
 
         for path in possiblePaths {
             if let image = NSImage(contentsOfFile: path) {
+                let loadTime = Date().timeIntervalSince(loadStartTime)
+                analytics.trackResourceLoadTime("image", loadTime: loadTime)
                 print("✅ Loaded image from file path: \(path)")
                 return image
             }
         }
 
+        // All methods failed
+        analytics.trackImageLoadError(name, method: "all_methods_failed")
         print("❌ Failed to load image: \(name).png from all attempted methods")
         return nil
     }
@@ -677,14 +706,20 @@ struct CatView: View {
                                 Button("Small") {
                                     print("🔧 Context menu: Setting scale to 0.65, appDelegate: \(animationController.appDelegate != nil)")
                                     animationController.appDelegate?.setScalePublic(0.65)
+                                    PostHogAnalyticsManager.shared.trackContextMenuUsed("right_click", action: "scale_small")
+                                    PostHogAnalyticsManager.shared.trackFeatureDiscovered("scale_adjustment", discoveryMethod: "context_menu")
                                 }
                                 Button("Medium") {
                                     print("🔧 Context menu: Setting scale to 0.75, appDelegate: \(animationController.appDelegate != nil)")
                                     animationController.appDelegate?.setScalePublic(0.75)
+                                    PostHogAnalyticsManager.shared.trackContextMenuUsed("right_click", action: "scale_medium")
+                                    PostHogAnalyticsManager.shared.trackFeatureDiscovered("scale_adjustment", discoveryMethod: "context_menu")
                                 }
                                 Button("Big") {
                                     print("🔧 Context menu: Setting scale to 1.0, appDelegate: \(animationController.appDelegate != nil)")
                                     animationController.appDelegate?.setScalePublic(1.0)
+                                    PostHogAnalyticsManager.shared.trackContextMenuUsed("right_click", action: "scale_big")
+                                    PostHogAnalyticsManager.shared.trackFeatureDiscovered("scale_adjustment", discoveryMethod: "context_menu")
                                 }
                             }
 
@@ -694,47 +729,65 @@ struct CatView: View {
                             Button(animationController.scaleOnInputEnabled ? "Disable Scale Pulse" : "Enable Scale Pulse") {
                                 print("🔧 Context menu: Toggling scale pulse, appDelegate: \(animationController.appDelegate != nil)")
                                 animationController.appDelegate?.toggleScalePulsePublic()
+                                PostHogAnalyticsManager.shared.trackContextMenuUsed("right_click", action: "toggle_scale_pulse")
+                                PostHogAnalyticsManager.shared.trackFeatureDiscovered("scale_pulse", discoveryMethod: "context_menu")
                             }
 
                             Button(animationController.rotation != 0.0 ? "Disable Rotation" : "Enable Rotation") {
                                 print("🔧 Context menu: Toggling rotation, appDelegate: \(animationController.appDelegate != nil)")
                                 animationController.appDelegate?.toggleBangoCatRotatePublic()
+                                PostHogAnalyticsManager.shared.trackContextMenuUsed("right_click", action: "toggle_rotation")
+                                PostHogAnalyticsManager.shared.trackFeatureDiscovered("rotation", discoveryMethod: "context_menu")
                             }
 
                             Button(animationController.isFlippedHorizontally ? "Unflip Horizontally" : "Flip Horizontally") {
                                 print("🔧 Context menu: Toggling horizontal flip, appDelegate: \(animationController.appDelegate != nil)")
                                 animationController.appDelegate?.toggleHorizontalFlipPublic()
+                                PostHogAnalyticsManager.shared.trackContextMenuUsed("right_click", action: "toggle_horizontal_flip")
+                                PostHogAnalyticsManager.shared.trackFeatureDiscovered("horizontal_flip", discoveryMethod: "context_menu")
                             }
 
                             Menu("Paw Behavior") {
                                 Button("Keyboard Layout") {
                                     print("🔧 Context menu: Setting paw behavior to keyboard layout")
                                     animationController.appDelegate?.setPawBehaviorKeyboardLayoutPublic()
+                                    PostHogAnalyticsManager.shared.trackContextMenuUsed("right_click", action: "paw_behavior_keyboard")
+                                    PostHogAnalyticsManager.shared.trackFeatureDiscovered("paw_behavior", discoveryMethod: "context_menu")
                                 }
                                 Button("Random") {
                                     print("🔧 Context menu: Setting paw behavior to random")
                                     animationController.appDelegate?.setPawBehaviorRandomPublic()
+                                    PostHogAnalyticsManager.shared.trackContextMenuUsed("right_click", action: "paw_behavior_random")
+                                    PostHogAnalyticsManager.shared.trackFeatureDiscovered("paw_behavior", discoveryMethod: "context_menu")
                                 }
                                 Button("Alternating") {
                                     print("🔧 Context menu: Setting paw behavior to alternating")
                                     animationController.appDelegate?.setPawBehaviorAlternatingPublic()
+                                    PostHogAnalyticsManager.shared.trackContextMenuUsed("right_click", action: "paw_behavior_alternating")
+                                    PostHogAnalyticsManager.shared.trackFeatureDiscovered("paw_behavior", discoveryMethod: "context_menu")
                                 }
                             }
 
                             Button(animationController.ignoreClicksEnabled ? "Enable Clicks" : "Ignore Clicks") {
                                 print("🔧 Context menu: Toggling ignore clicks, appDelegate: \(animationController.appDelegate != nil)")
                                 animationController.appDelegate?.toggleIgnoreClicksPublic()
+                                PostHogAnalyticsManager.shared.trackContextMenuUsed("right_click", action: "toggle_ignore_clicks")
+                                PostHogAnalyticsManager.shared.trackFeatureDiscovered("ignore_clicks", discoveryMethod: "context_menu")
                             }
 
                             // Get click through state from appDelegate - this is a bit of a workaround since we don't have direct access
                             Button("Toggle Click Through (Hold ⌘ to Drag)") {
                                 print("🔧 Context menu: Toggling click through, appDelegate: \(animationController.appDelegate != nil)")
                                 animationController.appDelegate?.toggleClickThroughPublic()
+                                PostHogAnalyticsManager.shared.trackContextMenuUsed("right_click", action: "toggle_click_through")
+                                PostHogAnalyticsManager.shared.trackFeatureDiscovered("click_through", discoveryMethod: "context_menu")
                             }
 
                             Button("Milestone Notifications 🔔") {
                                 print("🔧 Context menu: Toggling milestone notifications, appDelegate: \(animationController.appDelegate != nil)")
                                 animationController.appDelegate?.toggleMilestoneNotificationsPublic()
+                                PostHogAnalyticsManager.shared.trackContextMenuUsed("right_click", action: "toggle_milestone_notifications")
+                                PostHogAnalyticsManager.shared.trackFeatureDiscovered("milestone_notifications", discoveryMethod: "context_menu")
                             }
 
                             Divider()
@@ -743,22 +796,34 @@ struct CatView: View {
                             Menu("Position") {
                                 Button("Top Left") {
                                     animationController.appDelegate?.setCornerPositionPublic(.topLeft)
+                                    PostHogAnalyticsManager.shared.trackContextMenuUsed("right_click", action: "position_top_left")
+                                    PostHogAnalyticsManager.shared.trackFeatureDiscovered("corner_positioning", discoveryMethod: "context_menu")
                                 }
                                 Button("Top Right") {
                                     animationController.appDelegate?.setCornerPositionPublic(.topRight)
+                                    PostHogAnalyticsManager.shared.trackContextMenuUsed("right_click", action: "position_top_right")
+                                    PostHogAnalyticsManager.shared.trackFeatureDiscovered("corner_positioning", discoveryMethod: "context_menu")
                                 }
                                 Button("Bottom Left") {
                                     animationController.appDelegate?.setCornerPositionPublic(.bottomLeft)
+                                    PostHogAnalyticsManager.shared.trackContextMenuUsed("right_click", action: "position_bottom_left")
+                                    PostHogAnalyticsManager.shared.trackFeatureDiscovered("corner_positioning", discoveryMethod: "context_menu")
                                 }
                                 Button("Bottom Right") {
                                     animationController.appDelegate?.setCornerPositionPublic(.bottomRight)
+                                    PostHogAnalyticsManager.shared.trackContextMenuUsed("right_click", action: "position_bottom_right")
+                                    PostHogAnalyticsManager.shared.trackFeatureDiscovered("corner_positioning", discoveryMethod: "context_menu")
                                 }
                                 Divider()
                                 Button("Save Current Position") {
                                     animationController.appDelegate?.saveCurrentPositionActionPublic()
+                                    PostHogAnalyticsManager.shared.trackContextMenuUsed("right_click", action: "save_position")
+                                    PostHogAnalyticsManager.shared.trackFeatureDiscovered("save_position", discoveryMethod: "context_menu")
                                 }
                                 Button("Restore Saved Position") {
                                     animationController.appDelegate?.restoreSavedPositionPublic()
+                                    PostHogAnalyticsManager.shared.trackContextMenuUsed("right_click", action: "restore_position")
+                                    PostHogAnalyticsManager.shared.trackFeatureDiscovered("restore_position", discoveryMethod: "context_menu")
                                 }
                             }
 
@@ -768,17 +833,25 @@ struct CatView: View {
                             Menu("App Visibility") {
                                 Button("Per-App Hiding") {
                                     animationController.appDelegate?.togglePerAppHidingPublic()
+                                    PostHogAnalyticsManager.shared.trackContextMenuUsed("right_click", action: "toggle_per_app_hiding")
+                                    PostHogAnalyticsManager.shared.trackFeatureDiscovered("per_app_hiding", discoveryMethod: "context_menu")
                                 }
                                 Divider()
                                 Button("Hide for Current App") {
                                     animationController.appDelegate?.hideForCurrentAppPublic()
+                                    PostHogAnalyticsManager.shared.trackContextMenuUsed("right_click", action: "hide_for_current_app")
+                                    PostHogAnalyticsManager.shared.trackFeatureDiscovered("per_app_hiding", discoveryMethod: "context_menu")
                                 }
                                 Button("Show for Current App") {
                                     animationController.appDelegate?.showForCurrentAppPublic()
+                                    PostHogAnalyticsManager.shared.trackContextMenuUsed("right_click", action: "show_for_current_app")
+                                    PostHogAnalyticsManager.shared.trackFeatureDiscovered("per_app_hiding", discoveryMethod: "context_menu")
                                 }
                                 Divider()
                                 Button("Manage Hidden Apps...") {
                                     animationController.appDelegate?.manageHiddenAppsPublic()
+                                    PostHogAnalyticsManager.shared.trackContextMenuUsed("right_click", action: "manage_hidden_apps")
+                                    PostHogAnalyticsManager.shared.trackFeatureDiscovered("manage_hidden_apps", discoveryMethod: "context_menu")
                                 }
                             }
 
@@ -787,42 +860,58 @@ struct CatView: View {
                             // Utility options
                             Button("Hide BangoCat") {
                                 animationController.appDelegate?.toggleOverlayPublic()
+                                PostHogAnalyticsManager.shared.trackContextMenuUsed("right_click", action: "hide_bangocat")
                             }
 
                             Button("Reset Stroke Counter") {
                                 animationController.appDelegate?.resetStrokeCounterPublic()
+                                PostHogAnalyticsManager.shared.trackContextMenuUsed("right_click", action: "reset_stroke_counter")
+                                PostHogAnalyticsManager.shared.trackFeatureDiscovered("stroke_counter_reset", discoveryMethod: "context_menu")
                             }
 
                             Divider()
 
                             Button("Buy me a coffee ☕") {
                                 animationController.appDelegate?.buyMeACoffeePublic()
+                                PostHogAnalyticsManager.shared.trackContextMenuUsed("right_click", action: "buy_coffee")
+                                PostHogAnalyticsManager.shared.trackFeatureDiscovered("buy_coffee", discoveryMethod: "context_menu")
                             }
 
                             Button("Tweet about BangoCat 🐦") {
                                 animationController.appDelegate?.tweetAboutBangoCatPublic()
+                                PostHogAnalyticsManager.shared.trackContextMenuUsed("right_click", action: "tweet_about_bangocat")
+                                PostHogAnalyticsManager.shared.trackFeatureDiscovered("social_share", discoveryMethod: "context_menu")
                             }
 
                             Button("Visit Website") {
                                 animationController.appDelegate?.visitWebsitePublic()
+                                PostHogAnalyticsManager.shared.trackContextMenuUsed("right_click", action: "visit_website")
+                                PostHogAnalyticsManager.shared.trackFeatureDiscovered("visit_website", discoveryMethod: "context_menu")
                             }
 
                             Button("View Changelog 📋") {
                                 animationController.appDelegate?.viewChangelogPublic()
+                                PostHogAnalyticsManager.shared.trackContextMenuUsed("right_click", action: "view_changelog")
+                                PostHogAnalyticsManager.shared.trackFeatureDiscovered("view_changelog", discoveryMethod: "context_menu")
                             }
 
                             Button("Report a Bug 🐛") {
                                 animationController.appDelegate?.reportBugPublic()
+                                PostHogAnalyticsManager.shared.trackContextMenuUsed("right_click", action: "report_bug")
+                                PostHogAnalyticsManager.shared.trackFeatureDiscovered("bug_report", discoveryMethod: "context_menu")
                             }
 
                             Button("About BangoCat") {
                                 animationController.appDelegate?.showCreditsPublic()
+                                PostHogAnalyticsManager.shared.trackContextMenuUsed("right_click", action: "about_bangocat")
+                                PostHogAnalyticsManager.shared.trackFeatureDiscovered("about_dialog", discoveryMethod: "context_menu")
                             }
 
                             Divider()
 
                             Button("Quit BangoCat") {
                                 animationController.appDelegate?.quitAppPublic()
+                                PostHogAnalyticsManager.shared.trackContextMenuUsed("right_click", action: "quit_app")
                             }
                         }
                 }
