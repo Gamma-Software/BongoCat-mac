@@ -39,7 +39,7 @@ cd "$PROJECT_ROOT"
 
 APP_NAME="BangoCat"
 BUNDLE_ID="com.bangocat.mac"
-VERSION="1.1.0"  # Will be updated by bump_version.sh
+VERSION="1.2.0"  # Will be updated by bump_version.sh
 BUILD_DIR=".build/release"
 PACKAGE_DIR="Build/package"
 APP_BUNDLE="${PACKAGE_DIR}/${APP_NAME}.app"

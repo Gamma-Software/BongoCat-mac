@@ -9,12 +9,10 @@
 	<key>CFBundleName</key>
 	<string>BangoCat</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.1.0</string>
+	<string>1.2.0</string>
 	<key>CFBundleVersion</key>
 	<string>2025.07</string>
 	<key>LSUIElement</key>
-	<true/>
-	<key>NSHighResolutionCapable</key>
 	<true/>
 	<key>NSAppTransportSecurity</key>
 	<dict>
@@ -22,14 +20,16 @@
 		<dict>
 			<key>api.github.com</key>
 			<dict>
-				<key>NSExceptionRequiresForwardSecrecy</key>
-				<false/>
 				<key>NSExceptionMinimumTLSVersion</key>
 				<string>TLSv1.2</string>
+				<key>NSExceptionRequiresForwardSecrecy</key>
+				<false/>
 				<key>NSThirdPartyExceptionRequiresForwardSecrecy</key>
 				<false/>
 			</dict>
 		</dict>
 	</dict>
+	<key>NSHighResolutionCapable</key>
+	<true/>
 </dict>
 </plist>
