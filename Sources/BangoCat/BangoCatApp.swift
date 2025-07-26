@@ -608,7 +608,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @objc private func tweetAboutBangoCat() {
-        let tweetText = "🐱🥁 Just discovered BangoCat for macOS! A native Swift app that adds an adorable bongo cat overlay to your desktop - reacts to typing & clicks in real-time! Perfect for streamers & developers ✨ #BangoCat #macOS #Swift #OpenSource\n\nhttps://github.com/Gamma-Software/BangoCat-mac/releases"
+        let tweetText = "Just discovered BangoCat for macOS! A Bango Cat overlay for your Mac - reacts to typing and clicks in real-time! Perfect for streamers and developers ✨ #BangoCat #macOS #Swift #OpenSource\n\nDownload: https://github.com/Gamma-Software/BangoCat-mac/releases/tag/v1.0.0\nSee it in action: https://youtu.be/ZFw8m6V3qRQ"
         if let encodedText = tweetText.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
            let tweetURL = URL(string: "https://twitter.com/intent/tweet?text=\(encodedText)") {
             NSWorkspace.shared.open(tweetURL)
