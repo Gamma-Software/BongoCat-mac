@@ -1,0 +1,71 @@
+---
+globs: *Tests.swift,*Test.swift
+---
+
+# Testing Guidelines for BangoCat
+
+## Test Structure
+Tests are located in [Tests/BangoCatTests/](mdc:Tests/BangoCatTests/) with these key files:
+- [BangoCatTests.swift](mdc:Tests/BangoCatTests/BangoCatTests.swift) - Main app tests
+- [CatAnimationControllerTests.swift](mdc:Tests/BangoCatTests/CatAnimationControllerTests.swift) - Animation logic tests
+- [StrokeCounterTests.swift](mdc:Tests/BangoCatTests/StrokeCounterTests.swift) - Input tracking tests
+
+## Testing Principles
+- **Unit tests** for business logic and data processing
+- **Mock system dependencies** (input monitoring, window management)
+- **Test state transitions** and edge cases
+- **Verify settings persistence** and restoration
+- **Test error conditions** and recovery
+
+## Test Categories
+
+### Core Functionality Tests
+- Input detection and paw mapping
+- Animation state transitions
+- Position saving and loading
+- Settings persistence
+- Stroke counting accuracy
+
+### UI Component Tests
+- View state management
+- Menu interactions
+- Window positioning
+- Scale and rotation calculations
+
+### Integration Tests
+- App lifecycle management
+- Multi-monitor support
+- Accessibility permissions
+- System preference changes
+
+## Mock Guidelines
+- Mock **CGEvent** and input monitoring for deterministic tests
+- Mock **UserDefaults** for settings tests
+- Mock **NSWindow** and **NSScreen** for positioning tests
+- Use **dependency injection** to make components testable
+
+## Test Naming Convention
+```swift
+func test_featureName_whenCondition_shouldExpectedResult() {
+    // Test implementation
+}
+```
+
+## Running Tests
+- Use the test script: `./Scripts/test.sh`
+- Run individual test files in Xcode
+- Ensure tests pass before committing changes
+- Add tests for new features and bug fixes
+
+## Performance Testing
+- Test animation performance with high input rates
+- Verify memory usage doesn't grow over time
+- Test startup and shutdown performance
+- Monitor CPU usage during intensive operations
+
+## Testing Best Practices
+- Keep tests **fast and isolated**
+- Use **descriptive test names** that explain the scenario
+- **Arrange, Act, Assert** pattern for test structure
+- Clean up test state between tests
+- Test both **happy path** and **error scenarios**

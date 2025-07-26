@@ -1,0 +1,42 @@
+---
+globs: *.swift
+---
+
+# Swift Development Guidelines for BangoCat
+
+## Code Style
+- Use **4 spaces** for indentation (never tabs)
+- Follow **SwiftUI** best practices for UI components
+- Use **proper access control** (private, internal, public)
+- Prefer **computed properties** over methods where appropriate
+- Use **meaningful variable and function names**
+
+## Architecture Patterns
+- Follow **MVVM pattern** for SwiftUI views
+- Use **@StateObject** for owned objects, **@ObservedObject** for passed objects
+- Implement **proper error handling** with Result types or throwing functions
+- Keep **view models separate** from views for testability
+
+## BangoCat-Specific Guidelines
+- **Input monitoring** should be handled in [InputMonitor.swift](mdc:Sources/BangoCat/InputMonitor.swift)
+- **Animation logic** belongs in [CatView.swift](mdc:Sources/BangoCat/CatView.swift)
+- **Window management** should stay in [OverlayWindow.swift](mdc:Sources/BangoCat/OverlayWindow.swift)
+- **Settings persistence** should use UserDefaults with proper key naming
+
+## Performance Considerations
+- Minimize **view updates** by using proper state management
+- **Debounce rapid input events** to prevent excessive animations
+- Use **lazy loading** for images and resources
+- Keep the **main thread free** for UI updates
+
+## Accessibility
+- Ensure all UI elements have proper **accessibility labels**
+- Handle **VoiceOver** navigation appropriately
+- Respect **reduced motion** system preferences
+- Provide **keyboard navigation** alternatives where needed
+
+## Testing
+- Write **unit tests** for business logic in [Tests/BangoCatTests/](mdc:Tests/BangoCatTests/)
+- Mock **system dependencies** like input monitoring
+- Test **state transitions** and **error conditions**
+- Verify **settings persistence** and **restoration**
