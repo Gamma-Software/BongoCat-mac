@@ -5,6 +5,17 @@ All notable changes to BangoCat-mac will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [unreleased] - 2025-07-26
+
+### Added
+
+- **🔄 PostHog Analytics** - Anonymous analytics for feature usage and app behavior
+
+### Modified
+
+- Commit when bumping version with the script
+- Remove trackpad touch detection
+
 ## [1.2.0] - 2025-07-26
 
 ### Added

@@ -5,6 +5,9 @@ class TouchDetectionView: NSView {
     weak var catAnimationController: CatAnimationController?
     private var activeTouchCount: Int = 0
 
+    // Analytics
+    private let analytics = PostHogAnalyticsManager.shared
+
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         setupTouchDetection()
@@ -28,12 +31,20 @@ class TouchDetectionView: NSView {
         let touches = event.touches(matching: .began, in: self)
         activeTouchCount += touches.count
 
+        // Track trackpad gesture patterns
+        analytics.trackTrackpadGestureDetected("began_\(touches.count)_fingers")
+
         catAnimationController?.triggerAnimation(for: .trackpadTouch)
         super.touchesBegan(with: event)
     }
 
     override func touchesMoved(with event: NSEvent) {
         // Continuous trackpad contact - keep paws down
+        let touches = event.touches(matching: .moved, in: self)
+        if touches.count > 0 {
+            analytics.trackTrackpadGestureDetected("moved_\(touches.count)_fingers")
+        }
+
         catAnimationController?.triggerAnimation(for: .trackpadTouch)
         super.touchesMoved(with: event)
     }
@@ -44,6 +55,9 @@ class TouchDetectionView: NSView {
         // Remove ended touches
         let touches = event.touches(matching: .ended, in: self)
         activeTouchCount -= touches.count
+
+        // Track gesture end
+        analytics.trackTrackpadGestureDetected("ended_\(touches.count)_fingers")
 
         // If no more active touches, immediately return to idle
         if activeTouchCount <= 0 {
@@ -61,6 +75,9 @@ class TouchDetectionView: NSView {
         // Remove cancelled touches
         let touches = event.touches(matching: .cancelled, in: self)
         activeTouchCount -= touches.count
+
+        // Track gesture cancellation
+        analytics.trackTrackpadGestureDetected("cancelled_\(touches.count)_fingers")
 
         // If no more active touches, immediately return to idle
         if activeTouchCount <= 0 {
@@ -80,6 +97,9 @@ class OverlayWindow: NSWindowController, NSWindowDelegate {
     private var isMovingProgrammatically = false // Flag to prevent saving during automatic moves
     private var clickThroughEnabled = true // Track click through state
     private var commandKeyMonitor: Any? // Monitor for command key events
+
+    // Analytics
+    private let analytics = PostHogAnalyticsManager.shared
 
     override init(window: NSWindow?) {
         let window = NSWindow(
@@ -137,6 +157,9 @@ class OverlayWindow: NSWindowController, NSWindowDelegate {
 
         // Center window on screen
         window.center()
+
+        // Track window setup
+        analytics.trackConfigurationLoaded("window", success: true)
     }
 
     func updateIgnoreMouseEvents(_ ignoreClicks: Bool) {
@@ -200,11 +223,13 @@ class OverlayWindow: NSWindowController, NSWindowDelegate {
     func showWindow() {
         window?.makeKeyAndOrderFront(nil)
         isVisible = true
+        analytics.trackVisibilityToggled(true, method: "programmatic")
     }
 
     func hideWindow() {
         window?.orderOut(nil)
         isVisible = false
+        analytics.trackVisibilityToggled(false, method: "programmatic")
     }
 
     func toggleVisibility() {

@@ -67,3 +67,9 @@ Build/
 Demo/demo.mp4
 Demo/SCR-20250726-ntmf.png
 Demo/SCR-20250726-nuuf.png
+
+# Analytics Configuration (keep API keys private!)
+analytics-config.plist
+config.plist
+.env
+.env.local

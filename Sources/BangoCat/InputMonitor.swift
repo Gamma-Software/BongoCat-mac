@@ -56,8 +56,8 @@ class InputMonitor {
             switch event.type {
             case .leftMouseDown:
                 if event.subtype == .touch {
-                    print("👆 Trackpad touch detected (via mouse down subtype)")
-                    self?.callback(.trackpadTouch)
+                    //print("👆 Trackpad touch detected (via mouse down subtype)")
+                    //self?.callback(.trackpadTouch)
                 } else {
                     print("🖱️ Left mouse DOWN detected")
                     self?.callback(.leftClickDown)
@@ -76,8 +76,8 @@ class InputMonitor {
                 self?.callback(.trackpadTouch)
             case .mouseMoved:
                 if event.subtype == .touch {
-                    print("👆 Trackpad touch detected (via mouse movement)")
-                    self?.callback(.trackpadTouch)
+                    //print("👆 Trackpad touch detected (via mouse movement)")
+                    //self?.callback(.trackpadTouch)
                 }
                 // Don't print for regular mouse movements to avoid spam
             default:

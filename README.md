@@ -106,6 +106,38 @@ The **standout feature** that sets BangoCat apart:
 - **📚 Students** - Makes typing practice more enjoyable
 - **🐱 Cat Lovers** - Adorable desktop companion
 
+## 📊 Analytics Setup (Optional)
+
+BangoCat includes **optional PostHog analytics** to help improve the app with anonymous usage data. **Your privacy is protected** - no personal information is collected.
+
+### 🔒 **Secure Configuration**
+Since this is a public repository, **API keys are never committed**. Choose your preferred setup method:
+
+#### **🌍 Environment Variables (Recommended)**
+```bash
+export POSTHOG_API_KEY="ph_your_key_here"
+export POSTHOG_HOST="https://us.i.posthog.com"
+```
+
+#### **📁 Local Config File**
+```bash
+cp analytics-config.plist.template analytics-config.plist
+# Edit analytics-config.plist with your keys
+```
+
+#### **🔧 For Developers**
+See [`ANALYTICS_SETUP.md`](ANALYTICS_SETUP.md) for detailed setup instructions, including:
+- How to create a free PostHog account
+- Configuration methods for different environments
+- Privacy controls and what data is tracked
+- Testing and troubleshooting guides
+
+### 🔒 **Privacy First**
+- **✅ Anonymous tracking** - No personal identification
+- **✅ User opt-out** - Easy disable via menu
+- **✅ Transparent** - Clear explanation of what's tracked
+- **✅ Optional** - App works perfectly without analytics
+
 ## 🚀 Installation
 
 ### 📋 Requirements

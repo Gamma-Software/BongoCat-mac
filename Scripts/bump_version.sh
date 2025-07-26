@@ -262,22 +262,27 @@ fi
 
 echo ""
 
+# Commit the version bump changes
+print_info "Committing version bump changes..."
+cd "$PROJECT_ROOT"
+
+# Add all modified files
+git add .
+
+# Commit with version bump message
+if git commit -m "bump version to v$VERSION"; then
+    print_success "Committed version bump changes"
+else
+    print_warning "Failed to commit changes (might be no changes to commit)"
+fi
+
+echo ""
+
 # Ask about git tag
 read -p "$(echo -e "${YELLOW}🏷️  Create git tag v$VERSION? [y/N]: ${NC}")" -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     cd "$PROJECT_ROOT"
-
-    # Check if working directory is clean
-    if [ -n "$(git status --porcelain)" ]; then
-        print_warning "Working directory is not clean. Consider committing changes first."
-        read -p "$(echo -e "${YELLOW}Continue with tagging anyway? [y/N]: ${NC}")" -n 1 -r
-        echo
-        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-            print_info "Skipping git tag creation"
-            exit 0
-        fi
-    fi
 
     # Create tag
     if git tag -a "v$VERSION" -m "Release version $VERSION (build $BUILD)"; then
@@ -294,6 +299,5 @@ echo ""
 print_success "Version bump complete! 🎉"
 print_info "Don't forget to:"
 echo "  • Test the updated version"
-echo "  • Commit your changes: git add . && git commit -m 'Bump version to $VERSION ($BUILD)'"
 echo "  • Push to remote: git push"
 echo "  • Build and test: swift build && swift run"
