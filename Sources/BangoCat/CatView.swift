@@ -799,6 +799,10 @@ struct CatView: View {
                                 animationController.appDelegate?.buyMeACoffeePublic()
                             }
 
+                            Button("Tweet about BangoCat 🐦") {
+                                animationController.appDelegate?.tweetAboutBangoCatPublic()
+                            }
+
                             Button("Visit Website") {
                                 animationController.appDelegate?.visitWebsitePublic()
                             }

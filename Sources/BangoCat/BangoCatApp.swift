@@ -245,6 +245,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(NSMenuItem(title: "Reset to Factory Defaults", action: #selector(resetToFactoryDefaults), keyEquivalent: ""))
         menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Buy me a coffee ☕", action: #selector(buyMeACoffee), keyEquivalent: ""))
+        menu.addItem(NSMenuItem(title: "Tweet about BangoCat 🐦", action: #selector(tweetAboutBangoCat), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "Visit Website", action: #selector(visitWebsite), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "View Changelog 📋", action: #selector(viewChangelog), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "Report a Bug 🐛", action: #selector(reportBug), keyEquivalent: ""))
@@ -606,6 +607,17 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
     }
 
+    @objc private func tweetAboutBangoCat() {
+        let tweetText = "🐱🥁 Just discovered BangoCat for macOS! A native Swift app that adds an adorable bongo cat overlay to your desktop - reacts to typing & clicks in real-time! Perfect for streamers & developers ✨ #BangoCat #macOS #Swift #OpenSource\n\nhttps://github.com/Gamma-Software/BangoCat-mac/releases"
+        if let encodedText = tweetText.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+           let tweetURL = URL(string: "https://twitter.com/intent/tweet?text=\(encodedText)") {
+            NSWorkspace.shared.open(tweetURL)
+            print("Opening Tweet about BangoCat: \(tweetURL)")
+        } else {
+            print("Failed to create Tweet URL")
+        }
+    }
+
     @objc private func reportBug() {
         if let url = URL(string: "https://github.com/Gamma-Software/BangoCat-mac/issues/new") {
             NSWorkspace.shared.open(url)
@@ -834,6 +846,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     func buyMeACoffeePublic() {
         buyMeACoffee()
+    }
+
+    func tweetAboutBangoCatPublic() {
+        tweetAboutBangoCat()
     }
 
     func reportBugPublic() {
