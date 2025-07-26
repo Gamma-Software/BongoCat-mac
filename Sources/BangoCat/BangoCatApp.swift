@@ -19,8 +19,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     var statusBarItem: NSStatusItem?
 
     // App information
-    private let appVersion = "1.3.0"
-    private let appBuild = "2025.07"
+    private let appVersion = "1.4.0"
+    private let appBuild = "--push"
     private let appAuthor = "Valentin Rudloff"
     private let appWebsite = "https://valentin.pival.fr"
 
