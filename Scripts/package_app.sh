@@ -85,6 +85,54 @@ check_github_requirements() {
     echo "✅ GitHub CLI is ready for delivery"
 }
 
+# Function to parse changelog for current version
+parse_changelog() {
+    local version="$1"
+    local changelog_file="${PROJECT_ROOT}/CHANGELOG.md"
+
+    if [ ! -f "$changelog_file" ]; then
+        echo "⚠️  CHANGELOG.md not found, using default release notes"
+        return 1
+    fi
+
+    echo "📖 Parsing CHANGELOG.md for version ${version}..."
+
+    # Extract the section for the current version
+    # Look for ## [VERSION] or ## [VERSION] - DATE pattern
+    local version_pattern="## \[${version}\]"
+    local in_version_section=false
+    local changelog_content=""
+
+    while IFS= read -r line; do
+        # Check if we found the version header
+        if [[ "$line" =~ ^##[[:space:]]*\[${version}\] ]]; then
+            in_version_section=true
+            continue
+        fi
+
+        # Check if we hit the next version section (stop parsing)
+        if [[ "$line" =~ ^##[[:space:]]*\[ ]] && [ "$in_version_section" = true ]; then
+            break
+        fi
+
+        # If we're in the version section, collect the content
+        if [ "$in_version_section" = true ]; then
+            changelog_content="${changelog_content}${line}"$'\n'
+        fi
+    done < "$changelog_file"
+
+    if [ -z "$changelog_content" ]; then
+        echo "⚠️  No changelog entry found for version ${version}, using default release notes"
+        return 1
+    fi
+
+    # Clean up the changelog content (remove extra newlines, format for GitHub)
+    changelog_content=$(echo "$changelog_content" | sed '/^[[:space:]]*$/d' | head -c 8000)
+
+    echo "✅ Successfully parsed changelog for version ${version}"
+    echo "$changelog_content"
+}
+
 # Function to deliver to GitHub
 deliver_to_github() {
     echo ""
@@ -99,7 +147,35 @@ deliver_to_github() {
     # Get current git tag or create one based on version
     local tag_name="v${VERSION}"
     local release_title="BangoCat v${VERSION}"
-    local release_notes="BangoCat macOS release v${VERSION}
+
+    # Try to parse changelog, fall back to default if parsing fails
+    local release_notes
+    local changelog_notes
+    changelog_notes=$(parse_changelog "${VERSION}")
+
+    if [ $? -eq 0 ] && [ -n "$changelog_notes" ]; then
+        # Use changelog content with installation instructions
+        release_notes="# BangoCat v${VERSION}
+
+${changelog_notes}
+
+## 📦 Installation Instructions
+
+1. Download the DMG file below
+2. Open the DMG and drag BangoCat.app to Applications
+3. Launch BangoCat from Applications folder
+4. Grant accessibility permissions when prompted
+
+## 🔧 System Requirements
+
+- macOS 11.0 (Big Sur) or later
+- Accessibility permissions for global keyboard monitoring
+
+---
+*Built from commit $(git rev-parse --short HEAD)*"
+    else
+        # Fall back to default release notes
+        release_notes="BangoCat macOS release v${VERSION}
 
 🐱 **What's New**
 - Automatic build from commit $(git rev-parse --short HEAD)
@@ -115,6 +191,7 @@ deliver_to_github() {
 🔧 **System Requirements**
 - macOS 11.0 (Big Sur) or later
 - Accessibility permissions for global keyboard monitoring"
+    fi
 
     echo "📋 Preparing release: $tag_name"
     echo "📍 Repository: $GITHUB_REPO"
