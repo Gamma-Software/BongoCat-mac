@@ -9,10 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Run script to build and package the app more easily
+
 ### Modified
 
 - Remove text artifacts from changelog release notes
 - Download DMG from GitHub releases for auto-update
+- Remove scroll wheel detection logs
 
 ## [1.3.0] - 2025-07-27
 
