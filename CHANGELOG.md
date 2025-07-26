@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Changelog Management Rule** - Automated reminders to update changelog after development sessions
   - **Version Management Guidelines** - Semantic versioning and release process documentation
   - **Testing Guidelines** - Comprehensive testing standards and best practices
+- **🔄 Update Checker** - Daily update checks for new versions, can be disabled in the menu
 
 ### Modified
 
