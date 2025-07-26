@@ -130,7 +130,7 @@ def create_dmg_background(output_path, width=540, height=300):
         draw.ellipse([tail_x, tail_y, tail_x + 4, tail_y + 8], fill=cat_color)
 
     # Add version info in corner
-    version_text = "v1.0.0"
+    version_text = "v1.1.0"
     draw.text(
         (width - 60, height - 25),
         version_text,

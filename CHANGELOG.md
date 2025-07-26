@@ -5,9 +5,24 @@ All notable changes to BangoCat-mac will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0] - 2025-01-20
+## [1.1.0] -2025-07-26
 
 ### Added
+
+- Tweet about BangoCat
+
+## [1.0.0] - 2025-07-26
+
+### Added
+- **🎯 Keyboard Layout-Based Paw Mapping** - Intelligent paw assignment based on physical keyboard layout for realistic typing animations
+- **🐛 Enhanced Bug Reporting** - Improved error reporting and debugging features
+- **📱 Per-App Positioning** - Revolutionary feature that remembers different cat positions for each application
+- **📊 Comprehensive Stroke Counter** - Tracks keystrokes and mouse clicks with persistent statistics
+- **🎨 Visual Customization System**:
+  - Multiple scale presets (Small 65%, Medium 75%, Big 100%)
+  - Scale pulse animation on keystroke/click
+  - Cat rotation (13° tilt) with smart direction adjustment
+  - Horizontal flip for left-handed users or preferences
 - **🎯 Keyboard Layout-Based Paw Mapping** - Intelligent paw assignment based on physical keyboard layout for realistic typing animations
 - **🐛 Enhanced Bug Reporting** - Improved error reporting and debugging features
 - **📱 Per-App Positioning** - Revolutionary feature that remembers different cat positions for each application
