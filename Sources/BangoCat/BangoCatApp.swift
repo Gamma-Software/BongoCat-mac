@@ -78,6 +78,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     // Milestone notifications management
     private let milestoneManager = MilestoneNotificationManager.shared
 
+    // Update checking management
+    private let updateChecker = UpdateChecker.shared
+
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         print("BangoCat starting...")
         loadSavedScale()
@@ -100,6 +103,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         // This ensures the app is fully initialized before accessing UserNotifications
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
             self.milestoneManager.requestNotificationPermission()
+        }
+
+        // Start daily update checks after a delay to ensure app is fully initialized
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            self.updateChecker.startDailyUpdateChecks()
         }
     }
 
@@ -201,6 +209,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         // Milestone notifications section
         menu.addItem(NSMenuItem(title: "Milestone Notifications 🔔", action: #selector(toggleMilestoneNotifications), keyEquivalent: ""))
+        menu.addItem(NSMenuItem(title: "Update Notifications 🔄", action: #selector(toggleUpdateNotifications), keyEquivalent: ""))
 
         menu.addItem(NSMenuItem.separator())
 
@@ -248,6 +257,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(NSMenuItem(title: "Tweet about BangoCat 🐦", action: #selector(tweetAboutBangoCat), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "Visit Website", action: #selector(visitWebsite), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "View Changelog 📋", action: #selector(viewChangelog), keyEquivalent: ""))
+        menu.addItem(NSMenuItem(title: "Check for Updates 🔄", action: #selector(checkForUpdates), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "Report a Bug 🐛", action: #selector(reportBug), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "About BangoCat", action: #selector(showCredits), keyEquivalent: ""))
 
@@ -289,6 +299,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         // Update milestone notifications menu item
         updateMilestoneNotificationsMenuItem()
+        updateUpdateNotificationsMenuItem()
 
         print("🔧 Status bar setup complete")
     }
@@ -753,6 +764,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
     }
 
+    @objc private func checkForUpdates() {
+        updateChecker.checkForUpdatesManually()
+    }
+
     @objc private func quitApp() {
         NSApplication.shared.terminate(self)
     }
@@ -1172,11 +1187,28 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         print("Milestone notifications toggled to: \(!currentlyEnabled)")
     }
 
+    @objc private func toggleUpdateNotifications() {
+        let currentlyEnabled = updateChecker.isUpdateNotificationsEnabled()
+        updateChecker.setUpdateNotificationsEnabled(!currentlyEnabled)
+        updateUpdateNotificationsMenuItem()
+        print("Update notifications toggled to: \(!currentlyEnabled)")
+    }
+
     private func updateMilestoneNotificationsMenuItem() {
         guard let menu = statusBarItem?.menu else { return }
         for item in menu.items {
             if item.title == "Milestone Notifications 🔔" {
                 item.state = milestoneManager.isNotificationsEnabled() ? .on : .off
+                break
+            }
+        }
+    }
+
+    private func updateUpdateNotificationsMenuItem() {
+        guard let menu = statusBarItem?.menu else { return }
+        for item in menu.items {
+            if item.title == "Update Notifications 🔄" {
+                item.state = updateChecker.isUpdateNotificationsEnabled() ? .on : .off
                 break
             }
         }
