@@ -72,8 +72,9 @@ class InputMonitor {
                 print("🖱️ Right mouse UP detected")
                 self?.callback(.rightClickUp)
             case .scrollWheel:
-                print("🔄 Scroll wheel detected (likely trackpad)")
-                self?.callback(.trackpadTouch)
+                //print("🔄 Scroll wheel detected (likely trackpad)")
+                //self?.callback(.trackpadTouch)
+                break
             case .mouseMoved:
                 if event.subtype == .touch {
                     //print("👆 Trackpad touch detected (via mouse movement)")
