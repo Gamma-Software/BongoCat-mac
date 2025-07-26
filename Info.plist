@@ -9,9 +9,9 @@
 	<key>CFBundleName</key>
 	<string>BangoCat</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.3.0</string>
+	<string>1.4.0</string>
 	<key>CFBundleVersion</key>
-	<string>2025.07</string>
+	<string>--push</string>
 	<key>LSUIElement</key>
 	<true/>
 	<key>NSAppTransportSecurity</key>
