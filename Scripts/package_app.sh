@@ -46,6 +46,23 @@ APP_BUNDLE="${PACKAGE_DIR}/${APP_NAME}.app"
 DMG_NAME="Build/${APP_NAME}-${VERSION}.dmg"
 GITHUB_REPO="Gamma-Software/BangoCat-mac"
 
+# Function to check if we're on the main branch
+check_main_branch() {
+    echo "🌿 Checking git branch for GitHub delivery..."
+
+    local current_branch=$(git rev-parse --abbrev-ref HEAD)
+
+    if [ "$current_branch" != "main" ]; then
+        echo "❌ GitHub delivery is only allowed from the main branch"
+        echo "📍 Current branch: $current_branch"
+        echo "🔄 Please switch to main branch with: git checkout main"
+        echo "💡 Or merge your changes to main before delivering to GitHub"
+        exit 1
+    fi
+
+    echo "✅ On main branch - GitHub delivery is allowed"
+}
+
 # Function to check GitHub CLI requirements
 check_github_requirements() {
     echo "🔍 Checking GitHub delivery requirements..."
@@ -229,6 +246,7 @@ echo "📍 Working from: $PROJECT_ROOT"
 
 # Check GitHub requirements if delivery is requested
 if [ "$DELIVER_TO_GITHUB" = true ]; then
+    check_main_branch
     check_github_requirements
 fi
 
