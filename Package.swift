@@ -12,11 +12,15 @@ let package = Package(
             targets: ["BangoCat"]
         ),
     ],
-    dependencies: [],
+    dependencies: [
+        .package(url: "https://github.com/PostHog/posthog-ios.git", from: "3.1.3")
+    ],
     targets: [
         .executableTarget(
             name: "BangoCat",
-            dependencies: [],
+            dependencies: [
+                .product(name: "PostHog", package: "posthog-ios")
+            ],
             resources: [
                 .process("Resources")
             ]

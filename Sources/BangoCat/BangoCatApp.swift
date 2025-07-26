@@ -81,6 +81,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     // Update checking management
     private let updateChecker = UpdateChecker.shared
 
+    // Analytics management
+    private let analytics = PostHogAnalyticsManager.shared
+
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         print("BangoCat starting...")
         loadSavedScale()
@@ -99,6 +102,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         setupAppSwitchMonitoring()
         requestAccessibilityPermissions()
 
+        // Initialize analytics and track app launch
+        analytics.trackAppLaunch()
+
         // Request notification permissions for milestone notifications after a delay
         // This ensures the app is fully initialized before accessing UserNotifications
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
@@ -116,6 +122,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         appSwitchTimer?.invalidate()
         savePerAppPositioning()
         savePerAppHiding()
+
+        // Track app termination
+        analytics.trackAppTerminate()
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
@@ -213,6 +222,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         menu.addItem(NSMenuItem.separator())
 
+        // Analytics settings
+        menu.addItem(NSMenuItem(title: "Analytics & Privacy 📊", action: #selector(toggleAnalytics), keyEquivalent: ""))
+
+        menu.addItem(NSMenuItem.separator())
+
         // Position submenu
         let positionSubmenu = NSMenu()
 
@@ -261,6 +275,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(NSMenuItem(title: "Report a Bug 🐛", action: #selector(reportBug), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "About BangoCat", action: #selector(showCredits), keyEquivalent: ""))
 
+        // Developer options (only show if analytics debug is needed)
+        #if DEBUG
+        menu.addItem(NSMenuItem.separator())
+        menu.addItem(NSMenuItem(title: "🔧 Analytics Status", action: #selector(showAnalyticsStatus), keyEquivalent: ""))
+        menu.addItem(NSMenuItem(title: "🧪 Test Analytics", action: #selector(testAnalytics), keyEquivalent: ""))
+        #endif
+
         // Version info
         let versionItem = NSMenuItem(title: "Version \(getVersionString())", action: nil, keyEquivalent: "")
         versionItem.isEnabled = false // Make it non-clickable
@@ -300,6 +321,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         // Update milestone notifications menu item
         updateMilestoneNotificationsMenuItem()
         updateUpdateNotificationsMenuItem()
+        updateAnalyticsMenuItem()
 
         print("🔧 Status bar setup complete")
     }
@@ -532,6 +554,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @objc private func showCredits() {
+        // Track menu action
+        analytics.trackMenuAction("show_credits")
+
         let alert = NSAlert()
         alert.messageText = "About BangoCat \(getVersionString())"
         alert.informativeText = """
@@ -601,6 +626,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @objc private func visitWebsite() {
+        // Track menu action
+        analytics.trackMenuAction("visit_website")
+
         if let url = URL(string: "https://valentin.pival.fr") {
             NSWorkspace.shared.open(url)
             print("Opening website: https://valentin.pival.fr")
@@ -610,6 +638,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @objc private func buyMeACoffee() {
+        // Track menu action
+        analytics.trackMenuAction("buy_me_coffee")
+
         if let url = URL(string: "https://coff.ee/valentinrudloff") {
             NSWorkspace.shared.open(url)
             print("Opening Buy me a coffee: https://coff.ee/valentinrudloff")
@@ -765,6 +796,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @objc private func checkForUpdates() {
+        // Track menu action
+        analytics.trackMenuAction("check_for_updates")
+
         updateChecker.checkForUpdatesManually()
     }
 
@@ -882,6 +916,64 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     func quitAppPublic() {
         NSApplication.shared.terminate(self)
     }
+
+    // MARK: - Developer/Debug Methods
+
+    #if DEBUG
+    @objc private func showAnalyticsStatus() {
+        let alert = NSAlert()
+        alert.messageText = "Analytics Configuration Status"
+        alert.informativeText = """
+        \(analytics.getConfigurationStatus())
+
+        Analytics Enabled: \(analytics.isAnalyticsEnabled ? "Yes" : "No")
+
+                 To configure PostHog analytics:
+         1. Sign up at https://posthog.com
+         2. Create a new project
+         3. Configure securely (see ANALYTICS_SETUP.md):
+            • Environment variables (recommended)
+            • Local analytics-config.plist file
+            • Info.plist (not for public repos)
+         4. Rebuild the app
+
+        Once configured, BangoCat will track anonymous usage data to help improve the app.
+        """
+        alert.alertStyle = .informational
+        alert.addButton(withTitle: "OK")
+        alert.addButton(withTitle: "Open PostHog")
+
+        let response = alert.runModal()
+        if response == .alertSecondButtonReturn {
+            if let url = URL(string: "https://posthog.com") {
+                NSWorkspace.shared.open(url)
+            }
+        }
+    }
+
+    @objc private func testAnalytics() {
+        let alert = NSAlert()
+        alert.messageText = "Test Analytics Event"
+        alert.informativeText = "This will send a test event to PostHog (if configured).\n\n\(analytics.getConfigurationStatus())"
+        alert.alertStyle = .informational
+        alert.addButton(withTitle: "Send Test Event")
+        alert.addButton(withTitle: "Cancel")
+
+        let response = alert.runModal()
+        if response == .alertFirstButtonReturn {
+            analytics.testAnalytics()
+
+            let confirmAlert = NSAlert()
+            confirmAlert.messageText = "Test Event Sent"
+            confirmAlert.informativeText = analytics.isConfiguredForAnalytics() ?
+                "Test event has been sent to PostHog. Check your PostHog dashboard to see if it appears." :
+                "Analytics not configured, but test event would have been sent."
+            confirmAlert.alertStyle = .informational
+            confirmAlert.addButton(withTitle: "OK")
+            confirmAlert.runModal()
+        }
+    }
+    #endif
 
     func togglePerAppHidingPublic() {
         togglePerAppHiding()
@@ -1029,6 +1121,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         saveScale()
         overlayWindow?.updateScale(scale)
         updateScaleMenuItems()
+
+        // Track scale change
+        analytics.trackScaleChanged(scale)
+
         print("Scale changed to: \(scale)")
     }
 
@@ -1059,6 +1155,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         saveScaleOnInputPreference()
         overlayWindow?.catAnimationController?.setScaleOnInputEnabled(scaleOnInputEnabled)  // Apply immediately
         updateScalePulseMenuItem()
+
+        // Track setting toggle
+        analytics.trackSettingToggled("scale_pulse", enabled: scaleOnInputEnabled)
+
         print("Scale pulse on input toggled to: \(scaleOnInputEnabled)")
     }
 
@@ -1102,6 +1202,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         saveFlip()
         overlayWindow?.updateFlip(isFlippedHorizontally)
         updateFlipMenuItem()
+
+        // Track setting toggle
+        analytics.trackSettingToggled("horizontal_flip", enabled: isFlippedHorizontally)
+
         print("Cat horizontal flip toggled to: \(isFlippedHorizontally)")
     }
 
@@ -1110,6 +1214,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         saveIgnoreClicksPreference()
         overlayWindow?.catAnimationController?.setIgnoreClicksEnabled(ignoreClicksEnabled)
         updateIgnoreClicksMenuItem()
+
+        // Track setting toggle
+        analytics.trackSettingToggled("ignore_clicks", enabled: ignoreClicksEnabled)
+
         print("Ignore clicks toggled to: \(ignoreClicksEnabled)")
     }
 
@@ -1118,6 +1226,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         saveClickThroughPreference()
         overlayWindow?.updateIgnoreMouseEvents(clickThroughEnabled)
         updateClickThroughMenuItem()
+
+        // Track setting toggle
+        analytics.trackSettingToggled("click_through", enabled: clickThroughEnabled)
+
         print("Click through toggled to: \(clickThroughEnabled)")
     }
 
@@ -1138,6 +1250,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         savePawBehaviorPreference()
         overlayWindow?.catAnimationController?.setPawBehaviorMode(pawBehaviorMode)
         updatePawBehaviorMenuItems()
+
+        // Track paw behavior change
+        analytics.trackPawBehaviorChanged(behavior.displayName)
+
         print("Paw behavior changed to: \(behavior.displayName)")
     }
 
@@ -1155,6 +1271,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         if response == .alertFirstButtonReturn {
             overlayWindow?.catAnimationController?.strokeCounter.reset()
             updateStrokeCounterMenuItem()
+
+            // Track stroke counter reset
+            analytics.trackStrokeCounterReset()
+
             print("Stroke counter reset by user")
         }
     }
@@ -1191,7 +1311,72 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let currentlyEnabled = updateChecker.isUpdateNotificationsEnabled()
         updateChecker.setUpdateNotificationsEnabled(!currentlyEnabled)
         updateUpdateNotificationsMenuItem()
+
+        // Track setting toggle
+        analytics.trackSettingToggled("update_notifications", enabled: !currentlyEnabled)
+
         print("Update notifications toggled to: \(!currentlyEnabled)")
+    }
+
+    @objc private func toggleAnalytics() {
+        showAnalyticsPrivacyDialog()
+    }
+
+    private func showAnalyticsPrivacyDialog() {
+        let alert = NSAlert()
+        alert.messageText = "Analytics & Privacy Settings"
+        alert.informativeText = """
+        BangoCat uses analytics to improve the app experience by tracking:
+
+        📊 What We Track:
+        • App launches and usage patterns
+        • Feature usage (scale changes, settings toggles)
+        • Milestone achievements
+        • Error occurrences (for debugging)
+
+        🔒 What We DON'T Track:
+        • Personal information or keystrokes content
+        • Screen contents or passwords
+        • Files or documents you're working on
+
+        🛡️ Privacy:
+        • All data is anonymous
+        • No personal identification
+        • Data helps improve BangoCat for everyone
+
+        Current Status: \(analytics.isAnalyticsEnabled ? "Analytics Enabled" : "Analytics Disabled")
+        """
+
+        alert.alertStyle = .informational
+        alert.addButton(withTitle: analytics.isAnalyticsEnabled ? "Disable Analytics" : "Enable Analytics")
+        alert.addButton(withTitle: "Keep Current Setting")
+        alert.addButton(withTitle: "Learn More")
+
+        let response = alert.runModal()
+
+        if response == .alertFirstButtonReturn {
+            // Toggle analytics
+            let newState = !analytics.isAnalyticsEnabled
+            analytics.setAnalyticsEnabled(newState)
+            updateAnalyticsMenuItem()
+
+            // Show confirmation
+            let confirmAlert = NSAlert()
+            confirmAlert.messageText = "Analytics \(newState ? "Enabled" : "Disabled")"
+            confirmAlert.informativeText = newState ?
+                "Thank you! Analytics will help us improve BangoCat." :
+                "Analytics has been disabled. You can re-enable it anytime from the menu."
+            confirmAlert.alertStyle = .informational
+            confirmAlert.addButton(withTitle: "OK")
+            confirmAlert.runModal()
+
+            print("Analytics toggled to: \(newState)")
+        } else if response == .alertThirdButtonReturn {
+            // Learn more - open privacy policy or GitHub
+            if let url = URL(string: "https://github.com/Gamma-Software/BangoCat-mac#privacy") {
+                NSWorkspace.shared.open(url)
+            }
+        }
     }
 
     private func updateMilestoneNotificationsMenuItem() {
@@ -1209,6 +1394,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         for item in menu.items {
             if item.title == "Update Notifications 🔄" {
                 item.state = updateChecker.isUpdateNotificationsEnabled() ? .on : .off
+                break
+            }
+        }
+    }
+
+    private func updateAnalyticsMenuItem() {
+        guard let menu = statusBarItem?.menu else { return }
+        for item in menu.items {
+            if item.title == "Analytics & Privacy 📊" {
+                item.state = analytics.isAnalyticsEnabled ? .on : .off
                 break
             }
         }
@@ -1358,6 +1553,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         currentCornerPosition = corner
         saveManualPosition(position)
         updatePositionMenuItems()
+
+        // Track position change
+        analytics.trackPositionChanged(corner.displayName)
+
         print("Moved cat to \(corner.displayName) at position: \(position)")
     }
 

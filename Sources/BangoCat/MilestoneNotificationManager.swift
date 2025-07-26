@@ -25,6 +25,11 @@ class MilestoneNotificationManager: NSObject, UNUserNotificationCenterDelegate {
     // Track if notifications have been set up
     private var notificationsSetup: Bool = false
 
+    // Analytics tracking
+    private var analytics: PostHogAnalyticsManager {
+        return PostHogAnalyticsManager.shared
+    }
+
     override init() {
         super.init()
         loadSettings()
@@ -148,6 +153,10 @@ class MilestoneNotificationManager: NSObject, UNUserNotificationCenterDelegate {
         if let milestone = getNextMilestone(for: keystrokeCount, lastNotified: lastNotifiedKeystrokeMilestone) {
             lastNotifiedKeystrokeMilestone = milestone
             saveSettings()
+
+            // Track milestone reached in analytics
+            analytics.trackMilestoneReached(milestone, type: "keystrokes")
+
             sendMilestoneNotification(
                 type: "Keystroke",
                 count: milestone,
@@ -163,6 +172,10 @@ class MilestoneNotificationManager: NSObject, UNUserNotificationCenterDelegate {
         if let milestone = getNextMilestone(for: clickCount, lastNotified: lastNotifiedClickMilestone) {
             lastNotifiedClickMilestone = milestone
             saveSettings()
+
+            // Track milestone reached in analytics
+            analytics.trackMilestoneReached(milestone, type: "mouse_clicks")
+
             sendMilestoneNotification(
                 type: "Mouse Click",
                 count: milestone,
@@ -178,6 +191,10 @@ class MilestoneNotificationManager: NSObject, UNUserNotificationCenterDelegate {
         if let milestone = getNextMilestone(for: totalCount, lastNotified: lastNotifiedTotalMilestone) {
             lastNotifiedTotalMilestone = milestone
             saveSettings()
+
+            // Track milestone reached in analytics
+            analytics.trackMilestoneReached(milestone, type: "total_activity")
+
             sendMilestoneNotification(
                 type: "Total Activity",
                 count: milestone,

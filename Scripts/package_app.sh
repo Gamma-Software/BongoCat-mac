@@ -6,6 +6,7 @@ set -e
 # Parse command line arguments
 DELIVER_TO_GITHUB=false
 INSTALL_LOCAL=false
+DEBUG_BUILD=false
 while [[ $# -gt 0 ]]; do
     case $1 in
         --deliver)
@@ -16,10 +17,15 @@ while [[ $# -gt 0 ]]; do
             INSTALL_LOCAL=true
             shift
             ;;
+        --debug)
+            DEBUG_BUILD=true
+            shift
+            ;;
         -h|--help)
-            echo "Usage: $0 [--deliver] [--install_local] [--help]"
+            echo "Usage: $0 [--deliver] [--install_local] [--debug] [--help]"
             echo "  --deliver       Upload the DMG to GitHub Releases"
             echo "  --install_local Install the app directly to /Applications"
+            echo "  --debug         Create debug build instead of release build"
             echo "  --help          Show this help message"
             exit 0
             ;;
@@ -40,10 +46,25 @@ cd "$PROJECT_ROOT"
 APP_NAME="BangoCat"
 BUNDLE_ID="com.bangocat.mac"
 VERSION="1.2.0"  # Will be updated by bump_version.sh
-BUILD_DIR=".build/release"
+
+# Set build configuration based on debug flag
+if [ "$DEBUG_BUILD" = true ]; then
+    BUILD_DIR=".build/debug"
+    BUILD_TYPE="debug"
+    DMG_NAME="Build/${APP_NAME}-${VERSION}-debug.dmg"
+    echo "🐛 DEBUG BUILD MODE ENABLED"
+    echo "   • Debug symbols included"
+    echo "   • No optimizations"
+    echo "   • Larger binary size"
+    echo ""
+else
+    BUILD_DIR=".build/release"
+    BUILD_TYPE="release"
+    DMG_NAME="Build/${APP_NAME}-${VERSION}.dmg"
+fi
+
 PACKAGE_DIR="Build/package"
 APP_BUNDLE="${PACKAGE_DIR}/${APP_NAME}.app"
-DMG_NAME="Build/${APP_NAME}-${VERSION}.dmg"
 GITHUB_REPO="Gamma-Software/BangoCat-mac"
 
 # Function to check if we're on the main branch
@@ -66,6 +87,22 @@ check_main_branch() {
 # Function to check GitHub CLI requirements
 check_github_requirements() {
     echo "🔍 Checking GitHub delivery requirements..."
+
+    # Warn about debug builds going to GitHub
+    if [ "$DEBUG_BUILD" = true ]; then
+        echo ""
+        echo "⚠️  WARNING: You're about to deliver a DEBUG build to GitHub!"
+        echo "   • Debug builds are larger and slower"
+        echo "   • They include debug symbols and are not optimized"
+        echo "   • Consider using a release build for public distribution"
+        echo ""
+        read -p "Are you sure you want to deliver a debug build to GitHub? (y/n): " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            echo "❌ GitHub delivery cancelled"
+            exit 1
+        fi
+    fi
 
     # Check if gh CLI is installed
     if ! command -v gh &> /dev/null; then
@@ -146,7 +183,14 @@ deliver_to_github() {
 
     # Get current git tag or create one based on version
     local tag_name="v${VERSION}"
+    if [ "$DEBUG_BUILD" = true ]; then
+        tag_name="v${VERSION}-debug"
+    fi
+
     local release_title="BangoCat v${VERSION}"
+    if [ "$DEBUG_BUILD" = true ]; then
+        release_title="BangoCat v${VERSION} (Debug Build)"
+    fi
 
     # Try to parse changelog, fall back to default if parsing fails
     local release_notes
@@ -155,7 +199,18 @@ deliver_to_github() {
 
     if [ $? -eq 0 ] && [ -n "$changelog_notes" ]; then
         # Use changelog content with installation instructions
-        release_notes="# BangoCat v${VERSION}
+        local build_info=""
+        if [ "$DEBUG_BUILD" = true ]; then
+            build_info="
+
+⚠️ **DEBUG BUILD NOTICE**
+This is a debug build intended for development and testing purposes:
+- Includes debug symbols and logging
+- Not optimized for performance
+- Larger file size than release builds"
+        fi
+
+        release_notes="# BangoCat v${VERSION}${build_info}
 
 ${changelog_notes}
 
@@ -175,7 +230,14 @@ ${changelog_notes}
 *Built from commit $(git rev-parse --short HEAD)*"
     else
         # Fall back to default release notes
-        release_notes="BangoCat macOS release v${VERSION}
+        local build_notice=""
+        if [ "$DEBUG_BUILD" = true ]; then
+            build_notice="
+
+⚠️ **DEBUG BUILD** - For development and testing purposes only"
+        fi
+
+        release_notes="BangoCat macOS release v${VERSION}${build_notice}
 
 🐱 **What's New**
 - Automatic build from commit $(git rev-parse --short HEAD)
@@ -214,7 +276,7 @@ ${changelog_notes}
             --title "$release_title" \
             --notes "$release_notes" \
             --draft=false \
-            --prerelease=false
+            --prerelease=$DEBUG_BUILD
     fi
 
     # Get the release URL
@@ -320,6 +382,24 @@ install_local() {
 
 echo "🐱 Starting BangoCat packaging process..."
 echo "📍 Working from: $PROJECT_ROOT"
+echo "🔧 Build type: ${BUILD_TYPE}"
+echo "📦 Build directory: ${BUILD_DIR}"
+
+# Check if the build directory and executable exist
+if [ ! -d "$BUILD_DIR" ] || [ ! -f "${BUILD_DIR}/${APP_NAME}" ]; then
+    echo "❌ Build not found at ${BUILD_DIR}/${APP_NAME}"
+    echo ""
+    echo "💡 You need to build the app first. Run one of:"
+    if [ "$DEBUG_BUILD" = true ]; then
+        echo "   swift build  # for debug build"
+    else
+        echo "   swift build -c release  # for release build"
+    fi
+    echo ""
+    echo "🚀 Or use the build script:"
+    echo "   ./Scripts/build.sh"
+    exit 1
+fi
 
 # Check GitHub requirements if delivery is requested
 if [ "$DELIVER_TO_GITHUB" = true ]; then
