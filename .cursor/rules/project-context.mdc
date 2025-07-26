@@ -1,0 +1,33 @@
+---
+alwaysApply: true
+---
+
+# BangoCat macOS Project Context
+
+This is **BangoCat-mac**, a native macOS application built in Swift that displays an animated cat overlay that responds to keyboard and mouse input, popular among streamers and content creators.
+
+## Project Structure
+- **Main entry point**: [main.swift](mdc:Sources/BangoCat/main.swift) and [BangoCatApp.swift](mdc:Sources/BangoCat/BangoCatApp.swift)
+- **Core components**: [CatView.swift](mdc:Sources/BangoCat/CatView.swift), [InputMonitor.swift](mdc:Sources/BangoCat/InputMonitor.swift), [OverlayWindow.swift](mdc:Sources/BangoCat/OverlayWindow.swift)
+- **Project config**: [Package.swift](mdc:Package.swift) and [Info.plist](mdc:Info.plist)
+- **Build scripts**: Located in [Scripts/](mdc:Scripts/) directory
+- **Assets**: Cat sprites in [Sources/BangoCat/Resources/Images/](mdc:Sources/BangoCat/Resources/Images/)
+
+## Key Features
+- **Per-app positioning**: Remembers cat position for each application
+- **Keyboard layout-based paw mapping**: Intelligent left/right paw assignment
+- **Visual customization**: Scaling, rotation, flip options
+- **Stroke counter**: Tracks keystrokes and mouse clicks
+- **Menu integration**: Status bar and right-click context menus
+
+## Development Guidelines
+- Target macOS 13.0+ (Ventura)
+- Use SwiftUI for UI components
+- Follow Apple's Human Interface Guidelines
+- Maintain accessibility compliance
+- Keep the app lightweight and performant
+
+## Build System
+- Uses Swift Package Manager
+- Automated build scripts in `Scripts/` directory
+- Version managed through [Info.plist](mdc:Info.plist) and build scripts

@@ -1,0 +1,71 @@
+---
+description: "changelog management and updates"
+---
+
+# Changelog Management Rule
+
+**IMPORTANT**: At the end of every development session or when completing features/fixes, you MUST update the [CHANGELOG.md](mdc:CHANGELOG.md) file.
+
+## Changelog Format
+The project follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format with these sections:
+
+### Required Sections
+- **Added** - for new features
+- **Changed** - for changes in existing functionality
+- **Deprecated** - for soon-to-be removed features
+- **Removed** - for now removed features
+- **Fixed** - for any bug fixes
+- **Security** - in case of vulnerabilities
+
+## Update Process
+
+### 1. For Active Development
+Add changes to the `[unreleased]` section at the top of the changelog:
+
+```markdown
+## [unreleased] - YYYY-MM-DD
+
+### Added
+- New feature description
+
+### Fixed
+- Bug fix description
+
+### Changed
+- Modified functionality description
+```
+
+### 2. For Version Releases
+- Move unreleased changes to a new version section
+- Update version number following [Semantic Versioning](https://semver.org/)
+- Add release date
+- Create new empty `[unreleased]` section
+
+## Entry Guidelines
+- Use **clear, descriptive language** that users can understand
+- Start entries with **action verbs** (Added, Fixed, Changed, etc.)
+- Include **emojis** to match the existing style (🎯, 🐛, 📱, etc.)
+- Group related changes together
+- **Bold important keywords** or feature names
+- Reference relevant files using `[filename](mdc:filepath)` format when helpful
+
+## Examples
+```markdown
+### Added
+- **🎯 Smart Paw Detection** - Intelligent left/right paw assignment based on keyboard layout in [InputMonitor.swift](mdc:Sources/BangoCat/InputMonitor.swift)
+
+### Fixed
+- **🐛 Window Positioning** - Fixed cat position not saving correctly across app restarts in [OverlayWindow.swift](mdc:Sources/BangoCat/OverlayWindow.swift)
+
+### Changed
+- **⚡ Performance** - Optimized animation rendering for better CPU usage in [CatView.swift](mdc:Sources/BangoCat/CatView.swift)
+```
+
+## When to Update
+- **After implementing new features**
+- **After fixing bugs**
+- **After refactoring major components**
+- **Before committing significant changes**
+- **At the end of development sessions**
+
+Remember: The changelog is crucial for users to understand what's new, what's fixed, and what's changed in each version of BangoCat!

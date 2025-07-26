@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased] - 2025-07-26
 
+### Added
+
+- **📋 Cursor Rules System** - Comprehensive development rules and guidelines for consistent code quality
+  - **Project Context Rule** - Always-applied project structure and development guidelines
+  - **Swift Development Guidelines** - Code style, architecture patterns, and BangoCat-specific conventions
+  - **Changelog Management Rule** - Automated reminders to update changelog after development sessions
+  - **Version Management Guidelines** - Semantic versioning and release process documentation
+  - **Testing Guidelines** - Comprehensive testing standards and best practices
+
 ### Modified
 
 - Push changelog to github release notes
