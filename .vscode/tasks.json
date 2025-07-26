@@ -1,0 +1,141 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "swift",
+			"args": [
+				"build",
+				"--build-tests",
+				"-Xswiftc",
+				"-diagnostic-style=llvm"
+			],
+			"env": {},
+			"cwd": "/Users/valentinrudloff/Workspace/BangoCat-mac",
+			"disableTaskQueue": true,
+			"group": "build",
+			"problemMatcher": [],
+			"label": "swift: Build All",
+			"detail": "swift build --build-tests -Xswiftc -diagnostic-style=llvm"
+		},
+		{
+			"type": "shell",
+			"command": "./Scripts/build.sh",
+			"args": [],
+			"group": "build",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": true,
+				"clear": false
+			},
+			"problemMatcher": [],
+			"label": "BangoCat: Build Debug",
+			"detail": "Build BangoCat in debug mode using build.sh"
+		},
+		{
+			"type": "shell",
+			"command": "./Scripts/build.sh",
+			"args": ["release"],
+			"group": "build",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": true,
+				"clear": false
+			},
+			"problemMatcher": [],
+			"label": "BangoCat: Build Release",
+			"detail": "Build BangoCat in release mode using build.sh"
+		},
+		{
+			"type": "shell",
+			"command": "./Scripts/test.sh",
+			"args": [],
+			"group": "test",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": true,
+				"clear": false
+			},
+			"problemMatcher": [],
+			"label": "BangoCat: Run Tests",
+			"detail": "Run all tests using test.sh"
+		},
+		{
+			"type": "shell",
+			"command": "./Scripts/test.sh",
+			"args": ["--verbose"],
+			"group": "test",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": true,
+				"clear": false
+			},
+			"problemMatcher": [],
+			"label": "BangoCat: Run Tests (Verbose)",
+			"detail": "Run all tests with verbose output using test.sh"
+		},
+		{
+			"type": "shell",
+			"command": "./Scripts/package_app.sh",
+			"args": [],
+			"group": "build",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": true,
+				"clear": false
+			},
+			"problemMatcher": [],
+			"label": "BangoCat: Package App",
+			"detail": "Package BangoCat into .app bundle and create DMG",
+			"dependsOn": "BangoCat: Build Release"
+		},
+		{
+			"type": "shell",
+			"command": "./Scripts/check_version.sh",
+			"args": [],
+			"group": "build",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": true,
+				"clear": false
+			},
+			"problemMatcher": [],
+			"label": "BangoCat: Check Version Consistency",
+			"detail": "Check that all version numbers are consistent across project files"
+		},
+		{
+			"type": "shell",
+			"command": "./Scripts/check_version.sh",
+			"args": ["--verbose"],
+			"group": "build",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": true,
+				"clear": false
+			},
+			"problemMatcher": [],
+			"label": "BangoCat: Check Version Consistency (Verbose)",
+			"detail": "Check version consistency with detailed output"
+		}
+	]
+}

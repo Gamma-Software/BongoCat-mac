@@ -16,7 +16,10 @@ let package = Package(
     targets: [
         .executableTarget(
             name: "BangoCat",
-            dependencies: []
+            dependencies: [],
+            resources: [
+                .process("Resources")
+            ]
         ),
         .testTarget(
             name: "BangoCatTests",

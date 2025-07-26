@@ -27,24 +27,59 @@ class InputMonitor {
     }
 
     private func startKeyboardMonitoring() {
-        keyboardEventMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.keyDown]) { [weak self] event in
-            print("⌨️ Keyboard event detected: \(event.charactersIgnoringModifiers ?? "unknown")")
-            self?.callback(.keyboard)
+        keyboardEventMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.keyDown, .keyUp]) { [weak self] event in
+            let key = event.charactersIgnoringModifiers ?? "unknown"
+
+            switch event.type {
+            case .keyDown:
+                if event.isARepeat {
+                    print("🔄 Key is being held down (repeat event): \(key)")
+                    // Key is being held - do nothing or handle differently
+                    return
+                } else {
+                    print("⌨️ New key press detected: \(key)")
+                    self?.callback(.keyboardDown(key: key))
+                }
+
+            case .keyUp:
+                print("⌨️ Key released: \(key)")
+                self?.callback(.keyboardUp(key: key))
+
+            default:
+                break
+            }
         }
     }
 
     private func startMouseMonitoring() {
-        mouseEventMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown, .scrollWheel]) { [weak self] event in
+        mouseEventMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .leftMouseUp, .rightMouseDown, .rightMouseUp, .scrollWheel, .mouseMoved]) { [weak self] event in
             switch event.type {
             case .leftMouseDown:
-                print("🖱️ Left mouse click detected")
-                self?.callback(.leftClick)
+                if event.subtype == .touch {
+                    print("👆 Trackpad touch detected (via mouse down subtype)")
+                    self?.callback(.trackpadTouch)
+                } else {
+                    print("🖱️ Left mouse DOWN detected")
+                    self?.callback(.leftClickDown)
+                }
+            case .leftMouseUp:
+                print("🖱️ Left mouse UP detected")
+                self?.callback(.leftClickUp)
             case .rightMouseDown:
-                print("🖱️ Right mouse click detected")
-                self?.callback(.rightClick)
+                print("🖱️ Right mouse DOWN detected")
+                self?.callback(.rightClickDown)
+            case .rightMouseUp:
+                print("🖱️ Right mouse UP detected")
+                self?.callback(.rightClickUp)
             case .scrollWheel:
-                print("🔄 Mouse scroll detected")
-                self?.callback(.scroll)
+                print("🔄 Scroll wheel detected (likely trackpad)")
+                self?.callback(.trackpadTouch)
+            case .mouseMoved:
+                if event.subtype == .touch {
+                    print("👆 Trackpad touch detected (via mouse movement)")
+                    self?.callback(.trackpadTouch)
+                }
+                // Don't print for regular mouse movements to avoid spam
             default:
                 break
             }

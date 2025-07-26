@@ -60,3 +60,10 @@ fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots/**/*.png
 fastlane/test_output
+*.dmg
+Build/
+# Note: package/ moved to Build/package/
+.DS_Store
+Demo/demo.mp4
+Demo/SCR-20250726-ntmf.png
+Demo/SCR-20250726-nuuf.png
