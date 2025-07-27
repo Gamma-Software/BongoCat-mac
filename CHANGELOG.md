@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add auto-update menu item
 - Add auto-update notification
 
+### Modified
+
+- Make sure to source variables from the .env file when building the prod app
+
 ### Fixed
 
 - Incompatible change: Update notification system to use UserNotifications framework

@@ -36,7 +36,18 @@ fi
 
 print_info "Building BangoCat in $BUILD_CONFIG mode..."
 
+# Source environment variables for production builds
 if [ "$BUILD_CONFIG" = "release" ]; then
+    print_info "Production build detected, loading environment variables..."
+    if [ -f ".env" ]; then
+        print_info "Sourcing .env file..."
+        source .env
+        print_success "Environment variables loaded successfully"
+    else
+        print_error "Production build requires .env file but it was not found!"
+        print_error "Please create a .env file in the project root with necessary environment variables"
+        exit 1
+    fi
     BUILD_COMMAND="swift build --configuration release"
 else
     BUILD_COMMAND="swift build"
