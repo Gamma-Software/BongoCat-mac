@@ -21,7 +21,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     // App information
     private let appVersion = "1.4.1"
-    private let appBuild = "1.4.1.202507271435"
+    private let appBuild = "1.4.1.202507271437"
     private let appAuthor = "Valentin Rudloff"
     private let appWebsite = "https://valentin.pival.fr"
 
