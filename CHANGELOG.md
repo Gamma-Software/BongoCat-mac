@@ -5,7 +5,7 @@ All notable changes to BangoCat-mac will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [unreleased] - 2025-07-27
+## [1.4.1] - 2025-07-27
 
 ### Added
 
@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Modified
 
+- use utc date/time instead of sha1 in the build number
 - Make sure to source variables from the .env file when building the prod app
 - Add --push and --commit options to bump_version.sh script
 - Update run.sh to include additional options for building and bumping release versions; enhance build.sh to clean previous artifacts; refactor UpdateChecker for improved error handling and analytics tracking.
