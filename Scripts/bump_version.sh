@@ -21,16 +21,20 @@ print_error() { echo -e "${RED}❌ $1${NC}"; }
 show_usage() {
     echo "BangoCat Version Bump Script"
     echo ""
-    echo "Usage: $0 <version> [build]"
+    echo "Usage: $0 <version> [options]"
     echo ""
     echo "Arguments:"
     echo "  version    Version number (e.g., 1.0.2, 2.1.0)"
-    echo "  build      Build number (optional, defaults to YYYY.MM format)"
+    echo ""
+    echo "Options:"
+    echo "  --commit   Automatically commit the version bump changes"
+    echo "  --push     Automatically push the commit and tag to remote"
+    echo "  -h, --help Show this help message"
     echo ""
     echo "Examples:"
-    echo "  $0 1.0.2                    # Uses current YYYY.MM as build"
-    echo "  $0 1.0.2 2024.12           # Explicit build number"
-    echo "  $0 2.0.0 2025.01           # Major version bump"
+    echo "  $0 1.0.2                           # Interactive mode"
+    echo "  $0 1.0.2 --commit                 # Auto commit"
+    echo "  $0 1.0.2 --commit --push          # Auto commit and push"
     echo ""
     echo "This script will:"
     echo "  • Update Info.plist version strings"
@@ -38,19 +42,50 @@ show_usage() {
     echo "  • Update package_app.sh VERSION variable"
     echo "  • Update DMG background Python script version"
     echo "  • Update README.md version badge"
+    echo "  • Use commit SHA1 as CFBundleVersion"
     echo "  • Verify all versions are consistent"
-    echo "  • Optionally create a git tag"
+    echo "  • Optionally commit, tag and push changes"
     echo "  • Show a summary of changes"
 }
 
-# Check arguments
-if [ $# -lt 1 ] || [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
-    show_usage
-    exit 0
-fi
+# Parse command line arguments
+VERSION=""
+AUTO_COMMIT=false
+AUTO_PUSH=false
 
-VERSION="$1"
-BUILD="${2:-$(date +%Y.%m)}"
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -h|--help)
+            show_usage
+            exit 0
+            ;;
+        --commit)
+            AUTO_COMMIT=true
+            shift
+            ;;
+        --push)
+            AUTO_PUSH=true
+            shift
+            ;;
+        *)
+            if [[ -z "$VERSION" ]]; then
+                VERSION="$1"
+            else
+                print_error "Unknown argument: $1"
+                show_usage
+                exit 1
+            fi
+            shift
+            ;;
+    esac
+done
+
+# Check if version is provided
+if [[ -z "$VERSION" ]]; then
+    print_error "Version number is required!"
+    show_usage
+    exit 1
+fi
 
 # Validate version format (basic check)
 if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
@@ -62,7 +97,6 @@ fi
 print_info "BangoCat Version Bump Script"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 print_info "New Version: $VERSION"
-print_info "New Build:   $BUILD"
 echo ""
 
 # Get current directory (should be Scripts/)
@@ -127,9 +161,10 @@ else
     exit 1
 fi
 
-# Update CFBundleVersion (build)
-if /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD" "$INFO_PLIST" 2>/dev/null; then
-    print_success "Updated CFBundleVersion to $BUILD"
+# Update CFBundleVersion (temporary placeholder, will be replaced with commit SHA1)
+TEMP_BUILD="$VERSION.temp"
+if /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $TEMP_BUILD" "$INFO_PLIST" 2>/dev/null; then
+    print_success "Updated CFBundleVersion to temporary value (will be replaced with commit SHA1)"
 else
     print_error "Failed to update CFBundleVersion"
     restore_backups
@@ -157,9 +192,9 @@ else
     exit 1
 fi
 
-# Update hardcoded build in Swift
-if sed -i '' "s/private let appBuild = \"[^\"]*\"/private let appBuild = \"$BUILD\"/" "$SWIFT_FILE"; then
-    print_success "Updated appBuild in Swift to $BUILD"
+# Update hardcoded build in Swift (temporary placeholder, will be replaced with commit SHA1)
+if sed -i '' "s/private let appBuild = \"[^\"]*\"/private let appBuild = \"$TEMP_BUILD\"/" "$SWIFT_FILE"; then
+    print_success "Updated appBuild in Swift to temporary value (will be replaced with commit SHA1)"
 else
     print_error "Failed to update appBuild in Swift"
     restore_backups
@@ -230,9 +265,9 @@ echo ""
 print_info "Summary of changes:"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "• Info.plist → CFBundleShortVersionString: $VERSION"
-echo "• Info.plist → CFBundleVersion: $BUILD"
+echo "• Info.plist → CFBundleVersion: will be set to commit SHA1"
 echo "• Swift code → appVersion: $VERSION"
-echo "• Swift code → appBuild: $BUILD"
+echo "• Swift code → appBuild: will be set to commit SHA1"
 echo "• package_app.sh → VERSION: $VERSION"
 echo "• create_background.py → version_text: v$VERSION"
 echo "• README.md → version badge: $VERSION"
@@ -262,42 +297,119 @@ fi
 
 echo ""
 
-# Commit the version bump changes
-print_info "Committing version bump changes..."
+# Git workflow - commit first to get SHA1, then update CFBundleVersion
 cd "$PROJECT_ROOT"
 
-# Add all modified files
-git add .
+SHOULD_COMMIT=false
+SHOULD_PUSH=false
 
-# Commit with version bump message
-if git commit -m "bump version to v$VERSION"; then
-    print_success "Committed version bump changes"
-else
-    print_warning "Failed to commit changes (might be no changes to commit)"
-fi
-
-echo ""
-
-# Ask about git tag
-read -p "$(echo -e "${YELLOW}🏷️  Create git tag v$VERSION? [y/N]: ${NC}")" -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-    cd "$PROJECT_ROOT"
-
-    # Create tag
-    if git tag -a "v$VERSION" -m "Release version $VERSION (build $BUILD)"; then
-        print_success "Created git tag v$VERSION"
-        print_info "Push tag with: git push origin v$VERSION"
-    else
-        print_warning "Failed to create git tag (tag might already exist)"
+if [ "$AUTO_COMMIT" = true ]; then
+    SHOULD_COMMIT=true
+    if [ "$AUTO_PUSH" = true ]; then
+        SHOULD_PUSH=true
     fi
 else
-    print_info "Skipping git tag creation"
+    # Interactive mode - ask user
+    read -p "$(echo -e "${YELLOW}💾 Commit version bump changes? [y/N]: ${NC}")" -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        SHOULD_COMMIT=true
+
+        read -p "$(echo -e "${YELLOW}🚀 Push changes and tag to remote? [y/N]: ${NC}")" -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            SHOULD_PUSH=true
+        fi
+    fi
+fi
+
+if [ "$SHOULD_COMMIT" = true ]; then
+    print_info "Committing initial version bump changes..."
+
+    # Add all modified files
+    git add .
+
+    # Commit with version bump message
+    if git commit -m "bump version to v$VERSION"; then
+        print_success "Committed initial version bump changes"
+
+        # Get the commit SHA1
+        COMMIT_SHA=$(git rev-parse HEAD)
+        print_info "Commit SHA1: $COMMIT_SHA"
+
+        # Now update CFBundleVersion with the commit SHA1
+        print_info "Updating CFBundleVersion with commit SHA1..."
+
+        # Update CFBundleVersion in Info.plist with commit SHA1
+        if /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $COMMIT_SHA" "$INFO_PLIST" 2>/dev/null; then
+            print_success "Updated CFBundleVersion to $COMMIT_SHA"
+        else
+            print_error "Failed to update CFBundleVersion with commit SHA1"
+            exit 1
+        fi
+
+        # Update appBuild in Swift with commit SHA1
+        if sed -i '' "s/private let appBuild = \"[^\"]*\"/private let appBuild = \"$COMMIT_SHA\"/" "$SWIFT_FILE"; then
+            print_success "Updated appBuild in Swift to $COMMIT_SHA"
+        else
+            print_error "Failed to update appBuild in Swift with commit SHA1"
+            exit 1
+        fi
+
+        # Commit the CFBundleVersion update
+        git add .
+        if git commit --amend --no-edit; then
+            print_success "Updated commit with final CFBundleVersion"
+        else
+            print_warning "Failed to amend commit with CFBundleVersion update"
+        fi
+
+        # Create git tag
+        print_info "Creating git tag v$VERSION..."
+        if git tag -a "v$VERSION" -m "Release version $VERSION (build $COMMIT_SHA)"; then
+            print_success "Created git tag v$VERSION"
+        else
+            print_warning "Failed to create git tag (tag might already exist)"
+        fi
+
+        # Push if requested
+        if [ "$SHOULD_PUSH" = true ]; then
+            print_info "Pushing changes to remote..."
+            if git push; then
+                print_success "Pushed changes to remote"
+            else
+                print_error "Failed to push changes"
+            fi
+
+            print_info "Pushing tag to remote..."
+            if git push origin "v$VERSION"; then
+                print_success "Pushed tag v$VERSION to remote"
+            else
+                print_error "Failed to push tag"
+            fi
+        fi
+
+    else
+        print_warning "Failed to commit changes (might be no changes to commit)"
+    fi
+else
+    print_info "Skipping git commit"
+    print_warning "CFBundleVersion will use placeholder value until committed"
 fi
 
 echo ""
 print_success "Version bump complete! 🎉"
-print_info "Don't forget to:"
+
+if [ "$SHOULD_COMMIT" = false ]; then
+    print_info "Don't forget to:"
+    echo "  • Commit changes: git add . && git commit -m 'bump version to v$VERSION'"
+    echo "  • Create tag: git tag -a v$VERSION -m 'Release version $VERSION'"
+    echo "  • Push to remote: git push && git push origin v$VERSION"
+elif [ "$SHOULD_PUSH" = false ]; then
+    print_info "Don't forget to:"
+    echo "  • Push to remote: git push && git push origin v$VERSION"
+fi
+
+print_info "Next steps:"
 echo "  • Test the updated version"
-echo "  • Push to remote: git push"
 echo "  • Build and test: swift build && swift run"

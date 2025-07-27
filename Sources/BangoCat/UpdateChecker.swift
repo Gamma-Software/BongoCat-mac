@@ -488,7 +488,7 @@ class UpdateChecker: NSObject {
         let tempDir = FileManager.default.temporaryDirectory
         let dmgPath = tempDir.appendingPathComponent(asset.name).path
 
-        currentDownloadTask = URLSession.shared.downloadTask(with: url) { [weak self] tempURL, response, error in
+        currentDownloadTask = URLSession.shared.downloadTask(with: url) { tempURL, response, error in
             if let error = error {
                 completion(.failure(error))
                 return
@@ -589,22 +589,22 @@ class UpdateChecker: NSObject {
         end try
         """
 
-        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+        DispatchQueue.global(qos: .userInitiated).async {
             do {
                 let script = NSAppleScript(source: mountScript)
                 var error: NSDictionary?
-                let result = script?.executeAndReturnError(&error)
+                let _ = script?.executeAndReturnError(&error)
 
                 DispatchQueue.main.async {
                     if let error = error {
                         let errorMessage = error[NSAppleScript.errorMessage] as? String ?? "Unknown AppleScript error"
                         print("❌ Installation failed: \(errorMessage)")
-                                                 self?.analytics.trackError("Installation failed", context: ["error": errorMessage, "version": version])
-                         self?.showErrorAlert(message: "Failed to install update: \(errorMessage)")
-                     } else {
-                         print("✅ Update installed successfully!")
-                         self?.analytics.trackUpdateActionTaken("installed", version: version)
-                        self?.showInstallationSuccessAlert(version: version)
+                        self.analytics.trackError("Installation failed", context: ["error": errorMessage, "version": version])
+                        self.showErrorAlert(message: "Failed to install update: \(errorMessage)")
+                    } else {
+                        print("✅ Update installed successfully!")
+                        self.analytics.trackUpdateActionTaken("installed", version: version)
+                        self.showInstallationSuccessAlert(version: version)
                     }
                 }
             }
