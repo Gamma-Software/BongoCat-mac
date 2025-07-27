@@ -31,7 +31,7 @@ case $choice in
         ;;
     3)
         echo "📦 Building debug app, packaging and installing locally..."
-        rm -rf ./build; rm -rf ./Build; ./Scripts/build.sh; ./Scripts/package_app.sh --debug --local_install
+        rm -rf ./build; rm -rf ./Build; ./Scripts/build.sh; ./Scripts/package_app.sh --debug --install_local
         ;;
     4)
         echo "🚀 Building release app and packaging..."
@@ -39,7 +39,7 @@ case $choice in
         ;;
     5)
         echo "🚀 Building release app, packaging and installing locally..."
-        rm -rf ./build; rm -rf ./Build; ./Scripts/build.sh -r; ./Scripts/package_app.sh --local_install
+        rm -rf ./build; rm -rf ./Build; ./Scripts/build.sh -r; ./Scripts/package_app.sh --install_local
         ;;
     6)
         read -p "Enter version number (e.g., 1.3.0): " version

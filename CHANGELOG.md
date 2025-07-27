@@ -15,9 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Modified
 
 - Make sure to source variables from the .env file when building the prod app
+- Add --push and --commit options to bump_version.sh script
 
 ### Fixed
 
+- install_local instead of local_install
 - Incompatible change: Update notification system to use UserNotifications framework
 
 ## [1.4.0] - 2025-07-27
