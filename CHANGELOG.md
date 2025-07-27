@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Verify setup and dependencies
+- Troubleshooting guide when the cat is not animating when typing on your keyboard
 - Add auto-update menu item
 - Add auto-update notification
 
