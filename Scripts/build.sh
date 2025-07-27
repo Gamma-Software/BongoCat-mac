@@ -48,6 +48,8 @@ if [ "$BUILD_CONFIG" = "release" ]; then
         print_error "Please create a .env file in the project root with necessary environment variables"
         exit 1
     fi
+    print_info "Cleaning previous build artifacts for fresh production build..."
+    rm -rf .build
     BUILD_COMMAND="swift build --configuration release"
 else
     BUILD_COMMAND="swift build"

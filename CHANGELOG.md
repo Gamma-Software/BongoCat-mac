@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Make sure to source variables from the .env file when building the prod app
 - Add --push and --commit options to bump_version.sh script
+- Update run.sh to include additional options for building and bumping release versions; enhance build.sh to clean previous artifacts; refactor UpdateChecker for improved error handling and analytics tracking.
 
 ### Fixed
 
