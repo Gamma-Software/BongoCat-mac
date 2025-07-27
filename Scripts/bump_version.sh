@@ -42,7 +42,7 @@ show_usage() {
     echo "  • Update package_app.sh VERSION variable"
     echo "  • Update DMG background Python script version"
     echo "  • Update README.md version badge"
-    echo "  • Use commit SHA1 as CFBundleVersion"
+    echo "  • Use version + UTC date/time as CFBundleVersion"
     echo "  • Verify all versions are consistent"
     echo "  • Optionally commit, tag and push changes"
     echo "  • Show a summary of changes"
@@ -161,10 +161,10 @@ else
     exit 1
 fi
 
-# Update CFBundleVersion (temporary placeholder, will be replaced with commit SHA1)
+# Update CFBundleVersion (temporary placeholder, will be replaced with version + UTC date/time)
 TEMP_BUILD="$VERSION.temp"
 if /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $TEMP_BUILD" "$INFO_PLIST" 2>/dev/null; then
-    print_success "Updated CFBundleVersion to temporary value (will be replaced with commit SHA1)"
+    print_success "Updated CFBundleVersion to temporary value (will be replaced with version + UTC date/time)"
 else
     print_error "Failed to update CFBundleVersion"
     restore_backups
@@ -192,9 +192,9 @@ else
     exit 1
 fi
 
-# Update hardcoded build in Swift (temporary placeholder, will be replaced with commit SHA1)
+# Update hardcoded build in Swift (temporary placeholder, will be replaced with version + UTC date/time)
 if sed -i '' "s/private let appBuild = \"[^\"]*\"/private let appBuild = \"$TEMP_BUILD\"/" "$SWIFT_FILE"; then
-    print_success "Updated appBuild in Swift to temporary value (will be replaced with commit SHA1)"
+    print_success "Updated appBuild in Swift to temporary value (will be replaced with version + UTC date/time)"
 else
     print_error "Failed to update appBuild in Swift"
     restore_backups
@@ -265,9 +265,9 @@ echo ""
 print_info "Summary of changes:"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "• Info.plist → CFBundleShortVersionString: $VERSION"
-echo "• Info.plist → CFBundleVersion: will be set to commit SHA1"
+echo "• Info.plist → CFBundleVersion: will be set to version + UTC date/time"
 echo "• Swift code → appVersion: $VERSION"
-echo "• Swift code → appBuild: will be set to commit SHA1"
+echo "• Swift code → appBuild: will be set to version + UTC date/time"
 echo "• package_app.sh → VERSION: $VERSION"
 echo "• create_background.py → version_text: v$VERSION"
 echo "• README.md → version badge: $VERSION"
@@ -297,7 +297,7 @@ fi
 
 echo ""
 
-# Git workflow - commit first to get SHA1, then update CFBundleVersion
+# Git workflow - commit first to get UTC date/time, then update CFBundleVersion
 cd "$PROJECT_ROOT"
 
 SHOULD_COMMIT=false
@@ -333,26 +333,28 @@ if [ "$SHOULD_COMMIT" = true ]; then
     if git commit -m "bump version to v$VERSION"; then
         print_success "Committed initial version bump changes"
 
-        # Get the commit SHA1
-        COMMIT_SHA=$(git rev-parse HEAD)
-        print_info "Commit SHA1: $COMMIT_SHA"
+        # Get the UTC date/time in format YYYYMMDDHHMM
+        UTC_DATETIME=$(date -u +"%Y%m%d%H%M")
+        BUILD_VERSION="$VERSION.$UTC_DATETIME"
+        print_info "UTC date/time: $UTC_DATETIME"
+        print_info "Build version: $BUILD_VERSION"
 
-        # Now update CFBundleVersion with the commit SHA1
-        print_info "Updating CFBundleVersion with commit SHA1..."
+        # Now update CFBundleVersion with the version + UTC date/time
+        print_info "Updating CFBundleVersion with version + UTC date/time..."
 
-        # Update CFBundleVersion in Info.plist with commit SHA1
-        if /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $COMMIT_SHA" "$INFO_PLIST" 2>/dev/null; then
-            print_success "Updated CFBundleVersion to $COMMIT_SHA"
+        # Update CFBundleVersion in Info.plist with version + UTC date/time
+        if /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_VERSION" "$INFO_PLIST" 2>/dev/null; then
+            print_success "Updated CFBundleVersion to $BUILD_VERSION"
         else
-            print_error "Failed to update CFBundleVersion with commit SHA1"
+            print_error "Failed to update CFBundleVersion with version + UTC date/time"
             exit 1
         fi
 
-        # Update appBuild in Swift with commit SHA1
-        if sed -i '' "s/private let appBuild = \"[^\"]*\"/private let appBuild = \"$COMMIT_SHA\"/" "$SWIFT_FILE"; then
-            print_success "Updated appBuild in Swift to $COMMIT_SHA"
+        # Update appBuild in Swift with version + UTC date/time
+        if sed -i '' "s/private let appBuild = \"[^\"]*\"/private let appBuild = \"$BUILD_VERSION\"/" "$SWIFT_FILE"; then
+            print_success "Updated appBuild in Swift to $BUILD_VERSION"
         else
-            print_error "Failed to update appBuild in Swift with commit SHA1"
+            print_error "Failed to update appBuild in Swift with version + UTC date/time"
             exit 1
         fi
 
@@ -366,7 +368,7 @@ if [ "$SHOULD_COMMIT" = true ]; then
 
         # Create git tag
         print_info "Creating git tag v$VERSION..."
-        if git tag -a "v$VERSION" -m "Release version $VERSION (build $COMMIT_SHA)"; then
+        if git tag -a "v$VERSION" -m "Release version $VERSION (build $BUILD_VERSION)"; then
             print_success "Created git tag v$VERSION"
         else
             print_warning "Failed to create git tag (tag might already exist)"
