@@ -204,53 +204,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         menu.addItem(NSMenuItem(title: "Settings...", action: #selector(openPreferences), keyEquivalent: ","))
         menu.addItem(NSMenuItem.separator())
 
-        // Scale submenu
-        let scaleSubmenu = NSMenu()
-        scaleSubmenu.addItem(NSMenuItem(title: "Small", action: #selector(setScale065), keyEquivalent: ""))
-        scaleSubmenu.addItem(NSMenuItem(title: "Medium", action: #selector(setScale075), keyEquivalent: ""))
-        scaleSubmenu.addItem(NSMenuItem(title: "Big", action: #selector(setScale100), keyEquivalent: ""))
-
-        let scaleMenuItem = NSMenuItem(title: "Scale", action: nil, keyEquivalent: "")
-        scaleMenuItem.submenu = scaleSubmenu
-        menu.addItem(scaleMenuItem)
-
-        menu.addItem(NSMenuItem.separator())
-
-        // Scale pulse option
-        menu.addItem(NSMenuItem(title: "Scale Pulse on Input", action: #selector(toggleScalePulse), keyEquivalent: ""))
-
-        menu.addItem(NSMenuItem.separator())
-
-        // Bango cat rotate option
-        menu.addItem(NSMenuItem(title: "Bango Cat Rotate", action: #selector(toggleBangoCatRotate), keyEquivalent: ""))
-
-        menu.addItem(NSMenuItem.separator())
-
-        // Horizontal flip option
-        menu.addItem(NSMenuItem(title: "Flip Horizontally", action: #selector(toggleHorizontalFlip), keyEquivalent: ""))
-
-        menu.addItem(NSMenuItem.separator())
-
-        // Paw behavior submenu
-        let pawBehaviorSubmenu = NSMenu()
-        pawBehaviorSubmenu.addItem(NSMenuItem(title: "Keyboard Layout", action: #selector(setPawBehaviorKeyboardLayout), keyEquivalent: ""))
-        pawBehaviorSubmenu.addItem(NSMenuItem(title: "Random", action: #selector(setPawBehaviorRandom), keyEquivalent: ""))
-        pawBehaviorSubmenu.addItem(NSMenuItem(title: "Alternating", action: #selector(setPawBehaviorAlternating), keyEquivalent: ""))
-
-        let pawBehaviorMenuItem = NSMenuItem(title: "Paw Behavior", action: nil, keyEquivalent: "")
-        pawBehaviorMenuItem.submenu = pawBehaviorSubmenu
-        menu.addItem(pawBehaviorMenuItem)
-
-        menu.addItem(NSMenuItem.separator())
-
-        // Ignore clicks option
-        menu.addItem(NSMenuItem(title: "Ignore Clicks", action: #selector(toggleIgnoreClicks), keyEquivalent: ""))
-
-        // Click through option
-        menu.addItem(NSMenuItem(title: "Click Through (Hold ⌘ to Drag)", action: #selector(toggleClickThrough), keyEquivalent: ""))
-
-        menu.addItem(NSMenuItem.separator())
-
         // Stroke counter section
         let strokeCounterItem = NSMenuItem(title: "Loading stroke count...", action: nil, keyEquivalent: "")
         strokeCounterItem.tag = 999 // Special tag to identify this item for updates
@@ -258,65 +211,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         menu.addItem(NSMenuItem(title: "Reset Stroke Counter", action: #selector(resetStrokeCounter), keyEquivalent: ""))
 
         menu.addItem(NSMenuItem.separator())
-
-        // Milestone notifications section
-        menu.addItem(NSMenuItem(title: "Milestone Notifications 🔔", action: #selector(toggleMilestoneNotifications), keyEquivalent: ""))
-                menu.addItem(NSMenuItem(title: "Update Notifications 🔄", action: #selector(toggleUpdateNotifications), keyEquivalent: ""))
-        menu.addItem(NSMenuItem(title: "Auto-Update ⚡", action: #selector(toggleAutoUpdate), keyEquivalent: ""))
-
-        menu.addItem(NSMenuItem.separator())
-
-        // Analytics settings
-        menu.addItem(NSMenuItem(title: "Analytics & Privacy 📊", action: #selector(toggleAnalytics), keyEquivalent: ""))
-
-        menu.addItem(NSMenuItem.separator())
-
-        // Position submenu
-        let positionSubmenu = NSMenu()
-
-        // Corner position options
-        for corner in CornerPosition.allCases {
-            if corner != .custom {
-                let item = NSMenuItem(title: corner.displayName, action: #selector(setCornerPosition(_:)), keyEquivalent: "")
-                item.representedObject = corner
-                positionSubmenu.addItem(item)
-            }
-        }
-
-        positionSubmenu.addItem(NSMenuItem.separator())
-        positionSubmenu.addItem(NSMenuItem(title: "Per-App Positioning", action: #selector(togglePerAppPositioning), keyEquivalent: ""))
-        positionSubmenu.addItem(NSMenuItem.separator())
-        positionSubmenu.addItem(NSMenuItem(title: "Save Current Position", action: #selector(saveCurrentPositionAction), keyEquivalent: ""))
-        positionSubmenu.addItem(NSMenuItem(title: "Restore Saved Position", action: #selector(restoreSavedPosition), keyEquivalent: ""))
-
-        let positionMenuItem = NSMenuItem(title: "Position", action: nil, keyEquivalent: "")
-        positionMenuItem.submenu = positionSubmenu
-        menu.addItem(positionMenuItem)
-
-        menu.addItem(NSMenuItem.separator())
-
-        // Per-app hiding submenu
-        let hidingSubmenu = NSMenu()
-        hidingSubmenu.addItem(NSMenuItem(title: "Per-App Hiding", action: #selector(togglePerAppHiding), keyEquivalent: ""))
-        hidingSubmenu.addItem(NSMenuItem.separator())
-        hidingSubmenu.addItem(NSMenuItem(title: "Hide Cat for Current App", action: #selector(hideForCurrentApp), keyEquivalent: ""))
-        hidingSubmenu.addItem(NSMenuItem(title: "Show Cat for Current App", action: #selector(showForCurrentApp), keyEquivalent: ""))
-        hidingSubmenu.addItem(NSMenuItem.separator())
-        hidingSubmenu.addItem(NSMenuItem(title: "Manage Hidden Apps...", action: #selector(manageHiddenApps), keyEquivalent: ""))
-
-        let hidingMenuItem = NSMenuItem(title: "App Visibility", action: nil, keyEquivalent: "")
-        hidingMenuItem.submenu = hidingSubmenu
-        menu.addItem(hidingMenuItem)
-
-        menu.addItem(NSMenuItem.separator())
-        menu.addItem(NSMenuItem(title: "Reset to Factory Defaults", action: #selector(resetToFactoryDefaults), keyEquivalent: ""))
-        menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Buy me a coffee ☕", action: #selector(buyMeACoffee), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "Tweet about BangoCat 🐦", action: #selector(tweetAboutBangoCat), keyEquivalent: ""))
-        menu.addItem(NSMenuItem(title: "Visit Website", action: #selector(visitWebsite), keyEquivalent: ""))
-        menu.addItem(NSMenuItem(title: "View Changelog 📋", action: #selector(viewChangelog), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "Check for Updates 🔄", action: #selector(checkForUpdates), keyEquivalent: ""))
-        menu.addItem(NSMenuItem(title: "Report a Bug 🐛", action: #selector(reportBug), keyEquivalent: ""))
+
+        menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "About BangoCat", action: #selector(showCredits), keyEquivalent: ""))
 
         // Developer options (only show if analytics debug is needed)
@@ -346,27 +245,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         menu.delegate = self  // Set delegate to update stroke counter when menu opens
         print("🔧 Menu attached to status bar item")
 
-        // Set initial checkmarks
-        updateScaleMenuItems()
-        updateScalePulseMenuItem()
-        updatePositionMenuItems()
-        updateRotationMenuItem()
-        updateFlipMenuItem()
-        updatePawBehaviorMenuItems()
-        updateIgnoreClicksMenuItem()
-        updateClickThroughMenuItem()
-        updatePerAppPositioningMenuItem()
-
         // Update stroke counter after a short delay to ensure overlay window is ready
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             self.updateStrokeCounterMenuItem()
         }
-
-        // Update milestone notifications menu item
-        updateMilestoneNotificationsMenuItem()
-        updateUpdateNotificationsMenuItem()
-        updateAutoUpdateMenuItem()
-        updateAnalyticsMenuItem()
 
         print("🔧 Status bar setup complete")
     }
