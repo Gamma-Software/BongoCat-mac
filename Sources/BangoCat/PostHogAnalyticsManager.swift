@@ -247,14 +247,6 @@ class PostHogAnalyticsManager: ObservableObject {
     }
 
     // MARK: - Window & UI Events
-
-    func trackWindowPositionChanged(_ position: String, method: String) {
-        track(event: "window_position_changed", properties: [
-            "position": position,
-            "method": method // "manual_drag", "corner_menu", "keyboard_shortcut", "per_app_restore"
-        ])
-    }
-
     func trackContextMenuUsed(_ menuType: String, action: String) {
         track(event: "context_menu_used", properties: [
             "menu_type": menuType, // "right_click", "status_bar"
@@ -280,13 +272,6 @@ class PostHogAnalyticsManager: ObservableObject {
     func trackPerAppHidingToggled(_ enabled: Bool) {
         track(event: "per_app_hiding_toggled", properties: [
             "enabled": enabled
-        ])
-    }
-
-    func trackPerAppPositionSaved(_ appBundleID: String, totalAppsWithPositions: Int) {
-        track(event: "per_app_position_saved", properties: [
-            "app_bundle_id": appBundleID.replacingOccurrences(of: ".", with: "_"),
-            "total_apps_with_positions": totalAppsWithPositions
         ])
     }
 

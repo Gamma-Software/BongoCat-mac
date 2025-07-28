@@ -1586,11 +1586,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             // Save position for the current active app
             perAppPositions[currentActiveApp] = position
             savePerAppPositioning()
-
-            // Track per-app position save
-            analytics.trackPerAppPositionSaved(currentActiveApp, totalAppsWithPositions: perAppPositions.count)
-            analytics.trackWindowPositionChanged("per_app_manual", method: "manual_drag")
-
             print("Manual position saved for \(currentActiveApp): \(position)")
         } else {
             // Save position globally (original behavior)
@@ -1600,8 +1595,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             updatePositionMenuItems()
 
             // Track global position save
-            analytics.trackWindowPositionChanged("global_manual", method: "manual_drag")
-
             print("Manual position saved: \(position)")
         }
     }
@@ -1647,7 +1640,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         saveManualPosition(currentPosition)
 
         // Track position save
-        analytics.trackWindowPositionChanged("custom", method: "save_current")
         trackFeatureUsed("save_position")
 
         print("Current position saved: \(currentPosition)")
@@ -1659,7 +1651,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         updatePositionMenuItems()
 
         // Track position restore
-        analytics.trackWindowPositionChanged("saved", method: "restore_saved")
         trackFeatureUsed("restore_position")
 
         print("Restored saved position: \(savedPosition)")
@@ -1675,7 +1666,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         // Track position change
         analytics.trackPositionChanged(corner.displayName)
-        analytics.trackWindowPositionChanged(corner.displayName, method: "corner_menu")
         trackFeatureUsed("corner_positioning")
 
         print("Moved cat to \(corner.displayName) at position: \(position)")
@@ -1814,7 +1804,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             // Save current position for the old app (if it's not "unknown")
             if oldApp != "unknown", let currentPosition = overlayWindow?.window?.frame.origin {
                 perAppPositions[oldApp] = currentPosition
-                analytics.trackPerAppPositionSaved(oldApp, totalAppsWithPositions: perAppPositions.count)
                 print("💾 Saved position for \(oldApp): \(currentPosition)")
             }
 
@@ -1822,7 +1811,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             if let savedPosition = perAppPositions[newApp] {
                 print("📍 Restoring position for \(newApp): \(savedPosition)")
                 overlayWindow?.setPositionProgrammatically(savedPosition)
-                analytics.trackWindowPositionChanged("per_app_restore", method: "per_app_restore")
             } else {
                 print("🆕 No saved position for \(newApp), using current position")
                 // Optionally, you could set a default position here
