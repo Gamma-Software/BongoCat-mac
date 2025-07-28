@@ -45,7 +45,7 @@ cd "$PROJECT_ROOT"
 
 APP_NAME="BangoCat"
 BUNDLE_ID="com.gammasoftware.bangocat"
-VERSION="1.5.1"  # Will be updated by bump_version.sh
+VERSION="1.5.2"  # Will be updated by bump_version.sh
 
 # Set build configuration based on debug flag
 if [ "$DEBUG_BUILD" = true ]; then
