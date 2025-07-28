@@ -404,20 +404,20 @@ class UpdateChecker: NSObject {
             }
         } else {
             // Auto-update disabled: "Download Now", "Skip This Version", "Remind Me Later"
-        switch response {
-        case .alertFirstButtonReturn: // Download Now
-            analytics.trackUpdateActionTaken("download", version: release.tagName)
-            analytics.trackNotificationClicked("update", action: "download")
-            openUpdateURL(release.htmlUrl)
-        case .alertSecondButtonReturn: // Skip This Version
-            analytics.trackUpdateActionTaken("skip", version: release.tagName)
-            analytics.trackNotificationClicked("update", action: "skip")
-            skipVersion(release.tagName.replacingOccurrences(of: "v", with: ""))
-        case .alertThirdButtonReturn: // Remind Me Later
-            analytics.trackUpdateActionTaken("later", version: release.tagName)
-            analytics.trackNotificationClicked("update", action: "later")
-        default:
-            analytics.trackNotificationDismissed("update")
+            switch response {
+            case .alertFirstButtonReturn: // Download Now
+                analytics.trackUpdateActionTaken("download", version: release.tagName)
+                analytics.trackNotificationClicked("update", action: "download")
+                openUpdateURL(release.htmlUrl)
+            case .alertSecondButtonReturn: // Skip This Version
+                analytics.trackUpdateActionTaken("skip", version: release.tagName)
+                analytics.trackNotificationClicked("update", action: "skip")
+                skipVersion(release.tagName.replacingOccurrences(of: "v", with: ""))
+            case .alertThirdButtonReturn: // Remind Me Later
+                analytics.trackUpdateActionTaken("later", version: release.tagName)
+                analytics.trackNotificationClicked("update", action: "later")
+            default:
+                analytics.trackNotificationDismissed("update")
             }
         }
     }
