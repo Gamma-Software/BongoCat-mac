@@ -2,7 +2,7 @@
 
 A native macOS implementation of the beloved BangoCat overlay, written in Swift. Perfect for streamers, content creators, and anyone who wants an adorable cat companion on their desktop that reacts to their typing and interactions.
 
-![Platform](https://img.shields.io/badge/Platform-macOS%2013%2B-blue) ![Language](https://img.shields.io/badge/Language-Swift-orange) ![SwiftUI](https://img.shields.io/badge/UI-SwiftUI-purple) ![Status](https://img.shields.io/badge/Status-Stable-green) ![Version](https://img.shields.io/badge/Version-1.4.1-blue)
+![Platform](https://img.shields.io/badge/Platform-macOS%2013%2B-blue) ![Language](https://img.shields.io/badge/Language-Swift-orange) ![SwiftUI](https://img.shields.io/badge/UI-SwiftUI-purple) ![Status](https://img.shields.io/badge/Status-Stable-green) ![Version](https://img.shields.io/badge/Version-1.4.2-blue)
 
 ## What is BangoCat?
 
