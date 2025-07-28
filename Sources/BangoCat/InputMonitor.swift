@@ -56,8 +56,8 @@ class InputMonitor {
             switch event.type {
             case .leftMouseDown:
                 if event.subtype == .touch {
-                    //print("👆 Trackpad touch detected (via mouse down subtype)")
-                    //self?.callback(.trackpadTouch)
+                    print("👆 Trackpad touch detected (via mouse down subtype) - treating as left click")
+                    self?.callback(.leftClickDown)
                 } else {
                     print("🖱️ Left mouse DOWN detected")
                     self?.callback(.leftClickDown)

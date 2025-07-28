@@ -322,10 +322,10 @@ class CatAnimationController: ObservableObject {
             }
             print("🖱️ Right click up detected - right paw up animation")
             triggerPawAnimation(.rightPawUp)
-        //case .trackpadTouch:
-        //    print("👆 Trackpad touch detected - both paws down animation")
-        //    analytics.trackTrackpadGestureDetected("touch")
-        //    triggerTrackpadTouch()
+        case .trackpadTouch:
+            print("👆 Trackpad touch detected - both paws down animation")
+            analytics.trackTrackpadGestureDetected("touch")
+            triggerTrackpadTouch()
         //case .scroll:
         //    print("🔄 Scroll detected - both paws animation")
         //    triggerBothPawsAnimation()

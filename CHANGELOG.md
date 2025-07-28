@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Modified
 
 - Add public methods for checking updates and opening preferences in AppDelegate; update context menu in CatView to include new options
-
+- Treat trackpad touch as left click for now
 
 
 ## [1.4.3] - 2025-07-28
