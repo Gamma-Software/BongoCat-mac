@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Flip and rotate settings now work as expected
 - Refactor UpdateChecker to improve code readability by adjusting indentation in the analytics tracking switch statement for update actions.
 
 ## [1.4.2] - 2025-07-28

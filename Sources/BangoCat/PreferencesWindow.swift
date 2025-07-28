@@ -150,7 +150,13 @@ struct GeneralPreferencesView: View {
                     Toggle("Rotate Cat", isOn: Binding(
                         get: { appDelegate.currentRotation != 0.0 },
                         set: { newValue in
-                            appDelegate.currentRotation = newValue ? 13.0 : 0.0
+                            if newValue {
+                                // When enabling rotation, use 13° if not flipped, -13° if flipped
+                                appDelegate.currentRotation = appDelegate.isFlippedHorizontally ? -13.0 : 13.0
+                            } else {
+                                // When disabling rotation, always go back to 0°
+                                appDelegate.currentRotation = 0.0
+                            }
                             appDelegate.saveRotation()
                             appDelegate.updateOverlay()
                         }
@@ -160,6 +166,13 @@ struct GeneralPreferencesView: View {
                         get: { appDelegate.isFlippedHorizontally },
                         set: { newValue in
                             appDelegate.isFlippedHorizontally = newValue
+
+                            // If the cat is currently rotated, adjust the rotation for the new flip state
+                            if appDelegate.currentRotation != 0.0 {
+                                appDelegate.currentRotation = newValue ? -13.0 : 13.0
+                                appDelegate.saveRotation()
+                            }
+
                             appDelegate.saveFlip()
                             appDelegate.updateOverlay()
                         }
