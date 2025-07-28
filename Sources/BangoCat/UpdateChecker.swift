@@ -1,6 +1,7 @@
 import Foundation
 import UserNotifications
 import AppKit
+import SwiftUI
 
 struct GitHubReleaseAsset: Codable {
     let id: Int
@@ -38,7 +39,7 @@ struct GitHubRelease: Codable {
     }
 }
 
-class UpdateChecker: NSObject {
+class UpdateChecker: NSObject, ObservableObject {
     static let shared = UpdateChecker()
 
     // GitHub repository information
@@ -53,8 +54,8 @@ class UpdateChecker: NSObject {
     private let autoUpdateEnabledKey = "BangoCatAutoUpdateEnabled"
 
     // Settings
-    private var updateNotificationsEnabled: Bool = true
-    private var autoUpdateEnabled: Bool = true
+    @Published private var updateNotificationsEnabled: Bool = true
+    @Published private var autoUpdateEnabled: Bool = true
     private var skippedVersion: String?
 
     // Update checking
@@ -404,20 +405,20 @@ class UpdateChecker: NSObject {
             }
         } else {
             // Auto-update disabled: "Download Now", "Skip This Version", "Remind Me Later"
-        switch response {
-        case .alertFirstButtonReturn: // Download Now
-            analytics.trackUpdateActionTaken("download", version: release.tagName)
-            analytics.trackNotificationClicked("update", action: "download")
-            openUpdateURL(release.htmlUrl)
-        case .alertSecondButtonReturn: // Skip This Version
-            analytics.trackUpdateActionTaken("skip", version: release.tagName)
-            analytics.trackNotificationClicked("update", action: "skip")
-            skipVersion(release.tagName.replacingOccurrences(of: "v", with: ""))
-        case .alertThirdButtonReturn: // Remind Me Later
-            analytics.trackUpdateActionTaken("later", version: release.tagName)
-            analytics.trackNotificationClicked("update", action: "later")
-        default:
-            analytics.trackNotificationDismissed("update")
+            switch response {
+            case .alertFirstButtonReturn: // Download Now
+                analytics.trackUpdateActionTaken("download", version: release.tagName)
+                analytics.trackNotificationClicked("update", action: "download")
+                openUpdateURL(release.htmlUrl)
+            case .alertSecondButtonReturn: // Skip This Version
+                analytics.trackUpdateActionTaken("skip", version: release.tagName)
+                analytics.trackNotificationClicked("update", action: "skip")
+                skipVersion(release.tagName.replacingOccurrences(of: "v", with: ""))
+            case .alertThirdButtonReturn: // Remind Me Later
+                analytics.trackUpdateActionTaken("later", version: release.tagName)
+                analytics.trackNotificationClicked("update", action: "later")
+            default:
+                analytics.trackNotificationDismissed("update")
             }
         }
     }

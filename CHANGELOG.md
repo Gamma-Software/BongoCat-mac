@@ -5,6 +5,17 @@ All notable changes to BangoCat-mac will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [unreleased] - 2025-07-28
+
+### Modified
+
+- Remove unused menu items and refactor AppDelegate setup for improved clarity and performance. This includes the removal of scale options, paw behavior settings, and various notification settings from the menu structure.
+
+### Fixed
+
+- Flip and rotate settings now work as expected
+- Refactor UpdateChecker to improve code readability by adjusting indentation in the analytics tracking switch statement for update actions.
+
 ## [1.4.2] - 2025-07-28
 
 ### Modified
