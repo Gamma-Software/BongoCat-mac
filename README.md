@@ -153,6 +153,8 @@ See [`ANALYTICS_SETUP.md`](ANALYTICS_SETUP.md) for detailed setup instructions, 
 3. Launch BangoCat from Applications or Spotlight
 4. Grant accessibility permissions when prompted
 
+**💡 Pro Tip**: If you're reinstalling and accessibility permissions keep being asked, use the packaged DMG instead of building from source. The official releases are code signed for consistent identity.
+
 #### **🛠️ Build from Source**
 Perfect for developers or those who want the latest features:
 
@@ -183,9 +185,29 @@ The project includes helpful scripts in the `Scripts/` directory:
 
 # Create distributable DMG
 ./Scripts/package_app.sh
+
+# Clear accessibility permissions (if having issues)
+./Scripts/clear_accessibility.sh
 ```
 
 See [`Scripts/README.md`](Scripts/README.md) for detailed documentation.
+
+## 🔧 Troubleshooting
+
+### Accessibility Permission Issues
+If you're having trouble with accessibility permissions after reinstalling:
+
+1. **Use the official DMG**: Download from [Releases](https://github.com/Gamma-Software/BangoCat-mac/releases) instead of building from source
+2. **Clear old permissions**: Run `./Scripts/clear_accessibility.sh` to open System Preferences
+3. **Remove from Accessibility list**: In System Preferences → Security & Privacy → Accessibility, remove BangoCat if it's there
+4. **Reinstall and grant permissions**: Launch BangoCat again and grant permissions when prompted
+
+### Common Issues
+- **App won't start**: Right-click and select "Open" if you get a security warning
+- **Cat not animating**: Check accessibility permissions in System Preferences
+- **Position resets**: Use "Save Current Position" in the context menu
+
+For more detailed troubleshooting, see [`TROUBLESHOOTING.md`](TROUBLESHOOTING.md).
 
 ## 🤝 Development & Contributing
 

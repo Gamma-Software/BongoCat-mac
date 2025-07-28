@@ -44,7 +44,7 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 cd "$PROJECT_ROOT"
 
 APP_NAME="BangoCat"
-BUNDLE_ID="com.bangocat.mac"
+BUNDLE_ID="com.gammasoftware.bangocat"
 VERSION="1.5.0"  # Will be updated by bump_version.sh
 
 # Set build configuration based on debug flag
@@ -442,6 +442,22 @@ fi
 
 # Make executable runnable
 chmod +x "${APP_BUNDLE}/Contents/MacOS/${APP_NAME}"
+
+# Code sign the app bundle for consistent identity
+echo "🔐 Code signing app bundle for consistent identity..."
+if command -v codesign &> /dev/null; then
+    # Try to sign with ad-hoc signature (no certificate required)
+    if codesign --force --deep --sign - "${APP_BUNDLE}"; then
+        echo "✅ App bundle code signed successfully"
+    else
+        echo "⚠️  Code signing failed, but app will still work"
+        echo "   • Accessibility permissions may need to be re-granted on reinstall"
+        echo "   • Consider getting an Apple Developer certificate for production builds"
+    fi
+else
+    echo "⚠️  codesign not available, skipping code signing"
+    echo "   • App will work but may require re-granting accessibility permissions"
+fi
 
 echo "✅ App bundle created at: ${APP_BUNDLE}"
 
