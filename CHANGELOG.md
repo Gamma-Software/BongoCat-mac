@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Refactor run.sh to enhance usability with command line options and improve error handling. Added a usage function and streamlined the execution of build and package commands. The interactive menu remains available for user selection.
 
+### Removed
+
+- Remove redundant analytics tracking for window position changes and per-app position saves in BangoCatApp and PostHogAnalyticsManager classes to streamline code and improve performance.
+
 ## [1.4.1] - 2025-07-27
 
 ### Added
