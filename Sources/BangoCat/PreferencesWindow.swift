@@ -179,6 +179,20 @@ struct GeneralPreferencesView: View {
                     ))
                 }
             }
+
+            PreferencesSection(title: "App Behavior") {
+                VStack(alignment: .leading, spacing: 12) {
+                    Toggle("Auto-Start at Launch 🚀", isOn: Binding(
+                        get: { appDelegate.autoStartAtLaunchEnabled },
+                        set: { newValue in
+                            if newValue != appDelegate.autoStartAtLaunchEnabled {
+                                appDelegate.toggleAutoStartAtLaunch()
+                            }
+                        }
+                    ))
+                    .help("Automatically start BangoCat when you log into your Mac")
+                }
+            }
         }
     }
 }
