@@ -730,6 +730,11 @@ struct CatView: View {
                                 PostHogAnalyticsManager.shared.trackContextMenuUsed("right_click", action: "check_for_updates")
                             }
 
+                            Button("Auto-Start at Launch 🚀") {
+                                animationController.appDelegate?.toggleAutoStartAtLaunchPublic()
+                                PostHogAnalyticsManager.shared.trackContextMenuUsed("right_click", action: "toggle_auto_start")
+                            }
+
                             Divider()
 
                             Button("About BangoCat") {

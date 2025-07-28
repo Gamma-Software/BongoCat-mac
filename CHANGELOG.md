@@ -5,7 +5,27 @@ All notable changes to BangoCat-mac will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [unreleased] - 2025-07-28
+
+### Added
+
+- **🚀 Auto-Start at Launch** - New menu option to automatically start BangoCat when you log into your Mac
+  - Uses modern SMAppService API for macOS 13.0+ with fallback to legacy method
+  - Automatically syncs with system login items state
+  - Can be toggled on/off from the status bar menu, right-click context menu, and preferences window
+  - Enabled by default for new installations
+  - Respects user privacy and system permissions
+
 ## [1.4.4] - 2025-07-28
+
+### Added
+
+- **🚀 Auto-Start at Launch** - New menu option to automatically start BangoCat when you log into your Mac
+  - Uses modern SMAppService API for macOS 13.0+ with fallback to legacy method
+  - Automatically syncs with system login items state
+  - Can be toggled on/off from the status bar menu, right-click context menu, and preferences window
+  - Enabled by default for new installations
+  - Respects user privacy and system permissions
 
 ### Modified
 

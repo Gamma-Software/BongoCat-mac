@@ -1,6 +1,7 @@
 import Cocoa
 import SwiftUI
 import UserNotifications
+import ServiceManagement
 
 enum CornerPosition: String, CaseIterable {
     case topLeft = "Top Left"
@@ -53,6 +54,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
     // Paw behavior management
     @Published var pawBehaviorMode: PawBehaviorMode = .keyboardLayout  // Default to keyboard layout
     private let pawBehaviorKey = "BangoCatPawBehavior"
+
+    // Auto-start at launch management
+    @Published var autoStartAtLaunchEnabled: Bool = true  // Default enabled
+    private let autoStartAtLaunchKey = "BangoCatAutoStartAtLaunch"
 
     // Position management - Enhanced for per-app positioning
     private var snapToCornerEnabled: Bool = false
@@ -114,6 +119,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         loadIgnoreClicksPreference()
         loadClickThroughPreference()
         loadPawBehaviorPreference()
+        loadAutoStartAtLaunchPreference()
         loadPositionPreferences()
         loadPerAppPositioning()
         loadPerAppHiding()
@@ -135,6 +141,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         // Start daily update checks after a delay to ensure app is fully initialized
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
             self.updateChecker.startDailyUpdateChecks()
+        }
+
+        // Sync auto-start state with system
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            self.syncAutoStartState()
         }
 
         // Track initial settings combination
@@ -214,6 +225,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         menu.addItem(NSMenuItem(title: "Buy me a coffee ☕", action: #selector(buyMeACoffee), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "Tweet about BangoCat 🐦", action: #selector(tweetAboutBangoCat), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "Check for Updates 🔄", action: #selector(checkForUpdates), keyEquivalent: ""))
+        menu.addItem(NSMenuItem(title: "Auto-Start at Launch 🚀", action: #selector(toggleAutoStartAtLaunch), keyEquivalent: ""))
 
         menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "About BangoCat", action: #selector(showCredits), keyEquivalent: ""))
@@ -249,6 +261,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             self.updateStrokeCounterMenuItem()
         }
+
+        // Update auto-start menu item state
+        updateAutoStartAtLaunchMenuItem()
 
         print("🔧 Status bar setup complete")
     }
@@ -418,7 +433,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
     @objc internal func resetToFactoryDefaults() {
         let alert = NSAlert()
         alert.messageText = "Reset to Factory Defaults"
-        alert.informativeText = "This will reset all BangoCat settings to their default values:\n\n• Scale: 100%\n• Scale Pulse: Enabled\n• Rotation: Disabled\n• Flip: Disabled\n• Ignore Clicks: Disabled\n• Click Through: Enabled\n• Position: Default location\n• Per-App Positioning: Disabled\n• Per-App Hiding: Disabled (all hidden apps cleared)\n• Stroke Counter: Will be reset\n\nThis action cannot be undone."
+        alert.informativeText = "This will reset all BangoCat settings to their default values:\n\n• Scale: 100%\n• Scale Pulse: Enabled\n• Rotation: Disabled\n• Flip: Disabled\n• Ignore Clicks: Disabled\n• Click Through: Enabled\n• Auto-Start at Launch: Enabled\n• Position: Default location\n• Per-App Positioning: Disabled\n• Per-App Hiding: Disabled (all hidden apps cleared)\n• Stroke Counter: Will be reset\n\nThis action cannot be undone."
         alert.alertStyle = .warning
         alert.addButton(withTitle: "Reset")
         alert.addButton(withTitle: "Cancel")
@@ -437,6 +452,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
             ignoreClicksEnabled = false
             clickThroughEnabled = true
             pawBehaviorMode = .keyboardLayout
+            autoStartAtLaunchEnabled = true
             savedPosition = NSPoint(x: 100, y: 100)
             currentCornerPosition = .custom
             snapToCornerEnabled = false
@@ -453,6 +469,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
             saveIgnoreClicksPreference()
             saveClickThroughPreference()
             savePawBehaviorPreference()
+            saveAutoStartAtLaunchPreference()
             savePositionPreferences()
             savePerAppPositioning()
             savePerAppHiding()
@@ -482,6 +499,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
             updatePerAppPositioningMenuItem()
             updatePerAppHidingMenuItem()
             updateHiddenAppsMenuItems()
+            updateAutoStartAtLaunchMenuItem()
             updateStrokeCounterMenuItem()
 
             print("All settings reset to factory defaults")
@@ -884,6 +902,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         NSApplication.shared.terminate(self)
     }
 
+    func toggleAutoStartAtLaunchPublic() {
+        toggleAutoStartAtLaunch()
+    }
+
     // MARK: - Developer/Debug Methods
 
     #if DEBUG
@@ -1024,6 +1046,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         print("Loaded paw behavior preference: \(pawBehaviorMode.displayName)")
     }
 
+    private func loadAutoStartAtLaunchPreference() {
+        if UserDefaults.standard.object(forKey: autoStartAtLaunchKey) != nil {
+            autoStartAtLaunchEnabled = UserDefaults.standard.bool(forKey: autoStartAtLaunchKey)
+        } else {
+            autoStartAtLaunchEnabled = true // Default enabled
+        }
+        print("Loaded auto-start at launch preference: \(autoStartAtLaunchEnabled)")
+    }
+
     internal func saveScale() {
         UserDefaults.standard.set(currentScale, forKey: scaleKey)
         print("Saved scale: \(currentScale)")
@@ -1057,6 +1088,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
     internal func savePawBehaviorPreference() {
         UserDefaults.standard.set(pawBehaviorMode.rawValue, forKey: pawBehaviorKey)
         print("Saved paw behavior preference: \(pawBehaviorMode.displayName)")
+    }
+
+    internal func saveAutoStartAtLaunchPreference() {
+        UserDefaults.standard.set(autoStartAtLaunchEnabled, forKey: autoStartAtLaunchKey)
+        print("Saved auto-start at launch preference: \(autoStartAtLaunchEnabled)")
     }
 
     @objc private func setScale065() {
@@ -1400,6 +1436,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         for item in menu.items {
             if item.title == "Analytics & Privacy 📊" {
                 item.state = analytics.isAnalyticsEnabled ? .on : .off
+                break
+            }
+        }
+    }
+
+    private func updateAutoStartAtLaunchMenuItem() {
+        guard let menu = statusBarItem?.menu else { return }
+        for item in menu.items {
+            if item.title == "Auto-Start at Launch 🚀" {
+                item.state = autoStartAtLaunchEnabled ? .on : .off
                 break
             }
         }
@@ -2030,6 +2076,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
             "ignore_clicks": ignoreClicksEnabled,
             "click_through": clickThroughEnabled,
             "paw_behavior": pawBehaviorMode.rawValue,
+            "auto_start_at_launch": autoStartAtLaunchEnabled,
             "per_app_positioning": isPerAppPositioningEnabled,
             "per_app_hiding": isPerAppHidingEnabled,
             "corner_position": currentCornerPosition.rawValue
@@ -2066,6 +2113,26 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         alert.alertStyle = .informational
         alert.addButton(withTitle: "OK")
         alert.runModal()
+    }
+
+    @objc internal func toggleAutoStartAtLaunch() {
+        autoStartAtLaunchEnabled.toggle()
+        saveAutoStartAtLaunchPreference()
+        updateAutoStartAtLaunchMenuItem()
+
+        // Apply the auto-start setting
+        if autoStartAtLaunchEnabled {
+            enableAutoStartAtLaunch()
+        } else {
+            disableAutoStartAtLaunch()
+        }
+
+        // Track setting toggle
+        analytics.trackSettingToggled("auto_start_at_launch", enabled: autoStartAtLaunchEnabled)
+        trackSettingChanged("auto_start_at_launch")
+        trackFeatureUsed("auto_start_at_launch")
+
+        print("Auto-start at launch toggled to: \(autoStartAtLaunchEnabled)")
     }
 
     // MARK: - Preferences Window
@@ -2117,5 +2184,152 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         overlayWindow?.setPositionProgrammatically(newPosition)
         savedPosition = newPosition
         savePositionPreferences()
+    }
+
+    // MARK: - Auto-Start at Launch Management
+
+    private func enableAutoStartAtLaunch() {
+        guard Bundle.main.bundleIdentifier != nil else {
+            print("❌ Failed to get bundle identifier for auto-start")
+            return
+        }
+
+        // Try using the modern SMAppService API first (macOS 13.0+)
+        if #available(macOS 13.0, *) {
+            do {
+                let service = SMAppService.mainApp
+                try service.register()
+                print("✅ Auto-start enabled using SMAppService")
+            } catch {
+                print("❌ Failed to enable auto-start with SMAppService: \(error)")
+                // Fallback to legacy method
+                enableAutoStartAtLaunchLegacy()
+            }
+        } else {
+            // Fallback to legacy method for older macOS versions
+            enableAutoStartAtLaunchLegacy()
+        }
+    }
+
+    private func disableAutoStartAtLaunch() {
+        guard Bundle.main.bundleIdentifier != nil else {
+            print("❌ Failed to get bundle identifier for auto-start")
+            return
+        }
+
+        // Try using the modern SMAppService API first (macOS 13.0+)
+        if #available(macOS 13.0, *) {
+            do {
+                let service = SMAppService.mainApp
+                try service.unregister()
+                print("✅ Auto-start disabled using SMAppService")
+            } catch {
+                print("❌ Failed to disable auto-start with SMAppService: \(error)")
+                // Fallback to legacy method
+                disableAutoStartAtLaunchLegacy()
+            }
+        } else {
+            // Fallback to legacy method for older macOS versions
+            disableAutoStartAtLaunchLegacy()
+        }
+    }
+
+    private func enableAutoStartAtLaunchLegacy() {
+        // Legacy method using launchd
+        let appPath = Bundle.main.bundlePath
+        let script = """
+        tell application "System Events"
+            make login item at end with properties {path:"\(appPath)", hidden:false}
+        end tell
+        """
+
+        let task = Process()
+        task.launchPath = "/usr/bin/osascript"
+        task.arguments = ["-e", script]
+
+        do {
+            try task.run()
+            task.waitUntilExit()
+
+            if task.terminationStatus == 0 {
+                print("✅ Auto-start enabled using legacy method")
+            } else {
+                print("❌ Failed to enable auto-start using legacy method")
+            }
+        } catch {
+            print("❌ Error enabling auto-start using legacy method: \(error)")
+        }
+    }
+
+    private func disableAutoStartAtLaunchLegacy() {
+        // Legacy method using launchd
+        let appPath = Bundle.main.bundlePath
+        let script = """
+        tell application "System Events"
+            delete login item "\(appPath)"
+        end tell
+        """
+
+        let task = Process()
+        task.launchPath = "/usr/bin/osascript"
+        task.arguments = ["-e", script]
+
+        do {
+            try task.run()
+            task.waitUntilExit()
+
+            if task.terminationStatus == 0 {
+                print("✅ Auto-start disabled using legacy method")
+            } else {
+                print("❌ Failed to disable auto-start using legacy method")
+            }
+        } catch {
+            print("❌ Error disabling auto-start using legacy method: \(error)")
+        }
+    }
+
+    private func isAutoStartAtLaunchEnabled() -> Bool {
+        // Check if the app is in login items
+        let appPath = Bundle.main.bundlePath
+        let script = """
+        tell application "System Events"
+            return exists login item "\(appPath)"
+        end tell
+        """
+
+        let task = Process()
+        task.launchPath = "/usr/bin/osascript"
+        task.arguments = ["-e", script]
+
+        do {
+            let pipe = Pipe()
+            task.standardOutput = pipe
+            try task.run()
+            task.waitUntilExit()
+
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            let output = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+
+            return output == "true"
+        } catch {
+            print("❌ Error checking auto-start status: \(error)")
+            return false
+        }
+    }
+
+    private func syncAutoStartState() {
+        // Check if the system state matches our saved preference
+        let systemEnabled = isAutoStartAtLaunchEnabled()
+
+        if systemEnabled != autoStartAtLaunchEnabled {
+            print("🔄 Auto-start state mismatch detected - system: \(systemEnabled), saved: \(autoStartAtLaunchEnabled)")
+
+            // Update our saved preference to match the system state
+            autoStartAtLaunchEnabled = systemEnabled
+            saveAutoStartAtLaunchPreference()
+            updateAutoStartAtLaunchMenuItem()
+
+            print("✅ Auto-start state synced with system")
+        }
     }
 }
