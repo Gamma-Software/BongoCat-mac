@@ -1,6 +1,7 @@
 import Foundation
 import UserNotifications
 import AppKit
+import SwiftUI
 
 struct GitHubReleaseAsset: Codable {
     let id: Int
@@ -38,7 +39,7 @@ struct GitHubRelease: Codable {
     }
 }
 
-class UpdateChecker: NSObject {
+class UpdateChecker: NSObject, ObservableObject {
     static let shared = UpdateChecker()
 
     // GitHub repository information
@@ -53,8 +54,8 @@ class UpdateChecker: NSObject {
     private let autoUpdateEnabledKey = "BangoCatAutoUpdateEnabled"
 
     // Settings
-    private var updateNotificationsEnabled: Bool = true
-    private var autoUpdateEnabled: Bool = true
+    @Published private var updateNotificationsEnabled: Bool = true
+    @Published private var autoUpdateEnabled: Bool = true
     private var skippedVersion: String?
 
     // Update checking

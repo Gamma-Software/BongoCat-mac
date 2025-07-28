@@ -1,12 +1,13 @@
 import Foundation
 import UserNotifications
 import AppKit
+import SwiftUI
 
-class MilestoneNotificationManager: NSObject, UNUserNotificationCenterDelegate {
+class MilestoneNotificationManager: NSObject, UNUserNotificationCenterDelegate, ObservableObject {
     static let shared = MilestoneNotificationManager()
 
     // Milestone settings
-    private var notificationsEnabled: Bool = true
+    @Published private var notificationsEnabled: Bool = true
     private let notificationsEnabledKey = "BangoCatMilestoneNotificationsEnabled"
 
     // Default milestone intervals

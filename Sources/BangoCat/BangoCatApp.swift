@@ -14,10 +14,11 @@ enum CornerPosition: String, CaseIterable {
     }
 }
 
-class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
+class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableObject {
     var overlayWindow: OverlayWindow?
     var inputMonitor: InputMonitor?
     var statusBarItem: NSStatusItem?
+    var preferencesWindowController: PreferencesWindowController?
 
     // App information
     private let appVersion = "1.4.2"
@@ -26,31 +27,31 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let appWebsite = "https://valentin.pival.fr"
 
     // Scale management
-    private var currentScale: Double = 1.0
+    @Published var currentScale: Double = 1.0
     private let scaleKey = "BangoCatScale"
 
     // Scale pulse on input management
-    private var scaleOnInputEnabled: Bool = true
+    @Published var scaleOnInputEnabled: Bool = true
     private let scaleOnInputKey = "BangoCatScaleOnInput"
 
     // Rotation management
-    private var currentRotation: Double = 0.0
+    @Published var currentRotation: Double = 0.0
     private let rotationKey = "BangoCatRotation"
 
     // Horizontal flip management
-    private var isFlippedHorizontally: Bool = false
+    @Published var isFlippedHorizontally: Bool = false
     private let flipKey = "BangoCatFlipHorizontally"
 
     // Ignore clicks management
-    private var ignoreClicksEnabled: Bool = false
+    @Published var ignoreClicksEnabled: Bool = false
     private let ignoreClicksKey = "BangoCatIgnoreClicks"
 
     // Click through management
-    private var clickThroughEnabled: Bool = true  // Default enabled
+    @Published var clickThroughEnabled: Bool = true  // Default enabled
     private let clickThroughKey = "BangoCatClickThrough"
 
     // Paw behavior management
-    private var pawBehaviorMode: PawBehaviorMode = .keyboardLayout  // Default to keyboard layout
+    @Published var pawBehaviorMode: PawBehaviorMode = .keyboardLayout  // Default to keyboard layout
     private let pawBehaviorKey = "BangoCatPawBehavior"
 
     // Position management - Enhanced for per-app positioning
@@ -59,36 +60,45 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var savedPosition: NSPoint = NSPoint(x: 100, y: 100)
     private let savedPositionXKey = "BangoCatPositionX"
     private let savedPositionYKey = "BangoCatPositionY"
-    private var currentCornerPosition: CornerPosition = .custom
+    @Published var currentCornerPosition: CornerPosition = .custom
     private let cornerPositionKey = "BangoCatCornerPosition"
 
     // Per-app position management
-    internal var perAppPositions: [String: NSPoint] = [:]
+    @Published internal var perAppPositions: [String: NSPoint] = [:]
     private let perAppPositionsKey = "BangoCatPerAppPositions"
     internal var currentActiveApp: String = ""
     private var appSwitchTimer: Timer?
-    internal var isPerAppPositioningEnabled: Bool = true
+    @Published internal var isPerAppPositioningEnabled: Bool = true
     private let perAppPositioningKey = "BangoCatPerAppPositioning"
 
     // Per-app hiding management
-    internal var perAppHiddenApps: Set<String> = []
+    @Published internal var perAppHiddenApps: Set<String> = []
     private let perAppHiddenAppsKey = "BangoCatPerAppHiddenApps"
-    internal var isPerAppHidingEnabled: Bool = false
+    @Published internal var isPerAppHidingEnabled: Bool = false
     private let perAppHidingKey = "BangoCatPerAppHiding"
 
     // Milestone notifications management
-    private let milestoneManager = MilestoneNotificationManager.shared
+    @Published internal var milestoneManager = MilestoneNotificationManager.shared
 
     // Update checking management
-    private let updateChecker = UpdateChecker.shared
+    @Published internal var updateChecker = UpdateChecker.shared
 
     // Analytics management
-    private let analytics = PostHogAnalyticsManager.shared
+    internal let analytics = PostHogAnalyticsManager.shared
+
+    // Force SwiftUI updates when settings change
+    @Published private var settingsUpdateTrigger: Bool = false
 
     // Session tracking
     private var appLaunchTime = Date()
     private var settingsChangedThisSession: [String] = []
     private var featuresUsedThisSession: [String] = []
+
+    // MARK: - SwiftUI Update Trigger
+
+    internal func triggerSettingsUpdate() {
+        settingsUpdateTrigger.toggle()
+    }
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         print("BangoCat starting...")
@@ -190,6 +200,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         let menu = NSMenu()
         menu.addItem(NSMenuItem(title: "Show/Hide Overlay", action: #selector(toggleOverlay), keyEquivalent: ""))
+        menu.addItem(NSMenuItem.separator())
+        menu.addItem(NSMenuItem(title: "Settings...", action: #selector(openPreferences), keyEquivalent: ","))
         menu.addItem(NSMenuItem.separator())
 
         // Scale submenu
@@ -521,7 +533,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         trackFeatureUsed("toggle_overlay")
     }
 
-    @objc private func resetToFactoryDefaults() {
+    @objc internal func resetToFactoryDefaults() {
         let alert = NSAlert()
         alert.messageText = "Reset to Factory Defaults"
         alert.informativeText = "This will reset all BangoCat settings to their default values:\n\n• Scale: 100%\n• Scale Pulse: Enabled\n• Rotation: Disabled\n• Flip: Disabled\n• Ignore Clicks: Disabled\n• Click Through: Enabled\n• Position: Default location\n• Per-App Positioning: Disabled\n• Per-App Hiding: Disabled (all hidden apps cleared)\n• Stroke Counter: Will be reset\n\nThis action cannot be undone."
@@ -1126,37 +1138,37 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         print("Loaded paw behavior preference: \(pawBehaviorMode.displayName)")
     }
 
-    private func saveScale() {
+    internal func saveScale() {
         UserDefaults.standard.set(currentScale, forKey: scaleKey)
         print("Saved scale: \(currentScale)")
     }
 
-    private func saveScaleOnInputPreference() {
+    internal func saveScaleOnInputPreference() {
         UserDefaults.standard.set(scaleOnInputEnabled, forKey: scaleOnInputKey)
         print("Saved scale on input preference: \(scaleOnInputEnabled)")
     }
 
-    private func saveRotation() {
+    internal func saveRotation() {
         UserDefaults.standard.set(currentRotation, forKey: rotationKey)
         print("Saved rotation: \(currentRotation)")
     }
 
-    private func saveFlip() {
+    internal func saveFlip() {
         UserDefaults.standard.set(isFlippedHorizontally, forKey: flipKey)
         print("Saved horizontal flip: \(isFlippedHorizontally)")
     }
 
-    private func saveIgnoreClicksPreference() {
+    internal func saveIgnoreClicksPreference() {
         UserDefaults.standard.set(ignoreClicksEnabled, forKey: ignoreClicksKey)
         print("Saved ignore clicks preference: \(ignoreClicksEnabled)")
     }
 
-    private func saveClickThroughPreference() {
+    internal func saveClickThroughPreference() {
         UserDefaults.standard.set(clickThroughEnabled, forKey: clickThroughKey)
         print("Saved click through preference: \(clickThroughEnabled)")
     }
 
-    private func savePawBehaviorPreference() {
+    internal func savePawBehaviorPreference() {
         UserDefaults.standard.set(pawBehaviorMode.rawValue, forKey: pawBehaviorKey)
         print("Saved paw behavior preference: \(pawBehaviorMode.displayName)")
     }
@@ -1221,7 +1233,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     // MARK: - Scale Pulse Management
 
-    @objc private func toggleScalePulse() {
+    @objc internal func toggleScalePulse() {
         scaleOnInputEnabled.toggle()
         saveScaleOnInputPreference()
         overlayWindow?.catAnimationController?.setScaleOnInputEnabled(scaleOnInputEnabled)  // Apply immediately
@@ -1290,7 +1302,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         print("Cat horizontal flip toggled to: \(isFlippedHorizontally)")
     }
 
-    @objc private func toggleIgnoreClicks() {
+    @objc internal func toggleIgnoreClicks() {
         ignoreClicksEnabled.toggle()
         saveIgnoreClicksPreference()
         overlayWindow?.catAnimationController?.setIgnoreClicksEnabled(ignoreClicksEnabled)
@@ -1304,7 +1316,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         print("Ignore clicks toggled to: \(ignoreClicksEnabled)")
     }
 
-    @objc private func toggleClickThrough() {
+    @objc internal func toggleClickThrough() {
         clickThroughEnabled.toggle()
         saveClickThroughPreference()
         overlayWindow?.updateIgnoreMouseEvents(clickThroughEnabled)
@@ -1346,7 +1358,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     // MARK: - Stroke Counter Management
 
-    @objc private func resetStrokeCounter() {
+    @objc internal func resetStrokeCounter() {
         let alert = NSAlert()
         alert.messageText = "Reset Stroke Counter"
         alert.informativeText = "Are you sure you want to reset the stroke counter? This action cannot be undone."
@@ -1467,7 +1479,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
     }
 
-    private func updateMilestoneNotificationsMenuItem() {
+    internal func updateMilestoneNotificationsMenuItem() {
         guard let menu = statusBarItem?.menu else { return }
         for item in menu.items {
             if item.title == "Milestone Notifications 🔔" {
@@ -1477,7 +1489,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
     }
 
-    private func updateUpdateNotificationsMenuItem() {
+    internal func updateUpdateNotificationsMenuItem() {
         guard let menu = statusBarItem?.menu else { return }
         for item in menu.items {
             if item.title == "Update Notifications 🔄" {
@@ -1487,7 +1499,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
     }
 
-    private func updateAutoUpdateMenuItem() {
+    internal func updateAutoUpdateMenuItem() {
         guard let menu = statusBarItem?.menu else { return }
         for item in menu.items {
             if item.title == "Auto-Update ⚡" {
@@ -1497,7 +1509,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
     }
 
-    private func updateAnalyticsMenuItem() {
+    internal func updateAnalyticsMenuItem() {
         guard let menu = statusBarItem?.menu else { return }
         for item in menu.items {
             if item.title == "Analytics & Privacy 📊" {
@@ -1627,7 +1639,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         print("Loaded position preferences - snap: \(snapToCornerEnabled), position: \(savedPosition), corner: \(currentCornerPosition)")
     }
 
-    private func savePositionPreferences() {
+    internal func savePositionPreferences() {
         UserDefaults.standard.set(snapToCornerEnabled, forKey: snapToCornerKey)
         UserDefaults.standard.set(savedPosition.x, forKey: savedPositionXKey)
         UserDefaults.standard.set(savedPosition.y, forKey: savedPositionYKey)
@@ -1635,7 +1647,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         print("Saved position preferences - snap: \(snapToCornerEnabled), position: \(savedPosition), corner: \(currentCornerPosition)")
     }
 
-    @objc private func saveCurrentPositionAction() {
+    @objc internal func saveCurrentPositionAction() {
         let currentPosition = overlayWindow?.window?.frame.origin ?? NSPoint.zero
         saveManualPosition(currentPosition)
 
@@ -1645,7 +1657,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         print("Current position saved: \(currentPosition)")
     }
 
-    @objc private func restoreSavedPosition() {
+    @objc internal func restoreSavedPosition() {
         overlayWindow?.setPositionProgrammatically(savedPosition)
         currentCornerPosition = .custom // Assuming saved position is custom
         updatePositionMenuItems()
@@ -2168,5 +2180,52 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         alert.alertStyle = .informational
         alert.addButton(withTitle: "OK")
         alert.runModal()
+    }
+
+    // MARK: - Preferences Window
+
+    @objc private func openPreferences() {
+        if preferencesWindowController == nil {
+            preferencesWindowController = PreferencesWindowController(appDelegate: self)
+        }
+
+        preferencesWindowController?.showWindow(nil)
+        preferencesWindowController?.window?.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
+        // MARK: - Additional Helper Methods
+
+    func updateOverlay() {
+        overlayWindow?.updateScale(currentScale)
+        overlayWindow?.updateRotation(currentRotation)
+        overlayWindow?.updateFlip(isFlippedHorizontally)
+    }
+
+    func updateOverlayClickThrough() {
+        overlayWindow?.updateIgnoreMouseEvents(clickThroughEnabled)
+    }
+
+    func setPosition(to corner: CornerPosition) {
+        guard let screen = NSScreen.main else { return }
+        let screenFrame = screen.visibleFrame
+        var newPosition: NSPoint
+
+        switch corner {
+        case .topLeft:
+            newPosition = NSPoint(x: screenFrame.minX + 20, y: screenFrame.maxY - 120)
+        case .topRight:
+            newPosition = NSPoint(x: screenFrame.maxX - 120, y: screenFrame.maxY - 120)
+        case .bottomLeft:
+            newPosition = NSPoint(x: screenFrame.minX + 20, y: screenFrame.minY + 20)
+        case .bottomRight:
+            newPosition = NSPoint(x: screenFrame.maxX - 120, y: screenFrame.minY + 20)
+        case .custom:
+            return // Don't change position for custom
+        }
+
+        overlayWindow?.setPositionProgrammatically(newPosition)
+        savedPosition = newPosition
+        savePositionPreferences()
     }
 }
