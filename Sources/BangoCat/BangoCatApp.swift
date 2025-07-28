@@ -411,7 +411,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         1. Remove BangoCat from Accessibility list in System Preferences
         2. Re-add it by running the app again
 
-        This happens when running from different build locations.
+        This happens when the app is reinstalled or built from a different location.
+        The app will now be code signed to maintain consistent identity.
         """
         alert.alertStyle = .warning
         alert.addButton(withTitle: "Open System Preferences")
@@ -804,7 +805,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
     }
 
     internal func getBundleIdentifier() -> String {
-        return Bundle.main.bundleIdentifier ?? "com.bangocat.mac"
+        return Bundle.main.bundleIdentifier ?? "com.gammasoftware.bangocat"
     }
 
         // MARK: - Public methods for context menu

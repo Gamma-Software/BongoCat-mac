@@ -5,6 +5,13 @@ All notable changes to BangoCat-mac will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [unreleased] - 2025-07-28
+
+### Modified
+
+- Update README and TROUBLESHOOTING documentation with accessibility permission guidance. Add clear_accessibility.sh script to assist users in managing permissions.
+- Code sign app for consistent identity to prevent permission issues on reinstall. Update package_app.sh and BangoCatApp.swift for new bundle identifier and signing process.
+
 ## [1.5.0] - 2025-07-28
 
 ### Added
