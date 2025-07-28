@@ -765,6 +765,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         updateChecker.checkForUpdatesManually()
     }
 
+    internal func checkForUpdatesPublic() {
+        checkForUpdates()
+    }
+
     @objc private func quitApp() {
         NSApplication.shared.terminate(self)
     }
@@ -2074,6 +2078,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         preferencesWindowController?.showWindow(nil)
         preferencesWindowController?.window?.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
+    }
+
+    internal func openPreferencesPublic() {
+        openPreferences()
     }
 
         // MARK: - Additional Helper Methods
