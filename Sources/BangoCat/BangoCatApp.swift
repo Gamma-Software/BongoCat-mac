@@ -686,7 +686,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         // .alertThirdButtonReturn would be "OK" button - no action needed
     }
 
-    @objc private func visitWebsite() {
+    @objc internal func visitWebsite() {
         // Track menu action and support action
         analytics.trackMenuAction("visit_website")
         analytics.trackSupportActionTaken("website_visit")
@@ -700,7 +700,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         }
     }
 
-    @objc private func buyMeACoffee() {
+    @objc internal func buyMeACoffee() {
         // Track menu action and social share
         analytics.trackMenuAction("buy_me_coffee")
         analytics.trackSocialShareInitiated("coffee_donation")
@@ -714,7 +714,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         }
     }
 
-    @objc private func tweetAboutBangoCat() {
+    @objc internal func tweetAboutBangoCat() {
         // Track social share
         analytics.trackMenuAction("tweet_about_bangocat")
         analytics.trackSocialShareInitiated("twitter")
@@ -730,7 +730,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         }
     }
 
-    @objc private func reportBug() {
+    @objc internal func reportBug() {
         // Track support action
         analytics.trackMenuAction("report_bug")
         analytics.trackSupportActionTaken("bug_report")
@@ -744,7 +744,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         }
     }
 
-    @objc private func viewChangelog() {
+    @objc internal func viewChangelog() {
         // Track support action
         analytics.trackMenuAction("view_changelog")
         analytics.trackSupportActionTaken("changelog_view")
@@ -875,7 +875,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         }
     }
 
-    @objc private func checkForUpdates() {
+    @objc internal func checkForUpdates() {
         // Track menu action
         analytics.trackMenuAction("check_for_updates")
         trackFeatureUsed("manual_update_check")

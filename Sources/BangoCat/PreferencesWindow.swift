@@ -40,6 +40,14 @@ struct PreferencesWindow: View {
                 ) {
                     selectedTab = 3
                 }
+
+                PreferencesTabButton(
+                    title: "About",
+                    systemImage: "info.circle",
+                    isSelected: selectedTab == 4
+                ) {
+                    selectedTab = 4
+                }
             }
             .padding(.top, 20)
             .padding(.horizontal, 20)
@@ -59,6 +67,8 @@ struct PreferencesWindow: View {
                         PositionPreferencesView(appDelegate: appDelegate)
                     case 3:
                         AdvancedPreferencesView(appDelegate: appDelegate)
+                    case 4:
+                        AboutPreferencesView(appDelegate: appDelegate)
                     default:
                         GeneralPreferencesView(appDelegate: appDelegate)
                     }
@@ -421,6 +431,95 @@ struct AdvancedPreferencesView: View {
             strokeCount = "\(strokeCounter.totalStrokes)"
         } else {
             strokeCount = "0"
+        }
+    }
+}
+
+struct AboutPreferencesView: View {
+    @ObservedObject var appDelegate: AppDelegate
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            PreferencesSection(title: "Application Information") {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Text("Version:")
+                            .frame(width: 80, alignment: .leading)
+                        Text(appDelegate.getVersionString())
+                        Spacer()
+                    }
+
+                    HStack {
+                        Text("Author:")
+                            .frame(width: 80, alignment: .leading)
+                        Text("Valentin Rudloff")
+                        Spacer()
+                    }
+
+                    HStack {
+                        Text("Website:")
+                            .frame(width: 80, alignment: .leading)
+                        Button("https://valentin.pival.fr") {
+                            if let url = URL(string: "https://valentin.pival.fr") {
+                                NSWorkspace.shared.open(url)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundColor(.blue)
+                        Spacer()
+                    }
+                }
+            }
+
+            PreferencesSection(title: "Support") {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Button("Buy me a coffee ☕") {
+                            appDelegate.buyMeACoffee()
+                        }
+                        .buttonStyle(.bordered)
+
+                        Button("Tweet about BangoCat 🐦") {
+                            appDelegate.tweetAboutBangoCat()
+                        }
+                        .buttonStyle(.bordered)
+
+                        Spacer()
+                    }
+
+                    HStack {
+                        Button("Visit Website") {
+                            appDelegate.visitWebsite()
+                        }
+                        .buttonStyle(.bordered)
+
+                        Button("View Changelog 📋") {
+                            appDelegate.viewChangelog()
+                        }
+                        .buttonStyle(.bordered)
+
+                        Spacer()
+                    }
+                }
+            }
+
+            PreferencesSection(title: "Updates & Support") {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Button("Check for Updates 🔄") {
+                            appDelegate.checkForUpdates()
+                        }
+                        .buttonStyle(.bordered)
+
+                        Button("Report a Bug 🐛") {
+                            appDelegate.reportBug()
+                        }
+                        .buttonStyle(.bordered)
+
+                        Spacer()
+                    }
+                }
+            }
         }
     }
 }
