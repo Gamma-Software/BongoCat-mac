@@ -376,19 +376,26 @@ if [ "$SHOULD_COMMIT" = true ]; then
 
         # Push if requested
         if [ "$SHOULD_PUSH" = true ]; then
-            print_info "Pushing changes to remote..."
+            print_info "Pushing commit and tag to remote..."
+
+            # Push the commit first
             if git push; then
-                print_success "Pushed changes to remote"
+                print_success "Pushed commit to remote"
             else
-                print_error "Failed to push changes"
+                print_error "Failed to push commit"
+                exit 1
             fi
 
-            print_info "Pushing tag to remote..."
+            # Then push the tag
             if git push origin "v$VERSION"; then
                 print_success "Pushed tag v$VERSION to remote"
             else
                 print_error "Failed to push tag"
+                print_warning "Commit was pushed but tag push failed"
+                exit 1
             fi
+
+            print_success "Successfully pushed both commit and tag to remote"
         fi
 
     else
