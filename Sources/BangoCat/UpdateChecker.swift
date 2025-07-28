@@ -123,6 +123,38 @@ class UpdateChecker: NSObject, ObservableObject {
         checkForUpdates(isManual: true)
     }
 
+    // MARK: - Debug Methods
+
+    func debugUpdateSystem() {
+        print("🔍 Debugging update system...")
+
+        let currentVersion = getCurrentVersion()
+        print("📱 Current version: \(currentVersion)")
+        print("🔧 Auto-update enabled: \(autoUpdateEnabled)")
+        print("🔔 Update notifications enabled: \(updateNotificationsEnabled)")
+        print("⏭️ Skipped version: \(skippedVersion ?? "none")")
+
+        // Test network connectivity
+        guard let url = URL(string: releasesURL) else {
+            print("❌ Invalid GitHub API URL")
+            return
+        }
+
+        let task = URLSession.shared.dataTask(with: url) { data, response, error in
+            DispatchQueue.main.async {
+                if let error = error {
+                    print("❌ Network error: \(error.localizedDescription)")
+                } else if let httpResponse = response as? HTTPURLResponse {
+                    print("✅ Network response: HTTP \(httpResponse.statusCode)")
+                    if let data = data {
+                        print("📦 Response size: \(ByteCountFormatter.string(fromByteCount: Int64(data.count), countStyle: .file))")
+                    }
+                }
+            }
+        }
+        task.resume()
+    }
+
     func setUpdateNotificationsEnabled(_ enabled: Bool) {
         updateNotificationsEnabled = enabled
         saveSettings()
@@ -489,13 +521,38 @@ class UpdateChecker: NSObject, ObservableObject {
         let tempDir = FileManager.default.temporaryDirectory
         let dmgPath = tempDir.appendingPathComponent(asset.name).path
 
-        currentDownloadTask = URLSession.shared.downloadTask(with: url) { tempURL, response, error in
+        // Create a custom URLSession configuration for better reliability
+        let config = URLSessionConfiguration.default
+        config.timeoutIntervalForRequest = 60.0
+        config.timeoutIntervalForResource = 300.0
+        config.waitsForConnectivity = true
+
+        let session = URLSession(configuration: config)
+
+        print("🔄 Starting download from: \(url)")
+        print("📁 Target path: \(dmgPath)")
+
+        currentDownloadTask = session.downloadTask(with: url) { tempURL, response, error in
             if let error = error {
+                print("❌ Download error: \(error.localizedDescription)")
                 completion(.failure(error))
                 return
             }
 
+            guard let httpResponse = response as? HTTPURLResponse else {
+                print("❌ Invalid response type")
+                completion(.failure(NSError(domain: "UpdateChecker", code: 3, userInfo: [NSLocalizedDescriptionKey: "Invalid HTTP response"])))
+                return
+            }
+
+            guard httpResponse.statusCode == 200 else {
+                print("❌ HTTP error: \(httpResponse.statusCode)")
+                completion(.failure(NSError(domain: "UpdateChecker", code: httpResponse.statusCode, userInfo: [NSLocalizedDescriptionKey: "HTTP \(httpResponse.statusCode) error"])))
+                return
+            }
+
             guard let tempURL = tempURL else {
+                print("❌ No temporary file URL")
                 completion(.failure(NSError(domain: "UpdateChecker", code: 2, userInfo: [NSLocalizedDescriptionKey: "No temporary file URL"])))
                 return
             }
@@ -507,8 +564,14 @@ class UpdateChecker: NSObject, ObservableObject {
                 }
 
                 try FileManager.default.moveItem(at: tempURL, to: URL(fileURLWithPath: dmgPath))
+
+                // Verify the file was downloaded correctly
+                let fileSize = try FileManager.default.attributesOfItem(atPath: dmgPath)[.size] as? Int64 ?? 0
+                print("✅ Download complete: \(dmgPath) (\(ByteCountFormatter.string(fromByteCount: fileSize, countStyle: .file)))")
+
                 completion(.success(dmgPath))
             } catch {
+                print("❌ File operation error: \(error.localizedDescription)")
                 completion(.failure(error))
             }
         }
@@ -532,6 +595,10 @@ class UpdateChecker: NSObject, ObservableObject {
         set appName to "BangoCat"
 
         try
+            -- Verify DMG file exists and is readable
+            do shell script "test -f '" & dmgPath & "'"
+            do shell script "test -r '" & dmgPath & "'"
+
             -- Mount the DMG
             set mountResult to do shell script "hdiutil attach '" & dmgPath & "' -nobrowse -quiet"
 
@@ -545,7 +612,7 @@ class UpdateChecker: NSObject, ObservableObject {
             end repeat
 
             if mountPoint is "" then
-                error "Could not determine mount point"
+                error "Could not determine mount point from: " & mountResult
             end if
 
             -- Find the app in the mounted volume
@@ -571,6 +638,9 @@ class UpdateChecker: NSObject, ObservableObject {
 
             -- Set proper permissions
             do shell script "chmod -R 755 " & quoted form of destinationPath
+
+            -- Verify the installation
+            do shell script "test -d '" & destinationPath & "'"
 
             -- Unmount DMG
             do shell script "hdiutil detach '" & mountPoint & "' -quiet"
@@ -619,10 +689,10 @@ class UpdateChecker: NSObject, ObservableObject {
 
     private func showDownloadProgressAlert(onCancel: @escaping (Bool) -> Void) {
         let alert = NSAlert()
-        alert.messageText = "Downloading Update..."
-        alert.informativeText = "BangoCat is downloading the latest version. This may take a few minutes."
+        alert.messageText = "🔄 Downloading Update..."
+        alert.informativeText = "BangoCat is downloading the latest version.\n\nThis may take a few minutes depending on your internet connection.\n\nYou can cancel the download at any time."
         alert.alertStyle = .informational
-        alert.addButton(withTitle: "Cancel")
+        alert.addButton(withTitle: "Cancel Download")
 
         downloadProgressAlert = alert
 
@@ -670,11 +740,16 @@ class UpdateChecker: NSObject, ObservableObject {
 
     private func showErrorAlert(message: String) {
         let alert = NSAlert()
-        alert.messageText = "Update Failed"
-        alert.informativeText = message
+        alert.messageText = "❌ Update Failed"
+        alert.informativeText = message + "\n\nIf the problem persists, please try downloading the update manually from the GitHub releases page."
         alert.alertStyle = .warning
         alert.addButton(withTitle: "OK")
-        alert.runModal()
+        alert.addButton(withTitle: "Open GitHub Releases")
+
+        let response = alert.runModal()
+        if response == .alertSecondButtonReturn {
+            openUpdateURL("https://github.com/Gamma-Software/BangoCat-mac/releases")
+        }
     }
 
     private func showInfoAlert(title: String, message: String) {

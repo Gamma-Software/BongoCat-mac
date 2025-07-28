@@ -5,6 +5,16 @@ All notable changes to BangoCat-mac will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [unreleased] - 2025-07-28
+
+### Modified
+
+- Add debug methods to UpdateChecker for improved diagnostics and error handling
+- Introduced `debugUpdateSystem` method to log current version, auto-update settings, and network connectivity status.
+- Enhanced download task with custom URLSession configuration for better reliability and error reporting.
+- Added verification steps for downloaded DMG file and installation process.
+- Updated alert messages for clarity and added option to open GitHub releases on update failure.
+
 ## [1.5.1] - 2025-07-28
 
 ### Modified
