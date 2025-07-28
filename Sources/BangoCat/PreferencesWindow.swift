@@ -349,23 +349,10 @@ struct AdvancedPreferencesView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            PreferencesSection(title: "Notifications") {
-                VStack(alignment: .leading, spacing: 12) {
-                                                                                Toggle("Milestone Notifications 🔔", isOn: Binding(
-                        get: {
-                            let enabled = appDelegate.milestoneManager.isNotificationsEnabled()
-                            print("🔔 Getting milestone notifications enabled: \(enabled)")
-                            return enabled
-                        },
-                        set: { newValue in
-                            print("🔔 Setting milestone notifications enabled: \(newValue)")
-                            appDelegate.milestoneManager.setNotificationsEnabled(newValue)
-                            appDelegate.updateMilestoneNotificationsMenuItem()
-                            appDelegate.triggerSettingsUpdate()
-                        }
-                    ))
+            PreferencesSection(title: "Updates") {
+                VStack(alignment: .center, spacing: 12) {
 
-                                                            Toggle("Update Notifications 🔄", isOn: Binding(
+                    Toggle("Update Notifications 🔄", isOn: Binding(
                         get: {
                             let enabled = appDelegate.updateChecker.isUpdateNotificationsEnabled()
                             print("🔄 Getting update notifications enabled: \(enabled)")
@@ -379,7 +366,7 @@ struct AdvancedPreferencesView: View {
                         }
                     ))
 
-                                                            Toggle("Auto-Update ⚡", isOn: Binding(
+                    Toggle("Auto-Update ⚡", isOn: Binding(
                         get: {
                             let enabled = appDelegate.updateChecker.isAutoUpdateEnabled()
                             print("⚡ Getting auto-update enabled: \(enabled)")
@@ -392,12 +379,40 @@ struct AdvancedPreferencesView: View {
                             appDelegate.triggerSettingsUpdate()
                         }
                     ))
+
+                    HStack(alignment: .center) {
+                        Button("Check for Updates 🔄") {
+                            appDelegate.checkForUpdates()
+                        }
+                        .buttonStyle(.bordered)
+
+                        Spacer()
+                    }
+
+                }
+            }
+
+            PreferencesSection(title: "Notifications") {
+                VStack(alignment: .center, spacing: 12) {
+                    Toggle("Milestone Notifications 🔔", isOn: Binding(
+                        get: {
+                            let enabled = appDelegate.milestoneManager.isNotificationsEnabled()
+                            print("🔔 Getting milestone notifications enabled: \(enabled)")
+                            return enabled
+                        },
+                        set: { newValue in
+                            print("🔔 Setting milestone notifications enabled: \(newValue)")
+                            appDelegate.milestoneManager.setNotificationsEnabled(newValue)
+                            appDelegate.updateMilestoneNotificationsMenuItem()
+                            appDelegate.triggerSettingsUpdate()
+                        }
+                    ))
                 }
             }
 
             PreferencesSection(title: "Privacy") {
-                VStack(alignment: .leading, spacing: 12) {
-                                                            Toggle("Analytics & Privacy 📊", isOn: Binding(
+                VStack(alignment: .center, spacing: 12) {
+                    Toggle("Analytics & Privacy 📊", isOn: Binding(
                         get: {
                             let enabled = appDelegate.analytics.isAnalyticsEnabled
                             print("📊 Getting analytics enabled: \(enabled)")
@@ -530,14 +545,9 @@ struct AboutPreferencesView: View {
                 }
             }
 
-            PreferencesSection(title: "Updates & Support") {
+            PreferencesSection(title: "Support") {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
-                        Button("Check for Updates 🔄") {
-                            appDelegate.checkForUpdates()
-                        }
-                        .buttonStyle(.bordered)
-
                         Button("Report a Bug 🐛") {
                             appDelegate.reportBug()
                         }
