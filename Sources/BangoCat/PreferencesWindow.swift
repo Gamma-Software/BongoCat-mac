@@ -117,8 +117,8 @@ struct GeneralPreferencesView: View {
             PreferencesSection(title: "Appearance") {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
-                        Text("Scale:")
-                            .frame(width: 120, alignment: .leading)
+                        Text("Scale")
+                            .frame(width: 200, alignment: .leading)
 
                         Picker("", selection: Binding(
                             get: { appDelegate.currentScale },
@@ -138,59 +138,78 @@ struct GeneralPreferencesView: View {
                         Spacer()
                     }
 
-                    Toggle("Scale Pulse on Input", isOn: Binding(
-                        get: { appDelegate.scaleOnInputEnabled },
-                        set: { newValue in
-                            if newValue != appDelegate.scaleOnInputEnabled {
-                                appDelegate.toggleScalePulse()
+                    HStack {
+                        Text("Scale pulse on input")
+                            .frame(width: 200, alignment: .leading)
+                        Toggle("", isOn: Binding(
+                            get: { appDelegate.scaleOnInputEnabled },
+                            set: { newValue in
+                                if newValue != appDelegate.scaleOnInputEnabled {
+                                    appDelegate.toggleScalePulse()
+                                }
                             }
-                        }
-                    ))
+                        ))
+                        Spacer()
+                    }
 
-                    Toggle("Rotate Cat", isOn: Binding(
-                        get: { appDelegate.currentRotation != 0.0 },
-                        set: { newValue in
-                            if newValue {
-                                // When enabling rotation, use 13° if not flipped, -13° if flipped
-                                appDelegate.currentRotation = appDelegate.isFlippedHorizontally ? -13.0 : 13.0
-                            } else {
-                                // When disabling rotation, always go back to 0°
-                                appDelegate.currentRotation = 0.0
-                            }
-                            appDelegate.saveRotation()
-                            appDelegate.updateOverlay()
-                        }
-                    ))
-
-                    Toggle("Flip Horizontally", isOn: Binding(
-                        get: { appDelegate.isFlippedHorizontally },
-                        set: { newValue in
-                            appDelegate.isFlippedHorizontally = newValue
-
-                            // If the cat is currently rotated, adjust the rotation for the new flip state
-                            if appDelegate.currentRotation != 0.0 {
-                                appDelegate.currentRotation = newValue ? -13.0 : 13.0
+                    HStack {
+                        Text("Rotate cat")
+                            .frame(width: 200, alignment: .leading)
+                        Toggle("", isOn: Binding(
+                            get: { appDelegate.currentRotation != 0.0 },
+                            set: { newValue in
+                                if newValue {
+                                    // When enabling rotation, use 13° if not flipped, -13° if flipped
+                                    appDelegate.currentRotation = appDelegate.isFlippedHorizontally ? -13.0 : 13.0
+                                } else {
+                                    // When disabling rotation, always go back to 0°
+                                    appDelegate.currentRotation = 0.0
+                                }
                                 appDelegate.saveRotation()
+                                appDelegate.updateOverlay()
                             }
+                        ))
+                        Spacer()
+                    }
 
-                            appDelegate.saveFlip()
-                            appDelegate.updateOverlay()
-                        }
-                    ))
+                    HStack {
+                        Text("Flip horizontally")
+                            .frame(width: 200, alignment: .leading)
+                        Toggle("", isOn: Binding(
+                            get: { appDelegate.isFlippedHorizontally },
+                            set: { newValue in
+                                appDelegate.isFlippedHorizontally = newValue
+
+                                // If the cat is currently rotated, adjust the rotation for the new flip state
+                                if appDelegate.currentRotation != 0.0 {
+                                    appDelegate.currentRotation = newValue ? -13.0 : 13.0
+                                    appDelegate.saveRotation()
+                                }
+
+                                appDelegate.saveFlip()
+                                appDelegate.updateOverlay()
+                            }
+                        ))
+                        Spacer()
+                    }
                 }
             }
 
             PreferencesSection(title: "App Behavior") {
                 VStack(alignment: .leading, spacing: 12) {
-                    Toggle("Auto-Start at Launch 🚀", isOn: Binding(
-                        get: { appDelegate.autoStartAtLaunchEnabled },
-                        set: { newValue in
-                            if newValue != appDelegate.autoStartAtLaunchEnabled {
-                                appDelegate.toggleAutoStartAtLaunch()
+                    HStack {
+                        Text("Auto-start at launch")
+                            .frame(width: 200, alignment: .leading)
+                        Toggle("", isOn: Binding(
+                            get: { appDelegate.autoStartAtLaunchEnabled },
+                            set: { newValue in
+                                if newValue != appDelegate.autoStartAtLaunchEnabled {
+                                    appDelegate.toggleAutoStartAtLaunch()
+                                }
                             }
-                        }
-                    ))
-                    .help("Automatically start BangoCat when you log into your Mac")
+                        ))
+                        Spacer()
+                    }
                 }
             }
         }
@@ -205,8 +224,8 @@ struct BehaviorPreferencesView: View {
             PreferencesSection(title: "Input Behavior") {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
-                        Text("Paw Behavior:")
-                            .frame(width: 120, alignment: .leading)
+                        Text("Paw behavior")
+                            .frame(width: 200, alignment: .leading)
 
                         Picker("", selection: Binding(
                             get: { appDelegate.pawBehaviorMode },
@@ -225,23 +244,33 @@ struct BehaviorPreferencesView: View {
                         Spacer()
                     }
 
-                    Toggle("Ignore Mouse Clicks", isOn: Binding(
-                        get: { appDelegate.ignoreClicksEnabled },
-                        set: { newValue in
-                            if newValue != appDelegate.ignoreClicksEnabled {
-                                appDelegate.toggleIgnoreClicks()
+                    HStack {
+                        Text("Ignore mouse clicks")
+                            .frame(width: 200, alignment: .leading)
+                        Toggle("", isOn: Binding(
+                            get: { appDelegate.ignoreClicksEnabled },
+                            set: { newValue in
+                                if newValue != appDelegate.ignoreClicksEnabled {
+                                    appDelegate.toggleIgnoreClicks()
+                                }
                             }
-                        }
-                    ))
+                        ))
+                        Spacer()
+                    }
 
-                    Toggle("Click Through (Hold ⌘ to Drag)", isOn: Binding(
-                        get: { appDelegate.clickThroughEnabled },
-                        set: { newValue in
-                            if newValue != appDelegate.clickThroughEnabled {
-                                appDelegate.toggleClickThrough()
+                    HStack {
+                        Text("Click through (Hold ⌘ to drag)")
+                            .frame(width: 200, alignment: .leading)
+                        Toggle("", isOn: Binding(
+                            get: { appDelegate.clickThroughEnabled },
+                            set: { newValue in
+                                if newValue != appDelegate.clickThroughEnabled {
+                                    appDelegate.toggleClickThrough()
+                                }
                             }
-                        }
-                    ))
+                        ))
+                        Spacer()
+                    }
                 }
             }
         }
@@ -256,8 +285,8 @@ struct PositionPreferencesView: View {
             PreferencesSection(title: "Window Position") {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
-                        Text("Corner Position:")
-                            .frame(width: 120, alignment: .leading)
+                        Text("Corner position")
+                            .frame(width: 200, alignment: .leading)
 
                         Picker("", selection: Binding(
                             get: { appDelegate.currentCornerPosition },
@@ -280,26 +309,37 @@ struct PositionPreferencesView: View {
                         Spacer()
                     }
 
-                    Toggle("Per-App Positioning", isOn: Binding(
-                        get: { appDelegate.isPerAppPositioningEnabled },
-                        set: { newValue in
-                            if newValue != appDelegate.isPerAppPositioningEnabled {
-                                appDelegate.togglePerAppPositioning()
+                    HStack {
+                        Text("Per-app positioning")
+                            .frame(width: 200, alignment: .leading)
+                        Toggle("", isOn: Binding(
+                            get: { appDelegate.isPerAppPositioningEnabled },
+                            set: { newValue in
+                                if newValue != appDelegate.isPerAppPositioningEnabled {
+                                    appDelegate.togglePerAppPositioning()
+                                }
                             }
-                        }
-                    ))
+                        ))
+                        Spacer()
+                    }
 
                     HStack {
+                        Text("Save current position")
+                            .frame(width: 200, alignment: .leading)
                         Button("Save Current Position") {
                             appDelegate.saveCurrentPositionAction()
                         }
                         .buttonStyle(.bordered)
+                        Spacer()
+                    }
 
+                    HStack {
+                        Text("Restore saved position")
+                            .frame(width: 200, alignment: .leading)
                         Button("Restore Saved Position") {
                             appDelegate.restoreSavedPosition()
                         }
                         .buttonStyle(.bordered)
-
                         Spacer()
                     }
                 }
@@ -307,27 +347,38 @@ struct PositionPreferencesView: View {
 
             PreferencesSection(title: "App Visibility") {
                 VStack(alignment: .leading, spacing: 12) {
-                    Toggle("Per-App Hiding", isOn: Binding(
-                        get: { appDelegate.isPerAppHidingEnabled },
-                        set: { newValue in
-                            if newValue != appDelegate.isPerAppHidingEnabled {
-                                appDelegate.togglePerAppHiding()
+                    HStack {
+                        Text("Per-app hiding")
+                            .frame(width: 200, alignment: .leading)
+                        Toggle("", isOn: Binding(
+                            get: { appDelegate.isPerAppHidingEnabled },
+                            set: { newValue in
+                                if newValue != appDelegate.isPerAppHidingEnabled {
+                                    appDelegate.togglePerAppHiding()
+                                }
                             }
-                        }
-                    ))
+                        ))
+                        Spacer()
+                    }
 
                     if appDelegate.isPerAppHidingEnabled {
-                                                HStack {
+                        HStack {
+                            Text("Hide for current app")
+                                .frame(width: 200, alignment: .leading)
                             Button("Hide for Current App") {
                                 appDelegate.hideForCurrentApp()
                             }
                             .buttonStyle(.bordered)
+                            Spacer()
+                        }
 
+                        HStack {
+                            Text("Show for current app")
+                                .frame(width: 200, alignment: .leading)
                             Button("Show for Current App") {
                                 appDelegate.showForCurrentApp()
                             }
                             .buttonStyle(.bordered)
-
                             Spacer()
                         }
 
@@ -335,6 +386,7 @@ struct PositionPreferencesView: View {
                             Text("Hidden Apps: \(appDelegate.perAppHiddenApps.count)")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
+                                .padding(.leading, 200)
                         }
                     }
                 }
@@ -350,116 +402,147 @@ struct AdvancedPreferencesView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
             PreferencesSection(title: "Updates") {
-                VStack(alignment: .center, spacing: 12) {
-
-                    Toggle("Update Notifications 🔄", isOn: Binding(
-                        get: {
-                            let enabled = appDelegate.updateChecker.isUpdateNotificationsEnabled()
-                            print("🔄 Getting update notifications enabled: \(enabled)")
-                            return enabled
-                        },
-                        set: { newValue in
-                            print("🔄 Setting update notifications enabled: \(newValue)")
-                            appDelegate.updateChecker.setUpdateNotificationsEnabled(newValue)
-                            appDelegate.updateUpdateNotificationsMenuItem()
-                            appDelegate.triggerSettingsUpdate()
-                        }
-                    ))
-
-                    Toggle("Auto-Update ⚡", isOn: Binding(
-                        get: {
-                            let enabled = appDelegate.updateChecker.isAutoUpdateEnabled()
-                            print("⚡ Getting auto-update enabled: \(enabled)")
-                            return enabled
-                        },
-                        set: { newValue in
-                            print("⚡ Setting auto-update enabled: \(newValue)")
-                            appDelegate.updateChecker.setAutoUpdateEnabled(newValue)
-                            appDelegate.updateAutoUpdateMenuItem()
-                            appDelegate.triggerSettingsUpdate()
-                        }
-                    ))
-
-                    HStack(alignment: .center) {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Text("Check for updates")
+                            .frame(width: 200, alignment: .leading)
                         Button("Check for Updates 🔄") {
                             appDelegate.checkForUpdates()
                         }
                         .buttonStyle(.bordered)
-
                         Spacer()
                     }
 
+                    HStack {
+                        Text("Update notifications")
+                            .frame(width: 200, alignment: .leading)
+                        Toggle("", isOn: Binding(
+                            get: {
+                                let enabled = appDelegate.updateChecker.isUpdateNotificationsEnabled()
+                                print("🔄 Getting update notifications enabled: \(enabled)")
+                                return enabled
+                            },
+                            set: { newValue in
+                                print("🔄 Setting update notifications enabled: \(newValue)")
+                                appDelegate.updateChecker.setUpdateNotificationsEnabled(newValue)
+                                appDelegate.updateUpdateNotificationsMenuItem()
+                                appDelegate.triggerSettingsUpdate()
+                            }
+                        ))
+                        Spacer()
+                    }
+
+                    HStack {
+                        Text("Auto-update")
+                            .frame(width: 200, alignment: .leading)
+                        Toggle("", isOn: Binding(
+                            get: {
+                                let enabled = appDelegate.updateChecker.isAutoUpdateEnabled()
+                                print("⚡ Getting auto-update enabled: \(enabled)")
+                                return enabled
+                            },
+                            set: { newValue in
+                                print("⚡ Setting auto-update enabled: \(newValue)")
+                                appDelegate.updateChecker.setAutoUpdateEnabled(newValue)
+                                appDelegate.updateAutoUpdateMenuItem()
+                                appDelegate.triggerSettingsUpdate()
+                            }
+                        ))
+                        Spacer()
+                    }
                 }
             }
 
             PreferencesSection(title: "Notifications") {
-                VStack(alignment: .center, spacing: 12) {
-                    Toggle("Milestone Notifications 🔔", isOn: Binding(
-                        get: {
-                            let enabled = appDelegate.milestoneManager.isNotificationsEnabled()
-                            print("🔔 Getting milestone notifications enabled: \(enabled)")
-                            return enabled
-                        },
-                        set: { newValue in
-                            print("🔔 Setting milestone notifications enabled: \(newValue)")
-                            appDelegate.milestoneManager.setNotificationsEnabled(newValue)
-                            appDelegate.updateMilestoneNotificationsMenuItem()
-                            appDelegate.triggerSettingsUpdate()
-                        }
-                    ))
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Text("Milestone notifications")
+                            .frame(width: 200, alignment: .leading)
+                        Toggle("", isOn: Binding(
+                            get: {
+                                let enabled = appDelegate.milestoneManager.isNotificationsEnabled()
+                                print("🔔 Getting milestone notifications enabled: \(enabled)")
+                                return enabled
+                            },
+                            set: { newValue in
+                                print("🔔 Setting milestone notifications enabled: \(newValue)")
+                                appDelegate.milestoneManager.setNotificationsEnabled(newValue)
+                                appDelegate.updateMilestoneNotificationsMenuItem()
+                                appDelegate.triggerSettingsUpdate()
+                            }
+                        ))
+                        Spacer()
+                    }
                 }
             }
 
             PreferencesSection(title: "Privacy") {
-                VStack(alignment: .center, spacing: 12) {
-                    Toggle("Analytics & Privacy 📊", isOn: Binding(
-                        get: {
-                            let enabled = appDelegate.analytics.isAnalyticsEnabled
-                            print("📊 Getting analytics enabled: \(enabled)")
-                            return enabled
-                        },
-                        set: { newValue in
-                            print("📊 Setting analytics enabled: \(newValue)")
-                            appDelegate.analytics.setAnalyticsEnabled(newValue)
-                            appDelegate.updateAnalyticsMenuItem()
-                            appDelegate.triggerSettingsUpdate()
-                        }
-                    ))
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Text("Analytics & Privacy")
+                            .frame(width: 200, alignment: .leading)
+                        Toggle("", isOn: Binding(
+                            get: {
+                                let enabled = appDelegate.analytics.isAnalyticsEnabled
+                                print("📊 Getting analytics enabled: \(enabled)")
+                                return enabled
+                            },
+                            set: { newValue in
+                                print("📊 Setting analytics enabled: \(newValue)")
+                                appDelegate.analytics.setAnalyticsEnabled(newValue)
+                                appDelegate.updateAnalyticsMenuItem()
+                                appDelegate.triggerSettingsUpdate()
+                            }
+                        ))
+                        Spacer()
+                    }
 
                     Text("Help improve BangoCat by sharing anonymous usage data. No personal information is collected.")
                         .font(.caption)
                         .foregroundColor(.secondary)
+                        .padding(.leading, 0)
                 }
             }
 
             PreferencesSection(title: "Statistics") {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
-                        Text("Total Strokes:")
-                            .frame(width: 120, alignment: .leading)
+                        Text("Total strokes")
+                            .frame(width: 200, alignment: .leading)
                         Text(strokeCount)
                         Spacer()
                     }
 
-                    Button("Reset Stroke Counter") {
-                        appDelegate.resetStrokeCounter()
-                        updateStrokeCount()
+                    HStack {
+                        Text("Reset counter")
+                            .frame(width: 200, alignment: .leading)
+                        Button("Reset Stroke Counter") {
+                            appDelegate.resetStrokeCounter()
+                            updateStrokeCount()
+                        }
+                        .buttonStyle(.bordered)
+                        Spacer()
                     }
-                    .buttonStyle(.bordered)
                 }
             }
 
             PreferencesSection(title: "Reset") {
                 VStack(alignment: .leading, spacing: 12) {
-                    Button("Reset to Factory Defaults") {
-                        appDelegate.resetToFactoryDefaults()
+                    HStack {
+                        Text("Factory defaults")
+                            .frame(width: 200, alignment: .leading)
+                        Button("Reset to Factory Defaults") {
+                            appDelegate.resetToFactoryDefaults()
+                        }
+                        .buttonStyle(.bordered)
+                        .foregroundColor(.red)
+                        Spacer()
                     }
-                    .buttonStyle(.bordered)
-                    .foregroundColor(.red)
 
                     Text("This will reset all settings to their default values.")
                         .font(.caption)
                         .foregroundColor(.secondary)
+                        .padding(.leading, 200)
                 }
             }
         }
@@ -542,11 +625,7 @@ struct AboutPreferencesView: View {
 
                         Spacer()
                     }
-                }
-            }
 
-            PreferencesSection(title: "Support") {
-                VStack(alignment: .leading, spacing: 12) {
                     HStack {
                         Button("Report a Bug 🐛") {
                             appDelegate.reportBug()
