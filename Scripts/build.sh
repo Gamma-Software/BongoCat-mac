@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # BangoCat Build Script
-set -e  # Exit on error
+set -xe  # Exit on error
 
 # Colors for output
 GREEN='\033[0;32m'
@@ -50,7 +50,6 @@ if [ "$BUILD_CONFIG" = "release" ]; then
     fi
     print_info "Cleaning previous build artifacts for fresh production build..."
     rm -rf .build
-    sleep 5
     BUILD_COMMAND="swift build --configuration release"
 else
     BUILD_COMMAND="swift build"
