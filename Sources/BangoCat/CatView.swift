@@ -690,16 +690,20 @@ struct CatView: View {
                     Color.clear
                     //Color.red //DEBUG
 
-                    // The authentic BangoCat sprite using real images
-                    BangoCatSprite(state: animationController.currentState)
-                        .scaleEffect(animationController.scale)
-                        .scaleEffect(x: animationController.isFlippedHorizontally ? -1 : 1, y: 1)  // Apply horizontal flip
-                        .rotationEffect(.degrees(animationController.rotation))  // Apply rotation
-                        .animation(.easeInOut(duration: 0.08), value: animationController.currentState)
-                        .animation(.easeInOut(duration: 0.1), value: animationController.scale)
-                        .animation(.easeInOut(duration: 0.3), value: animationController.rotation)  // Smooth rotation transitions
-                        .animation(.easeInOut(duration: 0.3), value: animationController.isFlippedHorizontally)  // Smooth flip transitions
-                        .contentShape(Rectangle()) // Make the entire sprite area tappable
+                    // The authentic BangoCat sprite using real images with accessories
+                    let integration = PluginIntegration.shared
+                    integration.integrateWithCatView(
+                        BangoCatSprite(state: animationController.currentState),
+                        state: animationController.currentState
+                    )
+                    .scaleEffect(animationController.scale)
+                    .scaleEffect(x: animationController.isFlippedHorizontally ? -1 : 1, y: 1)  // Apply horizontal flip
+                    .rotationEffect(.degrees(animationController.rotation))  // Apply rotation
+                    .animation(.easeInOut(duration: 0.08), value: animationController.currentState)
+                    .animation(.easeInOut(duration: 0.1), value: animationController.scale)
+                    .animation(.easeInOut(duration: 0.3), value: animationController.rotation)  // Smooth rotation transitions
+                    .animation(.easeInOut(duration: 0.3), value: animationController.isFlippedHorizontally)  // Smooth flip transitions
+                    .contentShape(Rectangle()) // Make the entire sprite area tappable
                         .contextMenu {
                             Button("Show/Hide Overlay") {
                                 animationController.appDelegate?.toggleOverlayPublic()

@@ -238,6 +238,38 @@ class PostHogAnalyticsManager: ObservableObject {
         track(event: "error_occurred", properties: errorProperties)
     }
 
+    // MARK: - Plugin Events
+
+    func trackPluginDiscovery(_ count: Int) {
+        track(event: "plugin_discovery", properties: [
+            "plugin_count": count
+        ])
+    }
+
+    func trackPluginDownloaded(_ pluginId: String) {
+        track(event: "plugin_downloaded", properties: [
+            "plugin_id": pluginId
+        ])
+    }
+
+    func trackPluginPurchased(_ pluginId: String) {
+        track(event: "plugin_purchased", properties: [
+            "plugin_id": pluginId
+        ])
+    }
+
+    func trackPluginEnabled(_ pluginId: String) {
+        track(event: "plugin_enabled", properties: [
+            "plugin_id": pluginId
+        ])
+    }
+
+    func trackPluginDisabled(_ pluginId: String) {
+        track(event: "plugin_disabled", properties: [
+            "plugin_id": pluginId
+        ])
+    }
+
     // MARK: - Input & Animation Events
 
     func trackTrackpadGestureDetected(_ gestureType: String) {

@@ -123,10 +123,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         loadPositionPreferences()
         loadPerAppPositioning()
         loadPerAppHiding()
+        loadPluginPreferences()
         setupStatusBarItem()
         setupOverlayWindow()
         setupInputMonitoring()
         setupAppSwitchMonitoring()
+        setupPluginSystem()
         requestAccessibilityPermissions()
 
         // Initialize analytics and track app launch
@@ -155,11 +157,25 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         setupAppLifecycleNotifications()
     }
 
+    // MARK: - Plugin System Setup
+
+    private func setupPluginSystem() {
+        // Initialize plugin integration
+        let integration = PluginIntegration.shared
+        integration.setupAccessoriesMenu(for: self)
+
+        // Refresh available plugins
+        AccessoryPluginManager.shared.refreshAvailablePlugins()
+
+        print("🔌 Plugin system initialized")
+    }
+
     func applicationWillTerminate(_ aNotification: Notification) {
         inputMonitor?.stop()
         appSwitchTimer?.invalidate()
         savePerAppPositioning()
         savePerAppHiding()
+        savePluginPreferences()
 
         // Track session duration and usage patterns
         let sessionDuration = Date().timeIntervalSince(appLaunchTime)
@@ -226,6 +242,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         menu.addItem(NSMenuItem(title: "Tweet about BangoCat 🐦", action: #selector(tweetAboutBangoCat), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "Check for Updates 🔄", action: #selector(checkForUpdates), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "Auto-Start at Launch 🚀", action: #selector(toggleAutoStartAtLaunch), keyEquivalent: ""))
+
+        menu.addItem(NSMenuItem.separator())
+
+        // Accessories menu
+        let accessoriesMenuItem = NSMenuItem(title: "Accessories", action: nil, keyEquivalent: "")
+        let accessoriesSubmenu = NSMenu()
+        accessoriesSubmenu.addItem(NSMenuItem(title: "Accessory Store...", action: #selector(openAccessoryStore), keyEquivalent: ""))
+        accessoriesMenuItem.submenu = accessoriesSubmenu
+        menu.addItem(accessoriesMenuItem)
 
         menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "About BangoCat", action: #selector(showCredits), keyEquivalent: ""))
