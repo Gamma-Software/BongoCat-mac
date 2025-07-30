@@ -722,21 +722,17 @@ if [ "$DEBUG_BUILD" = false ] && [ "$DELIVER_TO_GITHUB" = true ]; then
         echo "   • App will be delivered without notarization"
     else
         # Check if we have Apple ID credentials for notarization
-        if [ -n "$APPLE_ID" ] && [ -n "$APPLE_ID_PASSWORD" ]; then
+        if [ -n "$APPLE_ID" ] && [ -n "$APPLE_ID_PASSWORD" ] && [ -n "$TEAM_ID" ]; then
             echo "🔐 Apple ID credentials found, proceeding with notarization..."
 
-            # Check if we have a valid certificate for notarization
-            if check_developer_certificate; then
-                echo "✅ Valid certificate found for notarization"
-
-                # Use the notarize_app function from code_sign.sh
-                notarize_app "" "$APP_BUNDLE"
+            # Call the code_sign.sh script for notarization with certificate signing
+            if ./Scripts/code_sign.sh --certificate --notarize; then
+                echo "✅ Notarization completed successfully"
             else
-                echo "⚠️  No valid certificate found for notarization"
+                echo "⚠️  Notarization failed or was skipped"
                 echo "   • App will be delivered without notarization"
                 echo "   • Users may see security warnings on first launch"
             fi
-
         else
             echo "⚠️  Apple ID credentials not set for notarization"
             echo "💡 To enable notarization, set environment variables:"
