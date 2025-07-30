@@ -210,9 +210,14 @@ sign_with_certificate() {
     echo "🔐 Signing with Apple Developer certificate..."
     echo "📋 Certificate: $identity"
 
-    # Sign the app bundle
-    if codesign --force --deep --sign "$identity" "$APP_BUNDLE"; then
+    # Sign the app bundle with hardened runtime and timestamp for notarization
+    if codesign --force --deep --sign "$identity" \
+        --options runtime \
+        --timestamp \
+        "$APP_BUNDLE"; then
         print_success "App signed with Apple Developer certificate"
+        print_info "Hardened runtime enabled"
+        print_info "Secure timestamp included"
 
         # Verify the signature
         echo "🔍 Verifying signature..."
