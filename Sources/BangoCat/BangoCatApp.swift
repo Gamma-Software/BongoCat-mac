@@ -805,7 +805,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
     }
 
     internal func getBundleIdentifier() -> String {
-        return Bundle.main.bundleIdentifier ?? "com.gammasoftware.bangocat"
+        return Bundle.main.bundleIdentifier ?? "com.leaptech.bangocat"
     }
 
         // MARK: - Public methods for context menu

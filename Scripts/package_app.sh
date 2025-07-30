@@ -7,6 +7,7 @@ set -e
 DELIVER_TO_GITHUB=false
 INSTALL_LOCAL=false
 DEBUG_BUILD=false
+VERIFY_APP=false
 while [[ $# -gt 0 ]]; do
     case $1 in
         --deliver)
@@ -21,12 +22,26 @@ while [[ $# -gt 0 ]]; do
             DEBUG_BUILD=true
             shift
             ;;
+        --verify)
+            VERIFY_APP=true
+            shift
+            ;;
         -h|--help)
-            echo "Usage: $0 [--deliver] [--install_local] [--debug] [--help]"
-            echo "  --deliver       Upload the DMG to GitHub Releases"
+            echo "Usage: $0 [--deliver] [--install_local] [--debug] [--verify] [--help]"
+            echo "  --deliver       Upload the DMG to GitHub Releases (auto-notarizes release builds)"
             echo "  --install_local Install the app directly to /Applications"
             echo "  --debug         Create debug build instead of release build"
+            echo "  --verify        Verify app signature and notarization status"
             echo "  --help          Show this help message"
+            echo ""
+            echo "📤 Notarization:"
+            echo "  • Release builds with --deliver are automatically notarized"
+            echo "  • Set APPLE_ID and APPLE_ID_PASSWORD environment variables"
+            echo "  • Use app-specific password if 2FA is enabled"
+            echo ""
+            echo "🔍 Verification:"
+            echo "  • --verify alone: Verify local app bundle"
+            echo "  • --verify --deliver: Download and verify GitHub release"
             exit 0
             ;;
         *)
@@ -44,7 +59,7 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 cd "$PROJECT_ROOT"
 
 APP_NAME="BangoCat"
-BUNDLE_ID="com.gammasoftware.bangocat"
+BUNDLE_ID="com.leaptech.bangocat"
 VERSION="1.5.2"  # Will be updated by bump_version.sh
 
 # Set build configuration based on debug flag
@@ -377,6 +392,165 @@ install_local() {
     fi
 }
 
+# Function to verify app bundle signature and notarization
+verify_app_bundle() {
+    local app_path="$1"
+    local app_name=$(basename "$app_path")
+
+    echo ""
+    echo "🔍 Verifying ${app_name}..."
+    echo "📍 Path: $app_path"
+    echo ""
+
+    # Check if app bundle exists
+    if [ ! -d "$app_path" ]; then
+        echo "❌ App bundle not found: $app_path"
+        return 1
+    fi
+
+    # Check if executable exists
+    local executable="${app_path}/Contents/MacOS/${APP_NAME}"
+    if [ ! -f "$executable" ]; then
+        echo "❌ Executable not found: $executable"
+        return 1
+    fi
+
+    echo "📋 App Bundle Structure:"
+    echo "   ✅ App bundle exists"
+    echo "   ✅ Executable exists: $(basename "$executable")"
+    echo ""
+
+    # Verify code signature
+    echo "🔐 Code Signature Verification:"
+    if codesign --verify --verbose "$app_path" 2>&1; then
+        echo "   ✅ Code signature is valid"
+    else
+        echo "   ❌ Code signature verification failed"
+        return 1
+    fi
+
+    # Display signature details
+    echo ""
+    echo "📄 Signature Details:"
+    if codesign --display --verbose "$app_path" 2>&1; then
+        echo "   ✅ Signature details retrieved"
+    else
+        echo "   ❌ Failed to retrieve signature details"
+        return 1
+    fi
+
+    # Check notarization status
+    echo ""
+    echo "📤 Notarization Status:"
+    if xcrun stapler validate "$app_path" 2>&1; then
+        echo "   ✅ App is notarized"
+    else
+        echo "   ⚠️  App is not notarized (normal for development builds)"
+        echo "   💡 For distribution, use --deliver with Apple ID credentials"
+    fi
+
+    echo ""
+    echo "🎉 Verification completed successfully!"
+    return 0
+}
+
+# Function to download and verify GitHub release
+verify_github_release() {
+    echo ""
+    echo "🌐 Downloading and verifying GitHub release..."
+
+    # Check if gh CLI is available
+    if ! command -v gh &> /dev/null; then
+        echo "❌ GitHub CLI (gh) is not installed"
+        echo "📥 Install it with: brew install gh"
+        return 1
+    fi
+
+    # Check if user is authenticated
+    if ! gh auth status &> /dev/null; then
+        echo "❌ Not authenticated with GitHub"
+        echo "🔐 Run: gh auth login"
+        return 1
+    fi
+
+    # Get current version and tag
+    local tag_name="v${VERSION}"
+    if [ "$DEBUG_BUILD" = true ]; then
+        tag_name="v${VERSION}-debug"
+    fi
+
+    echo "📋 Checking release: $tag_name"
+
+    # Check if release exists
+    if ! gh release view "$tag_name" --repo "$GITHUB_REPO" &> /dev/null; then
+        echo "❌ Release $tag_name not found"
+        echo "💡 Create a release first with: ./Scripts/package_app.sh --deliver"
+        return 1
+    fi
+
+    # Get release assets
+    echo "📦 Getting release assets..."
+    local assets_json=$(gh release view "$tag_name" --repo "$GITHUB_REPO" --json assets)
+    local dmg_url=$(echo "$assets_json" | jq -r '.assets[] | select(.name | endswith(".dmg")) | .url' | head -1)
+
+    if [ -z "$dmg_url" ] || [ "$dmg_url" = "null" ]; then
+        echo "❌ No DMG asset found in release"
+        return 1
+    fi
+
+    echo "📥 Downloading DMG from GitHub..."
+    local temp_dmg="/tmp/${APP_NAME}-verify.dmg"
+    gh release download "$tag_name" --repo "$GITHUB_REPO" --pattern "*.dmg" --output "$temp_dmg"
+
+    if [ ! -f "$temp_dmg" ]; then
+        echo "❌ Failed to download DMG"
+        return 1
+    fi
+
+    echo "✅ DMG downloaded: $(basename "$temp_dmg")"
+    echo ""
+
+    # Mount the DMG
+    echo "🔗 Mounting DMG..."
+    local mount_point=$(hdiutil attach "$temp_dmg" -readonly -nobrowse | grep "/Volumes/" | awk '{print $3}')
+
+    if [ -z "$mount_point" ]; then
+        echo "❌ Failed to mount DMG"
+        rm -f "$temp_dmg"
+        return 1
+    fi
+
+    echo "✅ DMG mounted at: $mount_point"
+
+    # Find the app bundle in the mounted DMG
+    local app_in_dmg="${mount_point}/${APP_NAME}.app"
+
+    if [ ! -d "$app_in_dmg" ]; then
+        echo "❌ App bundle not found in DMG: $app_in_dmg"
+        hdiutil detach "$mount_point" 2>/dev/null || true
+        rm -f "$temp_dmg"
+        return 1
+    fi
+
+    # Verify the app bundle
+    verify_app_bundle "$app_in_dmg"
+    local verify_result=$?
+
+    # Clean up
+    echo ""
+    echo "🧹 Cleaning up..."
+    hdiutil detach "$mount_point" 2>/dev/null || true
+    rm -f "$temp_dmg"
+
+    if [ $verify_result -eq 0 ]; then
+        echo "✅ GitHub release verification completed successfully!"
+        return 0
+    else
+        echo "❌ GitHub release verification failed"
+        return 1
+    fi
+}
+
 echo "🐱 Starting BangoCat packaging process..."
 echo "📍 Working from: $PROJECT_ROOT"
 echo "🔧 Build type: ${BUILD_TYPE}"
@@ -430,8 +604,8 @@ fi
 if [ -f "Assets/Icons/bongo.ico" ]; then
     cp "Assets/Icons/bongo.ico" "${APP_BUNDLE}/Contents/Resources/"
 fi
-if [ -f "Assets/Icons/bongo-simple.ico" ]; then
-    cp "Assets/Icons/bongo-simple.ico" "${APP_BUNDLE}/Contents/Resources/"
+if [ -f "Assets/Icons/menu-logo.ico" ]; then
+    cp "Assets/Icons/menu-logo.ico" "${APP_BUNDLE}/Contents/Resources/"
 fi
 
 # Copy all images from Sources/BangoCat/Resources
@@ -446,13 +620,30 @@ chmod +x "${APP_BUNDLE}/Contents/MacOS/${APP_NAME}"
 # Code sign the app bundle for consistent identity
 echo "🔐 Code signing app bundle for consistent identity..."
 if command -v codesign &> /dev/null; then
-    # Try to sign with ad-hoc signature (no certificate required)
-    if codesign --force --deep --sign - "${APP_BUNDLE}"; then
-        echo "✅ App bundle code signed successfully"
+    # Check for Apple Developer certificate first (updated to include Apple Development)
+    if security find-identity -v -p codesigning | grep -q "Developer ID Application\|Mac App Distribution\|Apple Development\|Mac Developer"; then
+        echo "🔍 Found Apple Developer certificate, signing with it..."
+        # Get the first available certificate (prioritize distribution certificates)
+        CERT_IDENTITY=$(security find-identity -v -p codesigning | grep "Developer ID Application\|Mac App Distribution\|Apple Development\|Mac Developer" | head -1 | cut -d'"' -f2)
+        if codesign --force --deep --sign "$CERT_IDENTITY" "${APP_BUNDLE}"; then
+            echo "✅ App bundle signed with Apple Developer certificate"
+            echo "   • App should launch without Gatekeeper warnings"
+        else
+            echo "⚠️  Certificate signing failed, falling back to ad-hoc"
+            codesign --force --deep --sign - "${APP_BUNDLE}"
+            echo "✅ App bundle signed with ad-hoc signature"
+        fi
     else
-        echo "⚠️  Code signing failed, but app will still work"
-        echo "   • Accessibility permissions may need to be re-granted on reinstall"
-        echo "   • Consider getting an Apple Developer certificate for production builds"
+        # Fall back to ad-hoc signature
+        echo "🔍 No Apple Developer certificate found, using ad-hoc signature..."
+        if codesign --force --deep --sign - "${APP_BUNDLE}"; then
+            echo "✅ App bundle signed with ad-hoc signature"
+            echo "   • Users will need to right-click and select 'Open' on first launch"
+            echo "   • Consider getting an Apple Developer certificate for production builds"
+        else
+            echo "⚠️  Code signing failed, but app will still work"
+            echo "   • Accessibility permissions may need to be re-granted on reinstall"
+        fi
     fi
 else
     echo "⚠️  codesign not available, skipping code signing"
@@ -486,6 +677,104 @@ echo "   • Re-run this script for professional background generation"
 
 echo "🎉 Professional DMG created successfully: ${DMG_NAME}"
 
+# Notarize release builds automatically
+if [ "$DEBUG_BUILD" = false ] && [ "$DELIVER_TO_GITHUB" = true ]; then
+    echo ""
+    echo "📤 Starting automatic notarization for release build..."
+
+    # Check if we have Apple ID credentials for notarization
+    if [ -n "$APPLE_ID" ] && [ -n "$APPLE_ID_PASSWORD" ]; then
+        echo "🔐 Apple ID credentials found, proceeding with notarization..."
+
+        # Check if we have a valid certificate for notarization
+        if security find-identity -v -p codesigning | grep -q "Developer ID Application\|Mac App Distribution\|Apple Development\|Mac Developer"; then
+            echo "✅ Valid certificate found for notarization"
+
+            # Create a temporary zip for notarization
+            temp_zip="/tmp/${APP_NAME}-notarize.zip"
+            echo "📦 Creating temporary zip for notarization..."
+            ditto -c -k --keepParent "$APP_BUNDLE" "$temp_zip"
+
+            echo "📤 Uploading for notarization..."
+            echo "⏳ This may take 5-15 minutes..."
+
+            # Upload for notarization
+            upload_output=$(xcrun altool --notarize-app \
+                --primary-bundle-id "$BUNDLE_ID" \
+                --username "$APPLE_ID" \
+                --password "$APPLE_ID_PASSWORD" \
+                --file "$temp_zip" 2>&1)
+
+            if echo "$upload_output" | grep -q "RequestUUID"; then
+                request_uuid=$(echo "$upload_output" | grep "RequestUUID" | awk '{print $2}')
+                echo "✅ Upload successful! Request UUID: $request_uuid"
+
+                echo "⏳ Waiting for notarization to complete..."
+                echo "   This can take 5-15 minutes..."
+
+                # Wait for notarization to complete
+                attempts=0
+                max_attempts=30  # 15 minutes with 30-second intervals
+                while [ $attempts -lt $max_attempts ]; do
+                    sleep 30
+                    attempts=$((attempts + 1))
+
+                    status_output=$(xcrun altool --notarization-info "$request_uuid" \
+                        --username "$APPLE_ID" \
+                        --password "$APPLE_ID_PASSWORD" 2>&1)
+
+                    if echo "$status_output" | grep -q "Status: success"; then
+                        echo "✅ Notarization completed successfully!"
+
+                        # Staple the notarization ticket to the app
+                        echo "📎 Stapling notarization ticket to app..."
+                        xcrun stapler staple "$APP_BUNDLE"
+                        echo "✅ Notarization ticket stapled successfully!"
+                        break
+                    elif echo "$status_output" | grep -q "Status: invalid"; then
+                        echo "❌ Notarization failed!"
+                        echo "$status_output"
+                        echo "⚠️  Continuing without notarization..."
+                        break
+                    else
+                        echo "⏳ Still processing... (attempt $attempts/$max_attempts)"
+                    fi
+                done
+
+                if [ $attempts -eq $max_attempts ]; then
+                    echo "⚠️  Notarization timeout - continuing without notarization"
+                fi
+
+            else
+                echo "❌ Upload failed:"
+                echo "$upload_output"
+                echo "⚠️  Continuing without notarization..."
+            fi
+
+            # Clean up
+            rm -f "$temp_zip"
+
+        else
+            echo "⚠️  No valid certificate found for notarization"
+            echo "   • App will be delivered without notarization"
+            echo "   • Users may see security warnings on first launch"
+        fi
+
+    else
+        echo "⚠️  Apple ID credentials not set for notarization"
+        echo "💡 To enable notarization, set environment variables:"
+        echo "   export APPLE_ID='your-apple-id@example.com'"
+        echo "   export APPLE_ID_PASSWORD='your-app-specific-password'"
+        echo "   • Use an app-specific password if you have 2FA enabled"
+    fi
+else
+    if [ "$DEBUG_BUILD" = true ]; then
+        echo "🐛 Debug build - skipping notarization"
+    elif [ "$DELIVER_TO_GITHUB" = false ]; then
+        echo "📦 Local build - skipping notarization"
+    fi
+fi
+
 # Deliver to GitHub if requested
 if [ "$DELIVER_TO_GITHUB" = true ]; then
     deliver_to_github
@@ -494,6 +783,17 @@ fi
 # Install locally if requested
 if [ "$INSTALL_LOCAL" = true ]; then
     install_local
+fi
+
+# Verify app if requested
+if [ "$VERIFY_APP" = true ]; then
+    if [ "$DELIVER_TO_GITHUB" = true ]; then
+        # Verify GitHub release
+        verify_github_release
+    else
+        # Verify local app bundle
+        verify_app_bundle "$APP_BUNDLE"
+    fi
 fi
 
 echo ""

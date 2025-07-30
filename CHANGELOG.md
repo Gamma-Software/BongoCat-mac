@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased] - 2025-07-30
 
+### Added
+
+- Sign the app with a certificate
+
 ### Modified
 
 - Remove create_background.py and INSTALLATION.md files; update icon resources and references in BangoCatApp.swift to use new menu-logo.png. Add new logo assets for improved branding.
