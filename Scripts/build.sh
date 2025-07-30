@@ -49,8 +49,8 @@ if [ "$BUILD_CONFIG" = "release" ]; then
         exit 1
     fi
     print_info "Cleaning previous build artifacts for fresh production build..."
-    rm -rf .build
-    BUILD_COMMAND="swift build --configuration release"
+    swift package clean
+    BUILD_COMMAND="swift build --configuration release --skip-build-manifest --skip-build-info"
 else
     BUILD_COMMAND="swift build"
 fi
