@@ -235,6 +235,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "🔧 Analytics Status", action: #selector(showAnalyticsStatus), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "🧪 Test Analytics", action: #selector(testAnalytics), keyEquivalent: ""))
+        menu.addItem(NSMenuItem(title: "🔍 Debug Update System", action: #selector(debugUpdateSystem), keyEquivalent: ""))
+        menu.addItem(NSMenuItem(title: "📥 Test Download", action: #selector(testDownloadFunctionality), keyEquivalent: ""))
         #endif
 
         // Version info
@@ -784,8 +786,89 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         updateChecker.checkForUpdatesManually()
     }
 
+    @objc internal func openInstallerDMG() {
+        // Track menu action
+        analytics.trackMenuAction("open_installer_dmg")
+        trackFeatureUsed("open_installer_dmg")
+
+        // Get the path to the DMG file in the Build directory
+        let buildPath = "Build/BangoCat-\(appVersion).dmg"
+        let currentDirectory = FileManager.default.currentDirectoryPath
+        let dmgPath = "\(currentDirectory)/\(buildPath)"
+
+        // Check if the DMG file exists
+        if FileManager.default.fileExists(atPath: dmgPath) {
+            // Open the DMG file using NSWorkspace
+            if let url = URL(string: "file://\(dmgPath)") {
+                NSWorkspace.shared.open(url)
+                print("✅ Opened DMG file: \(dmgPath)")
+
+                // Show confirmation to user
+                let alert = NSAlert()
+                alert.messageText = "Installer DMG Opened"
+                alert.informativeText = "The BangoCat installer DMG has been opened in Finder.\n\nTo install:\n1. Drag the BangoCat app to your Applications folder\n2. Eject the DMG when finished"
+                alert.alertStyle = .informational
+                alert.addButton(withTitle: "OK")
+                alert.runModal()
+            } else {
+                print("❌ Failed to create URL for DMG file")
+                showDMGErrorAlert("Failed to create URL for DMG file")
+            }
+        } else {
+            print("❌ DMG file not found at: \(dmgPath)")
+            showDMGErrorAlert("DMG file not found. Please build the app first using the build script.")
+        }
+    }
+
+    private func showDMGErrorAlert(_ message: String) {
+        let alert = NSAlert()
+        alert.messageText = "Cannot Open Installer DMG"
+        alert.informativeText = "\(message)\n\nTo create the installer DMG:\n1. Run the build script: ./Scripts/build.sh\n2. The DMG will be created in the Build directory"
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: "OK")
+        alert.addButton(withTitle: "Open Build Directory")
+
+        let response = alert.runModal()
+        if response == .alertSecondButtonReturn {
+            // Open the Build directory in Finder
+            let buildURL = URL(fileURLWithPath: "\(FileManager.default.currentDirectoryPath)/Build")
+            NSWorkspace.shared.open(buildURL)
+        }
+    }
+
+    @objc internal func debugUpdateSystem() {
+        print("🔍 Debugging update system from menu...")
+        updateChecker.debugUpdateSystem()
+        updateChecker.testVersionComparison()
+
+        // Show a simple alert to confirm the debug was triggered
+        let alert = NSAlert()
+        alert.messageText = "Debug Complete"
+        alert.informativeText = "Check the console for debug information about the update system."
+        alert.alertStyle = .informational
+        alert.addButton(withTitle: "OK")
+        alert.runModal()
+    }
+
+    @objc internal func testDownloadFunctionality() {
+        print("🧪 Testing download functionality from menu...")
+        updateChecker.testDownloadFunctionality()
+
+        // Show a simple alert to confirm the test was triggered
+        let alert = NSAlert()
+        alert.messageText = "Download Test Started"
+        alert.informativeText = "Check the console for download test results."
+        alert.alertStyle = .informational
+        alert.addButton(withTitle: "OK")
+        alert.runModal()
+    }
+
     internal func checkForUpdatesPublic() {
         checkForUpdates()
+    }
+
+    internal func openInstallerDMGPublic() {
+        openInstallerDMG()
     }
 
     @objc private func quitApp() {

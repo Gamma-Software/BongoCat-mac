@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Modified
 
+- Open DMG file after download instead to let the user drag and drop it to the Applications folder
 - Update run.sh to include verification steps for downloaded DMG file and installation process.
 
 ## [1.5.3] - 2025-07-30
