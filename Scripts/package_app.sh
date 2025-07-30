@@ -735,10 +735,33 @@ if [ "$DEBUG_BUILD" = false ] && [ "$DELIVER_TO_GITHUB" = true ]; then
             fi
         else
             echo "⚠️  Apple ID credentials not set for notarization"
-            echo "💡 To enable notarization, set environment variables:"
-            echo "   export APPLE_ID='your-apple-id@example.com'"
-            echo "   export APPLE_ID_PASSWORD='your-app-specific-password'"
-            echo "   • Use an app-specific password if you have 2FA enabled"
+            echo "💡 Attempting to source .env and retry notarization..."
+            if [ -f ".env" ]; then
+                # shellcheck disable=SC1091
+                source .env
+                if [ -n "$APPLE_ID" ] && [ -n "$APPLE_ID_PASSWORD" ] && [ -n "$TEAM_ID" ]; then
+                    echo "🔐 Apple ID credentials found after sourcing .env, proceeding with notarization..."
+                    if ./Scripts/code_sign.sh --certificate --notarize; then
+                        echo "✅ Notarization completed successfully after sourcing .env"
+                    else
+                        echo "⚠️  Notarization failed or was skipped after sourcing .env"
+                        echo "   • App will be delivered without notarization"
+                        echo "   • Users may see security warnings on first launch"
+                    fi
+                else
+                    echo "⚠️  Apple ID credentials still not set after sourcing .env"
+                    echo "💡 To enable notarization, set environment variables:"
+                    echo "   export APPLE_ID='your-apple-id@example.com'"
+                    echo "   export APPLE_ID_PASSWORD='your-app-specific-password'"
+                    echo "   • Use an app-specific password if you have 2FA enabled"
+                fi
+            else
+                echo "⚠️  .env file not found, cannot retry notarization"
+                echo "💡 To enable notarization, set environment variables:"
+                echo "   export APPLE_ID='your-apple-id@example.com'"
+                echo "   export APPLE_ID_PASSWORD='your-app-specific-password'"
+                echo "   • Use an app-specific password if you have 2FA enabled"
+            fi
         fi
     fi
 else
