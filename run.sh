@@ -3,6 +3,9 @@
 # BangoCat Build Menu Script
 # Interactive menu to run different build and package commands
 
+print_info "Sourcing .env file..."
+source .env
+
 # Function to show usage
 show_usage() {
     echo "🐱 BangoCat Build Script"

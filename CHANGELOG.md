@@ -5,6 +5,17 @@ All notable changes to BangoCat-mac will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [unreleased] - 2025-07-30
+
+### Modified
+
+- Source .env file in run.sh
+- Change default scale to 75%
+- Per-app positioning is now enabled by default
+- Per-app hiding is now enabled by default
+- Auto-start is now enabled by default
+- Random paw behavior is now enabled by default
+
 ## [1.5.4] - 2025-07-30
 
 ### Modified
