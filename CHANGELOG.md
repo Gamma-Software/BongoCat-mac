@@ -5,6 +5,13 @@ All notable changes to BangoCat-mac will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [unreleased] - 2025-07-30
+
+### Modified
+
+- Open DMG file after download instead to let the user drag and drop it to the Applications folder
+- Update run.sh to include verification steps for downloaded DMG file and installation process.
+
 ## [1.5.3] - 2025-07-30
 
 ### Added

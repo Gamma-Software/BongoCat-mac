@@ -148,11 +148,108 @@ class UpdateChecker: NSObject, ObservableObject {
                     print("✅ Network response: HTTP \(httpResponse.statusCode)")
                     if let data = data {
                         print("📦 Response size: \(ByteCountFormatter.string(fromByteCount: Int64(data.count), countStyle: .file))")
+
+                        // Try to parse the response
+                        do {
+                            let releases = try JSONDecoder().decode([GitHubRelease].self, from: data)
+                            if let latestRelease = releases.first {
+                                let latestVersion = latestRelease.tagName.replacingOccurrences(of: "v", with: "")
+                                print("🔄 Latest GitHub version: \(latestVersion)")
+                                print("🔄 Version comparison result: \(self.isNewerVersion(latest: latestVersion, current: currentVersion))")
+                            }
+                        } catch {
+                            print("❌ Failed to parse GitHub response: \(error.localizedDescription)")
+                        }
                     }
                 }
             }
         }
         task.resume()
+    }
+
+    func testVersionComparison() {
+        let currentVersion = getCurrentVersion()
+        let testVersions = ["1.5.2", "1.5.3", "1.5.4", "1.6.0", "2.0.0"]
+
+        print("🧪 Testing version comparison with current version: \(currentVersion)")
+        for testVersion in testVersions {
+            let result = isNewerVersion(latest: testVersion, current: currentVersion)
+            print("  \(testVersion) > \(currentVersion): \(result)")
+        }
+    }
+
+    func testDownloadFunctionality() {
+        print("🧪 Testing download functionality...")
+
+        // Create a mock release for testing
+        let mockAsset = GitHubReleaseAsset(
+            id: 1,
+            name: "BangoCat-1.5.4.dmg",
+            browserDownloadUrl: "https://github.com/Gamma-Software/BangoCat-mac/releases/download/v1.5.3/BangoCat-1.5.3.dmg",
+            size: 1024 * 1024 * 10, // 10MB
+            contentType: "application/octet-stream"
+        )
+
+        let mockRelease = GitHubRelease(
+            tagName: "v1.5.4",
+            name: "Test Release",
+            publishedAt: "2024-01-01T00:00:00Z",
+            htmlUrl: "https://github.com/Gamma-Software/BangoCat-mac/releases/tag/v1.5.4",
+            draft: false,
+            prerelease: false,
+            assets: [mockAsset]
+        )
+
+        print("🔄 Testing download with mock release: \(mockRelease.tagName)")
+        downloadAndOpenUpdate(release: mockRelease)
+    }
+
+    func testDownloadOnly() {
+        print("🧪 Testing download only (no installation)...")
+
+        // Create a mock release for testing
+        let mockAsset = GitHubReleaseAsset(
+            id: 1,
+            name: "BangoCat-1.5.4.dmg",
+            browserDownloadUrl: "https://github.com/Gamma-Software/BangoCat-mac/releases/download/v1.5.3/BangoCat-1.5.3.dmg",
+            size: 1024 * 1024 * 10, // 10MB
+            contentType: "application/octet-stream"
+        )
+
+        let mockRelease = GitHubRelease(
+            tagName: "v1.5.4",
+            name: "Test Release",
+            publishedAt: "2024-01-01T00:00:00Z",
+            htmlUrl: "https://github.com/Gamma-Software/BangoCat-mac/releases/tag/v1.5.4",
+            draft: false,
+            prerelease: false,
+            assets: [mockAsset]
+        )
+
+        print("🔄 Testing download only with mock release: \(mockRelease.tagName)")
+
+        // Find DMG asset
+        guard let dmgAsset = findDMGAsset(in: mockRelease.assets) else {
+            print("❌ No DMG asset found")
+            return
+        }
+
+        print("🔄 Starting download test for version \(mockRelease.tagName)")
+        print("📦 DMG Asset: \(dmgAsset.name) (\(ByteCountFormatter.string(fromByteCount: Int64(dmgAsset.size), countStyle: .file)))")
+
+        downloadDMG(from: dmgAsset) { result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let dmgPath):
+                    print("✅ Download test successful: \(dmgPath)")
+                    // Don't try to install, just clean up
+                    try? FileManager.default.removeItem(atPath: dmgPath)
+                    print("🧹 Cleaned up test file")
+                case .failure(let error):
+                    print("❌ Download test failed: \(error.localizedDescription)")
+                }
+            }
+        }
     }
 
     func setUpdateNotificationsEnabled(_ enabled: Bool) {
@@ -289,6 +386,7 @@ class UpdateChecker: NSObject, ObservableObject {
         let latestVersion = latestRelease.tagName.replacingOccurrences(of: "v", with: "")
 
         print("🔄 Current version: \(currentVersion), Latest version: \(latestVersion)")
+        print("🔄 Version comparison: isNewerVersion(\(latestVersion), \(currentVersion)) = \(isNewerVersion(latest: latestVersion, current: currentVersion))")
 
         if isNewerVersion(latest: latestVersion, current: currentVersion) {
             analytics.trackUpdateCheckCompleted(true, currentVersion: currentVersion, latestVersion: latestVersion)
@@ -399,7 +497,7 @@ class UpdateChecker: NSObject, ObservableObject {
 
         if autoUpdateEnabled {
             infoText += "\n\nWould you like to automatically download and install it now?"
-            alert.addButton(withTitle: "Install Automatically")
+            alert.addButton(withTitle: "Open DMG Automatically")
             alert.addButton(withTitle: "Download Manually")
         } else {
             infoText += "\n\nWould you like to download it now?"
@@ -415,12 +513,12 @@ class UpdateChecker: NSObject, ObservableObject {
         let response = alert.runModal()
 
         if autoUpdateEnabled {
-            // Auto-update enabled: "Install Automatically", "Download Manually", "Skip This Version", "Remind Me Later"
+            // Auto-update enabled: "Open DMG Automatically", "Download Manually", "Skip This Version", "Remind Me Later"
             switch response {
-            case .alertFirstButtonReturn: // Install Automatically
-                analytics.trackUpdateActionTaken("auto_install", version: release.tagName)
-                analytics.trackNotificationClicked("update", action: "auto_install")
-                downloadAndInstallUpdate(release: release)
+            case .alertFirstButtonReturn: // Open DMG Automatically
+                analytics.trackUpdateActionTaken("auto_open_dmg", version: release.tagName)
+                analytics.trackNotificationClicked("update", action: "auto_open_dmg")
+                downloadAndOpenUpdate(release: release)
             case .alertSecondButtonReturn: // Download Manually
                 analytics.trackUpdateActionTaken("download", version: release.tagName)
                 analytics.trackNotificationClicked("update", action: "download")
@@ -457,14 +555,24 @@ class UpdateChecker: NSObject, ObservableObject {
 
     // MARK: - Automatic Update Methods
 
-    private func downloadAndInstallUpdate(release: GitHubRelease) {
+    private func downloadAndOpenUpdate(release: GitHubRelease) {
         guard !isUpdating else {
             print("🔄 Update already in progress")
             return
         }
 
+        // Verify that this is actually a newer version before proceeding
+        let currentVersion = getCurrentVersion()
+        let latestVersion = release.tagName.replacingOccurrences(of: "v", with: "")
+
+        if !isNewerVersion(latest: latestVersion, current: currentVersion) {
+            print("❌ Attempted to download update for same or older version: current=\(currentVersion), latest=\(latestVersion)")
+            showErrorAlert(message: "No update available. You already have the latest version (\(currentVersion)).")
+            return
+        }
+
         // Find DMG asset
-        guard let dmgAsset = findDMGAsset(in: release.assets) else {
+        guard let dmgAsset: GitHubReleaseAsset = findDMGAsset(in: release.assets) else {
             showErrorAlert(message: "No DMG file found in the release assets. Please download manually from the GitHub releases page.")
             analytics.trackError("No DMG asset found", context: ["version": release.tagName])
             return
@@ -475,24 +583,29 @@ class UpdateChecker: NSObject, ObservableObject {
 
         isUpdating = true
 
-        showDownloadProgressAlert { [weak self] cancelled in
-            if cancelled {
-                self?.cancelDownload()
+        showDownloadProgressAlert(
+            onCancel: { [weak self] cancelled in
+                if cancelled {
+                    self?.cancelDownload()
+                }
+            },
+            onInstall: { [weak self] dmgPath in
+                self?.openDownloadedDMG(dmgPath: dmgPath, version: release.tagName)
             }
-        }
+        )
 
         downloadDMG(from: dmgAsset) { [weak self] result in
             DispatchQueue.main.async {
                 self?.isUpdating = false
-                self?.hideDownloadProgressAlert()
 
                 switch result {
                 case .success(let dmgPath):
                     print("✅ Download complete: \(dmgPath)")
-                    self?.mountDMGAndInstall(dmgPath: dmgPath, version: release.tagName)
+                    self?.updateDownloadAlertToInstall(dmgPath: dmgPath, version: release.tagName)
                 case .failure(let error):
                     print("❌ Download failed: \(error.localizedDescription)")
-                                         self?.analytics.trackError("Download failed", context: ["error": error.localizedDescription, "version": release.tagName])
+                    self?.analytics.trackError("Download failed", context: ["error": error.localizedDescription, "version": release.tagName])
+                    self?.hideDownloadProgressAlert()
                     self?.showErrorAlert(message: "Failed to download update: \(error.localizedDescription)")
                 }
             }
@@ -514,6 +627,7 @@ class UpdateChecker: NSObject, ObservableObject {
 
     private func downloadDMG(from asset: GitHubReleaseAsset, completion: @escaping (Result<String, Error>) -> Void) {
         guard let url = URL(string: asset.browserDownloadUrl) else {
+            print("❌ Invalid download URL: \(asset.browserDownloadUrl)")
             completion(.failure(NSError(domain: "UpdateChecker", code: 1, userInfo: [NSLocalizedDescriptionKey: "Invalid download URL"])))
             return
         }
@@ -526,11 +640,13 @@ class UpdateChecker: NSObject, ObservableObject {
         config.timeoutIntervalForRequest = 60.0
         config.timeoutIntervalForResource = 300.0
         config.waitsForConnectivity = true
+        config.allowsCellularAccess = true
 
         let session = URLSession(configuration: config)
 
         print("🔄 Starting download from: \(url)")
         print("📁 Target path: \(dmgPath)")
+        print("📦 Expected file size: \(ByteCountFormatter.string(fromByteCount: Int64(asset.size), countStyle: .file))")
 
         currentDownloadTask = session.downloadTask(with: url) { tempURL, response, error in
             if let error = error {
@@ -544,6 +660,8 @@ class UpdateChecker: NSObject, ObservableObject {
                 completion(.failure(NSError(domain: "UpdateChecker", code: 3, userInfo: [NSLocalizedDescriptionKey: "Invalid HTTP response"])))
                 return
             }
+
+            print("📡 HTTP Response: \(httpResponse.statusCode)")
 
             guard httpResponse.statusCode == 200 else {
                 print("❌ HTTP error: \(httpResponse.statusCode)")
@@ -569,6 +687,11 @@ class UpdateChecker: NSObject, ObservableObject {
                 let fileSize = try FileManager.default.attributesOfItem(atPath: dmgPath)[.size] as? Int64 ?? 0
                 print("✅ Download complete: \(dmgPath) (\(ByteCountFormatter.string(fromByteCount: fileSize, countStyle: .file)))")
 
+                // Verify file size is reasonable
+                if fileSize < 1024 * 1024 { // Less than 1MB
+                    print("⚠️ Warning: Downloaded file seems too small (\(ByteCountFormatter.string(fromByteCount: fileSize, countStyle: .file)))")
+                }
+
                 completion(.success(dmgPath))
             } catch {
                 print("❌ File operation error: \(error.localizedDescription)")
@@ -583,8 +706,41 @@ class UpdateChecker: NSObject, ObservableObject {
         currentDownloadTask?.cancel()
         currentDownloadTask = nil
         isUpdating = false
+        downloadedDMGPath = nil
+        downloadedVersion = nil
         print("🛑 Download cancelled by user")
         analytics.trackUpdateActionTaken("cancel", version: "unknown")
+    }
+
+    private func openDownloadedDMG(dmgPath: String, version: String) {
+        print("🔄 Opening downloaded DMG for manual installation...")
+
+        // Open the DMG file using NSWorkspace
+        if let url = URL(string: "file://\(dmgPath)") {
+            NSWorkspace.shared.open(url)
+            print("✅ Opened DMG file: \(dmgPath)")
+
+            // Show success alert with installation instructions
+            let alert = NSAlert()
+            alert.messageText = "📦 Update Downloaded Successfully!"
+            alert.informativeText = "BangoCat v\(version) has been downloaded and opened in Finder.\n\nTo install the update:\n1. Drag the BangoCat app to your Applications folder\n2. Replace the existing app when prompted\n3. Eject the DMG when finished\n4. Restart BangoCat to complete the update"
+            alert.alertStyle = .informational
+            alert.addButton(withTitle: "OK")
+            alert.addButton(withTitle: "Open Applications Folder")
+
+            let response = alert.runModal()
+            if response == .alertSecondButtonReturn {
+                // Open Applications folder
+                let applicationsURL = URL(fileURLWithPath: "/Applications")
+                NSWorkspace.shared.open(applicationsURL)
+            }
+
+            // Track the action
+            analytics.trackUpdateActionTaken("opened_dmg", version: version)
+        } else {
+            print("❌ Failed to create URL for DMG file")
+            showErrorAlert(message: "Failed to open downloaded DMG file.")
+        }
     }
 
     private func mountDMGAndInstall(dmgPath: String, version: String) {
@@ -593,6 +749,7 @@ class UpdateChecker: NSObject, ObservableObject {
         let mountScript = """
         set dmgPath to "\(dmgPath)"
         set appName to "BangoCat"
+        set mountPoint to ""
 
         try
             -- Verify DMG file exists and is readable
@@ -603,7 +760,6 @@ class UpdateChecker: NSObject, ObservableObject {
             set mountResult to do shell script "hdiutil attach '" & dmgPath & "' -nobrowse -quiet"
 
             -- Extract mount point from result
-            set mountPoint to ""
             repeat with line in paragraphs of mountResult
                 if line contains "/Volumes/" then
                     set mountPoint to word -1 of line
@@ -652,9 +808,11 @@ class UpdateChecker: NSObject, ObservableObject {
 
         on error errorMessage
             -- Try to unmount DMG in case of error
-            try
-                do shell script "hdiutil detach '" & mountPoint & "' -quiet"
-            end try
+            if mountPoint is not "" then
+                try
+                    do shell script "hdiutil detach '" & mountPoint & "' -quiet"
+                end try
+            end if
 
             error errorMessage
         end try
@@ -662,18 +820,21 @@ class UpdateChecker: NSObject, ObservableObject {
 
         DispatchQueue.global(qos: .userInitiated).async {
             do {
+                print("🔄 Executing AppleScript installation...")
                 let script = NSAppleScript(source: mountScript)
                 var error: NSDictionary?
-                let _ = script?.executeAndReturnError(&error)
+                let result = script?.executeAndReturnError(&error)
 
                 DispatchQueue.main.async {
                     if let error = error {
                         let errorMessage = error[NSAppleScript.errorMessage] as? String ?? "Unknown AppleScript error"
-                        print("❌ Installation failed: \(errorMessage)")
+                        let errorNumber = error[NSAppleScript.errorNumber] as? Int ?? 0
+                        print("❌ Installation failed: \(errorMessage) (Error #\(errorNumber))")
                         self.analytics.trackError("Installation failed", context: ["error": errorMessage, "version": version])
                         self.showErrorAlert(message: "Failed to install update: \(errorMessage)")
                     } else {
                         print("✅ Update installed successfully!")
+                        print("📦 Installation result: \(result?.stringValue ?? "unknown")")
                         self.analytics.trackUpdateActionTaken("installed", version: version)
                         self.showInstallationSuccessAlert(version: version)
                     }
@@ -686,27 +847,69 @@ class UpdateChecker: NSObject, ObservableObject {
 
     private var downloadProgressAlert: NSAlert?
     private var progressWindow: NSWindow?
+    private var downloadCompletionCallback: ((String) -> Void)?
+    private var downloadedDMGPath: String?
+    private var downloadedVersion: String?
 
-    private func showDownloadProgressAlert(onCancel: @escaping (Bool) -> Void) {
+    private func showDownloadProgressAlert(onCancel: @escaping (Bool) -> Void, onInstall: @escaping (String) -> Void) {
         let alert = NSAlert()
         alert.messageText = "🔄 Downloading Update..."
-        alert.informativeText = "BangoCat is downloading the latest version.\n\nThis may take a few minutes depending on your internet connection.\n\nYou can cancel the download at any time."
+        alert.informativeText = "BangoCat is downloading the latest version.\n\nThis may take a few minutes depending on your internet connection."
         alert.alertStyle = .informational
-        alert.addButton(withTitle: "Cancel Download")
+        alert.addButton(withTitle: "OK")
 
         downloadProgressAlert = alert
+        downloadCompletionCallback = onInstall
 
+        // Show the alert in a non-blocking way
         DispatchQueue.main.async {
             let response = alert.runModal()
             if response == .alertFirstButtonReturn {
-                onCancel(true)
+                // User clicked Install
+                if let dmgPath = self.downloadedDMGPath {
+                    onInstall(dmgPath)
+                }
             }
         }
     }
 
     private func hideDownloadProgressAlert() {
-        // The alert will be dismissed automatically when the download completes
-        downloadProgressAlert = nil
+        DispatchQueue.main.async {
+            // Dismiss the alert if it's still showing
+            if self.downloadProgressAlert != nil {
+                // The alert will be dismissed when the download completes
+                self.downloadProgressAlert = nil
+            }
+        }
+    }
+
+        private func updateDownloadAlertToInstall(dmgPath: String, version: String) {
+        DispatchQueue.main.async {
+            // Dismiss the current alert
+            if let alert = self.downloadProgressAlert {
+                alert.window.close()
+            }
+            self.downloadProgressAlert = nil
+
+            // Create a new alert for installation
+            let installAlert = NSAlert()
+            installAlert.messageText = "✅ Download Complete!"
+            installAlert.informativeText = "The update has been downloaded successfully.\n\nClick 'Install' to open the DMG and install the update manually."
+            installAlert.alertStyle = .informational
+            installAlert.addButton(withTitle: "Install")
+            installAlert.addButton(withTitle: "Cancel")
+
+            // Store the DMG path and version for the install action
+            self.downloadedDMGPath = dmgPath
+            self.downloadedVersion = version
+
+            // Show the new alert
+            let response = installAlert.runModal()
+            if response == .alertFirstButtonReturn {
+                // User clicked Install
+                self.openDownloadedDMG(dmgPath: dmgPath, version: version)
+            }
+        }
     }
 
     private func showInstallationSuccessAlert(version: String) {
