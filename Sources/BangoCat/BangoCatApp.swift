@@ -28,7 +28,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
     private let appWebsite = "https://valentin.pival.fr"
 
     // Scale management
-    @Published var currentScale: Double = 1.0
+    @Published var currentScale: Double = 0.75  // Default to Medium (75%)
     private let scaleKey = "BangoCatScale"
 
     // Scale pulse on input management
@@ -52,7 +52,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
     private let clickThroughKey = "BangoCatClickThrough"
 
     // Paw behavior management
-    @Published var pawBehaviorMode: PawBehaviorMode = .keyboardLayout  // Default to keyboard layout
+    @Published var pawBehaviorMode: PawBehaviorMode = .random  // Default to random
     private let pawBehaviorKey = "BangoCatPawBehavior"
 
     // Auto-start at launch management
@@ -73,13 +73,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
     private let perAppPositionsKey = "BangoCatPerAppPositions"
     internal var currentActiveApp: String = ""
     private var appSwitchTimer: Timer?
-    @Published internal var isPerAppPositioningEnabled: Bool = true
+    @Published internal var isPerAppPositioningEnabled: Bool = true  // Default enabled
     private let perAppPositioningKey = "BangoCatPerAppPositioning"
 
     // Per-app hiding management
     @Published internal var perAppHiddenApps: Set<String> = []
     private let perAppHiddenAppsKey = "BangoCatPerAppHiddenApps"
-    @Published internal var isPerAppHidingEnabled: Bool = false
+    @Published internal var isPerAppHidingEnabled: Bool = true  // Default enabled
     private let perAppHidingKey = "BangoCatPerAppHiding"
 
     // Milestone notifications management
@@ -436,7 +436,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
     @objc internal func resetToFactoryDefaults() {
         let alert = NSAlert()
         alert.messageText = "Reset to Factory Defaults"
-        alert.informativeText = "This will reset all BangoCat settings to their default values:\n\n• Scale: 100%\n• Scale Pulse: Enabled\n• Rotation: Disabled\n• Flip: Disabled\n• Ignore Clicks: Disabled\n• Click Through: Enabled\n• Auto-Start at Launch: Enabled\n• Position: Default location\n• Per-App Positioning: Disabled\n• Per-App Hiding: Disabled (all hidden apps cleared)\n• Stroke Counter: Will be reset\n\nThis action cannot be undone."
+        alert.informativeText = "This will reset all BangoCat settings to their default values:\n\n• Scale: 75% (Medium)\n• Scale Pulse: Enabled\n• Rotation: Disabled\n• Flip: Disabled\n• Ignore Clicks: Disabled\n• Click Through: Enabled\n• Auto-Start at Launch: Enabled\n• Position: Default location\n• Per-App Positioning: Enabled\n• Per-App Hiding: Enabled (all hidden apps cleared)\n• Paw Behavior: Random\n• Stroke Counter: Will be reset\n\nThis action cannot be undone."
         alert.alertStyle = .warning
         alert.addButton(withTitle: "Reset")
         alert.addButton(withTitle: "Cancel")
@@ -448,20 +448,20 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
             trackFeatureUsed("factory_reset")
 
             // Reset all settings to factory defaults
-            currentScale = 1.0
+            currentScale = 0.75  // Medium size
             scaleOnInputEnabled = true
             currentRotation = 0.0
             isFlippedHorizontally = false
             ignoreClicksEnabled = false
             clickThroughEnabled = true
-            pawBehaviorMode = .keyboardLayout
+            pawBehaviorMode = .random  // Random paw behavior
             autoStartAtLaunchEnabled = true
             savedPosition = NSPoint(x: 100, y: 100)
             currentCornerPosition = .custom
             snapToCornerEnabled = false
-            isPerAppPositioningEnabled = false
+            isPerAppPositioningEnabled = true  // Per-app positioning enabled
             perAppPositions.removeAll()
-            isPerAppHidingEnabled = false
+            isPerAppHidingEnabled = true  // Per-app hiding enabled
             perAppHiddenApps.removeAll()
 
             // Save all the reset values
@@ -1070,7 +1070,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         if UserDefaults.standard.object(forKey: scaleKey) != nil {
             currentScale = UserDefaults.standard.double(forKey: scaleKey)
         } else {
-            currentScale = 1.0 // Default scale
+            currentScale = 0.75 // Default to Medium (75%)
         }
         print("Loaded scale: \(currentScale)")
     }
@@ -1125,7 +1125,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
            let behavior = PawBehaviorMode(rawValue: behaviorString) {
             pawBehaviorMode = behavior
         } else {
-            pawBehaviorMode = .keyboardLayout // Default to keyboard layout
+            pawBehaviorMode = .random // Default to random
         }
         print("Loaded paw behavior preference: \(pawBehaviorMode.displayName)")
     }
@@ -1751,7 +1751,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         if UserDefaults.standard.object(forKey: perAppPositioningKey) != nil {
             isPerAppPositioningEnabled = UserDefaults.standard.bool(forKey: perAppPositioningKey)
         } else {
-            isPerAppPositioningEnabled = false // Default disabled
+            isPerAppPositioningEnabled = true // Default enabled
         }
 
         // Load per-app positions dictionary
@@ -1787,7 +1787,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         if UserDefaults.standard.object(forKey: perAppHidingKey) != nil {
             isPerAppHidingEnabled = UserDefaults.standard.bool(forKey: perAppHidingKey)
         } else {
-            isPerAppHidingEnabled = false // Default disabled
+            isPerAppHidingEnabled = true // Default enabled
         }
 
         // Load per-app hidden apps set
