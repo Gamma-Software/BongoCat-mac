@@ -192,11 +192,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         print("🔧 Status bar item created: \(statusBarItem != nil)")
 
         if let button = statusBarItem?.button {
-            // Try to load the bongo-simple.png file
+            // Try to load the menu-logo.png file
             if let iconImage = loadStatusBarIcon() {
                 button.image = iconImage
                 button.imagePosition = .imageOnly
-                print("🔧 Status bar icon loaded from bongo-simple.png")
+                print("🔧 Status bar icon loaded from menu-logo.png")
             } else {
                 // Fallback to emoji if icon loading fails
                 button.title = "🐱"
@@ -271,28 +271,28 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
     private func loadStatusBarIcon() -> NSImage? {
         // Method 1: Try Bundle.module (for Swift Package Manager)
         #if SWIFT_PACKAGE
-        if let url = Bundle.module.url(forResource: "bongo-simple", withExtension: "png"),
+        if let url = Bundle.module.url(forResource: "menu-logo", withExtension: "png"),
            let image = NSImage(contentsOf: url) {
-            return resizeIconForStatusBar(image, fromPath: "Bundle.module: bongo-simple.png")
+            return resizeIconForStatusBar(image, fromPath: "Bundle.module: menu-logo.png")
         }
         #endif
 
         // Method 2: Try Bundle.main.path (for packaged app)
-        if let bundlePath = Bundle.main.path(forResource: "bongo-simple", ofType: "png"),
+        if let bundlePath = Bundle.main.path(forResource: "menu-logo", ofType: "png"),
            let bundleImage = NSImage(contentsOfFile: bundlePath) {
             return resizeIconForStatusBar(bundleImage, fromPath: "Bundle.main path: \(bundlePath)")
         }
 
         // Method 3: Try NSImage named loading (without extension)
-        if let bundleImage = NSImage(named: "bongo-simple") {
+        if let bundleImage = NSImage(named: "menu-logo") {
             return resizeIconForStatusBar(bundleImage, fromPath: "NSImage named resource")
         }
 
         // Method 4: Try direct file paths (development fallback)
         let iconPaths = [
-            "bongo-simple.png",
-            "./bongo-simple.png",
-            "Sources/BangoCat/Resources/bongo-simple.png"
+            "menu-logo.png",
+            "./menu-logo.png",
+            "Sources/BangoCat/Resources/menu-logo.png"
         ]
 
         for path in iconPaths {
@@ -303,12 +303,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
 
         // Method 5: Try loading from current working directory
         let currentDir = FileManager.default.currentDirectoryPath
-        let currentDirPath = "\(currentDir)/bongo-simple.png"
+        let currentDirPath = "\(currentDir)/menu-logo.png"
         if let image = NSImage(contentsOfFile: currentDirPath) {
             return resizeIconForStatusBar(image, fromPath: "current dir: \(currentDirPath)")
         }
 
-        print("❌ Failed to load bongo-simple.png from all attempted methods")
+        print("❌ Failed to load menu-logo.png from all attempted methods")
         return nil
     }
 

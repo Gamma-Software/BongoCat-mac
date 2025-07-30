@@ -5,6 +5,12 @@ All notable changes to BangoCat-mac will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [unreleased] - 2025-07-30
+
+### Modified
+
+- Remove create_background.py and INSTALLATION.md files; update icon resources and references in BangoCatApp.swift to use new menu-logo.png. Add new logo assets for improved branding.
+
 ## [1.5.2] - 2025-07-28
 
 ### Modified
