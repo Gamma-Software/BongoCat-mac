@@ -111,7 +111,7 @@ class CatAnimationController: ObservableObject {
     @Published var rotation: Double = 0.0  // New rotation property for cat rotation
     @Published var isFlippedHorizontally: Bool = false  // New property for horizontal flip
     @Published var ignoreClicksEnabled: Bool = false  // Control whether to ignore mouse clicks
-    @Published var pawBehaviorMode: PawBehaviorMode = .random  // Control paw behavior mode
+    @Published var pawBehaviorMode: PawBehaviorMode = .alternating  // Control paw behavior mode
 
     // Reference to AppDelegate for context menu actions
     weak var appDelegate: AppDelegate?
