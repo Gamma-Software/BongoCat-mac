@@ -8,6 +8,7 @@ DELIVER_TO_GITHUB=false
 INSTALL_LOCAL=false
 DEBUG_BUILD=false
 VERIFY_APP=false
+SIGN_MODE="auto"
 while [[ $# -gt 0 ]]; do
     case $1 in
         --deliver)
@@ -26,13 +27,28 @@ while [[ $# -gt 0 ]]; do
             VERIFY_APP=true
             shift
             ;;
+        --sign-adhoc)
+            SIGN_MODE="adhoc"
+            shift
+            ;;
+        --sign-certificate)
+            SIGN_MODE="certificate"
+            shift
+            ;;
         -h|--help)
-            echo "Usage: $0 [--deliver] [--install_local] [--debug] [--verify] [--help]"
-            echo "  --deliver       Upload the DMG to GitHub Releases (auto-notarizes release builds)"
-            echo "  --install_local Install the app directly to /Applications"
-            echo "  --debug         Create debug build instead of release build"
-            echo "  --verify        Verify app signature and notarization status"
-            echo "  --help          Show this help message"
+            echo "Usage: $0 [--deliver] [--install_local] [--debug] [--verify] [--sign-adhoc] [--sign-certificate] [--help]"
+            echo "  --deliver           Upload the DMG to GitHub Releases (auto-notarizes release builds)"
+            echo "  --install_local     Install the app directly to /Applications"
+            echo "  --debug             Create debug build instead of release build"
+            echo "  --verify            Verify app signature and notarization status"
+            echo "  --sign-adhoc        Sign with ad-hoc signature (no certificate required)"
+            echo "  --sign-certificate  Sign with Apple Developer certificate"
+            echo "  --help              Show this help message"
+            echo ""
+            echo "🔐 Code Signing:"
+            echo "  • Default: Auto-detect certificate, fall back to ad-hoc"
+            echo "  • --sign-adhoc: Force ad-hoc signing (no certificate needed)"
+            echo "  • --sign-certificate: Force certificate signing (requires certificate)"
             echo ""
             echo "📤 Notarization:"
             echo "  • Release builds with --deliver are automatically notarized"
@@ -60,7 +76,7 @@ cd "$PROJECT_ROOT"
 
 APP_NAME="BangoCat"
 BUNDLE_ID="com.leaptech.bangocat"
-VERSION="1.5.5"  # Will be updated by bump_version.sh
+VERSION="1.5.6"  # Will be updated by bump_version.sh
 
 # Set build configuration based on debug flag
 if [ "$DEBUG_BUILD" = true ]; then
@@ -617,43 +633,54 @@ fi
 # Make executable runnable
 chmod +x "${APP_BUNDLE}/Contents/MacOS/${APP_NAME}"
 
-# Code sign the app bundle for consistent identity
+# Source the code signing script to use its functions
+source "$SCRIPT_DIR/code_sign.sh"
+
+# Code sign the app bundle using the code signing script functions
 echo "🔐 Code signing app bundle for consistent identity..."
-if command -v codesign &> /dev/null; then
-    # Check for Apple Developer certificate first (updated to include Apple Development)
-    if security find-identity -v -p codesigning | grep -q "Developer ID Application\|Mac App Distribution\|Apple Development\|Mac Developer"; then
-        echo "🔍 Found Apple Developer certificate, signing with it..."
-        # Get the first available certificate (prioritize distribution certificates)
-        # Extract the identity hash (first field) from the security find-identity output
-        CERT_IDENTITY=$(security find-identity -v -p codesigning | grep "Developer ID Application\|Mac App Distribution\|Apple Development\|Mac Developer" | head -1 | awk '{print $2}')
-        if codesign --force --deep --sign "$CERT_IDENTITY" \
-            --options runtime \
-            --timestamp \
-            "${APP_BUNDLE}"; then
-            echo "✅ App bundle signed with Apple Developer certificate"
-            echo "   • Hardened runtime enabled"
-            echo "   • Secure timestamp included"
-            echo "   • App should launch without Gatekeeper warnings"
-        else
-            echo "⚠️  Certificate signing failed, falling back to ad-hoc"
-            codesign --force --deep --sign - "${APP_BUNDLE}"
-            echo "✅ App bundle signed with ad-hoc signature"
-        fi
-    else
-        # Fall back to ad-hoc signature
-        echo "🔍 No Apple Developer certificate found, using ad-hoc signature..."
-        if codesign --force --deep --sign - "${APP_BUNDLE}"; then
-            echo "✅ App bundle signed with ad-hoc signature"
-            echo "   • Users will need to right-click and select 'Open' on first launch"
-            echo "   • Consider getting an Apple Developer certificate for production builds"
-        else
-            echo "⚠️  Code signing failed, but app will still work"
-            echo "   • Accessibility permissions may need to be re-granted on reinstall"
-        fi
-    fi
-else
+
+# Check if codesign is available
+if ! command -v codesign &> /dev/null; then
     echo "⚠️  codesign not available, skipping code signing"
     echo "   • App will work but may require re-granting accessibility permissions"
+else
+    # Use the specified signing mode or auto mode
+    case $SIGN_MODE in
+        "adhoc")
+            echo "🔐 Using ad-hoc signing mode..."
+            sign_adhoc
+            ;;
+        "certificate")
+            echo "🔐 Using certificate signing mode..."
+            if check_developer_certificate; then
+                identity=$(get_certificate_identity)
+                if [ -n "$identity" ]; then
+                    sign_with_certificate "$identity"
+                else
+                    print_error "Failed to get certificate identity"
+                    exit 1
+                fi
+            else
+                print_error "No Apple Developer certificate available"
+                exit 1
+            fi
+            ;;
+        "auto")
+            echo "🔐 Using auto signing mode (tries certificate first, falls back to ad-hoc)..."
+            if check_developer_certificate; then
+                identity=$(get_certificate_identity)
+                if [ -n "$identity" ]; then
+                    sign_with_certificate "$identity"
+                else
+                    echo "⚠️  Failed to get certificate identity, falling back to ad-hoc"
+                    sign_adhoc
+                fi
+            else
+                echo "🔍 No Apple Developer certificate found, using ad-hoc signature..."
+                sign_adhoc
+            fi
+            ;;
+    esac
 fi
 
 echo "✅ App bundle created at: ${APP_BUNDLE}"
@@ -688,106 +715,54 @@ if [ "$DEBUG_BUILD" = false ] && [ "$DELIVER_TO_GITHUB" = true ]; then
     echo ""
     echo "📤 Starting automatic notarization for release build..."
 
-    # Check if we have Apple ID credentials for notarization
-    if [ -n "$APPLE_ID" ] && [ -n "$APPLE_ID_PASSWORD" ]; then
-        echo "🔐 Apple ID credentials found, proceeding with notarization..."
+    # Check if signing mode is ad-hoc (notarization requires certificate)
+    if [ "$SIGN_MODE" = "adhoc" ]; then
+        echo "⚠️  Ad-hoc signing mode - skipping notarization"
+        echo "   • Notarization requires Apple Developer certificate"
+        echo "   • App will be delivered without notarization"
+    else
+        # Check if we have Apple ID credentials for notarization
+        if [ -n "$APPLE_ID" ] && [ -n "$APPLE_ID_PASSWORD" ] && [ -n "$TEAM_ID" ]; then
+            echo "🔐 Apple ID credentials found, proceeding with notarization..."
 
-        # Check if we have a valid certificate for notarization
-        if security find-identity -v -p codesigning | grep -q "Developer ID Application\|Mac App Distribution\|Apple Development\|Mac Developer"; then
-            echo "✅ Valid certificate found for notarization"
-
-            # Create a temporary zip for notarization
-            temp_zip="/tmp/${APP_NAME}-notarize.zip"
-            echo "📦 Creating temporary zip for notarization..."
-            ditto -c -k --keepParent "$APP_BUNDLE" "$temp_zip"
-
-            echo "📤 Uploading for notarization..."
-            echo "⏳ This may take 5-15 minutes..."
-
-            # Upload for notarization using modern notarytool
-            echo "📤 Uploading for notarization using notarytool..."
-
-            # Get team ID if not set
-            if [ -z "$TEAM_ID" ]; then
-                echo "🔍 Getting team ID automatically..."
-                team_info=$(xcrun notarytool info --apple-id "$APPLE_ID" --password "$APPLE_ID_PASSWORD" 2>/dev/null)
-                if echo "$team_info" | grep -q "team_id:"; then
-                    TEAM_ID=$(echo "$team_info" | grep "team_id:" | awk '{print $2}')
-                    echo "📋 Found Team ID: $TEAM_ID"
+            # Call the code_sign.sh script for notarization with certificate signing
+            if ./Scripts/code_sign.sh --certificate --notarize; then
+                echo "✅ Notarization completed successfully"
+            else
+                echo "⚠️  Notarization failed or was skipped"
+                echo "   • App will be delivered without notarization"
+                echo "   • Users may see security warnings on first launch"
+            fi
+        else
+            echo "⚠️  Apple ID credentials not set for notarization"
+            echo "💡 Attempting to source .env and retry notarization..."
+            if [ -f ".env" ]; then
+                # shellcheck disable=SC1091
+                source .env
+                if [ -n "$APPLE_ID" ] && [ -n "$APPLE_ID_PASSWORD" ] && [ -n "$TEAM_ID" ]; then
+                    echo "🔐 Apple ID credentials found after sourcing .env, proceeding with notarization..."
+                    if ./Scripts/code_sign.sh --certificate --notarize; then
+                        echo "✅ Notarization completed successfully after sourcing .env"
+                    else
+                        echo "❌  Notarization failed checkout the logs."
+                        return 1
+                    fi
                 else
-                    echo "⚠️  Could not automatically determine Team ID"
-                    echo "💡 Please set your Team ID:"
-                    echo "   export TEAM_ID='your-team-id'"
-                    echo "   You can find it at: https://developer.apple.com/account/#!/membership"
-                    echo "⚠️  Continuing without notarization..."
-                    rm -f "$temp_zip"
+                    echo "❌  Apple ID credentials still not set after sourcing .env"
+                    echo "💡 To enable notarization, set environment variables:"
+                    echo "   export APPLE_ID='your-apple-id@example.com'"
+                    echo "   export APPLE_ID_PASSWORD='your-app-specific-password'"
+                    echo "   • Use an app-specific password if you have 2FA enabled"
                     return 1
                 fi
-            fi
-
-            upload_output=$(xcrun notarytool submit "$temp_zip" \
-                --apple-id "$APPLE_ID" \
-                --password "$APPLE_ID_PASSWORD" \
-                --team-id "$TEAM_ID" 2>&1)
-
-            if echo "$upload_output" | grep -q "id:"; then
-                submission_id=$(echo "$upload_output" | grep -m1 "id:" | awk '{print $2}')
-                echo "✅ Upload successful! Submission ID: $submission_id"
-
-                echo "⏳ Waiting for notarization to complete..."
-                echo "   This can take 5-15 minutes..."
-
-                # Wait for notarization to complete
-                while true; do
-                    sleep 30
-                    status_output=$(xcrun notarytool wait "$submission_id" \
-                        --apple-id "$APPLE_ID" \
-                        --password "$APPLE_ID_PASSWORD" \
-                        --team-id "$TEAM_ID" 2>&1)
-
-                    if echo "$status_output" | grep -q "status: Accepted"; then
-                        echo "✅ Notarization completed successfully!"
-
-                        # Staple the notarization ticket to the app
-                        echo "📎 Stapling notarization ticket to app..."
-                        xcrun stapler staple "$APP_BUNDLE"
-                        echo "✅ Notarization ticket stapled successfully!"
-                        break
-                    elif echo "$status_output" | grep -q "status: Invalid"; then
-                        echo "❌ Notarization failed!"
-                        log_output=$(xcrun notarytool log "$submission_id" \
-                            --apple-id "$APPLE_ID" \
-                            --password "$APPLE_ID_PASSWORD" \
-                            --team-id "$TEAM_ID" 2>&1)
-                        echo "$log_output"
-                        echo "⚠️  Continuing without notarization..."
-                        break
-                    else
-                        echo "⏳ Still processing... (checking again in 30 seconds)"
-                    fi
-                done
-
             else
-                echo "❌ Upload failed:"
-                echo "$upload_output"
-                echo "⚠️  Continuing without notarization..."
+                echo "❌  .env file not found, cannot retry notarization"
+                echo "💡 To enable notarization, set environment variables:"
+                echo "   export APPLE_ID='your-apple-id@example.com'"
+                echo "   export APPLE_ID_PASSWORD='your-app-specific-password'"
+                echo "   • Use an app-specific password if you have 2FA enabled"
             fi
-
-            # Clean up
-            rm -f "$temp_zip"
-
-        else
-            echo "⚠️  No valid certificate found for notarization"
-            echo "   • App will be delivered without notarization"
-            echo "   • Users may see security warnings on first launch"
         fi
-
-    else
-        echo "⚠️  Apple ID credentials not set for notarization"
-        echo "💡 To enable notarization, set environment variables:"
-        echo "   export APPLE_ID='your-apple-id@example.com'"
-        echo "   export APPLE_ID_PASSWORD='your-app-specific-password'"
-        echo "   • Use an app-specific password if you have 2FA enabled"
     fi
 else
     if [ "$DEBUG_BUILD" = true ]; then
@@ -839,8 +814,10 @@ echo ""
 # Show available options if not used
 if [ "$DELIVER_TO_GITHUB" = false ] && [ "$INSTALL_LOCAL" = false ]; then
     echo "🚀 Additional options:"
-    echo "   --deliver       Upload to GitHub Releases (https://github.com/${GITHUB_REPO}/releases)"
-    echo "   --install_local Install directly to /Applications for testing"
+    echo "   --deliver           Upload to GitHub Releases (https://github.com/${GITHUB_REPO}/releases)"
+    echo "   --install_local     Install directly to /Applications for testing"
+    echo "   --sign-adhoc        Force ad-hoc signing (no certificate needed)"
+    echo "   --sign-certificate  Force certificate signing (requires certificate)"
 elif [ "$DELIVER_TO_GITHUB" = false ] && [ "$INSTALL_LOCAL" = true ]; then
     echo "🚀 To also deliver to GitHub Releases, run with: --deliver"
     echo "   This will upload the DMG to https://github.com/${GITHUB_REPO}/releases"

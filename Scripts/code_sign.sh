@@ -64,28 +64,28 @@ get_certificate_identity() {
     local identity=""
 
     # Try Developer ID first (for distribution)
-    identity=$(security find-identity -v -p codesigning | grep "Developer ID Application" | head -1 | cut -d'"' -f2)
+    identity=$(security find-identity -v -p codesigning | grep "Developer ID Application" | awk '{print $2}')
     if [ -n "$identity" ]; then
         echo "$identity"
         return 0
     fi
 
     # Try Mac App Distribution
-    identity=$(security find-identity -v -p codesigning | grep "Mac App Distribution" | head -1 | cut -d'"' -f2)
+    identity=$(security find-identity -v -p codesigning | grep "Mac App Distribution" | awk '{print $2}')
     if [ -n "$identity" ]; then
         echo "$identity"
         return 0
     fi
 
     # Try Apple Development (development only)
-    identity=$(security find-identity -v -p codesigning | grep "Apple Development" | head -1 | cut -d'"' -f2)
+    identity=$(security find-identity -v -p codesigning | grep "Apple Development" | awk '{print $2}')
     if [ -n "$identity" ]; then
         echo "$identity"
         return 0
     fi
 
     # Try Mac Developer (development only)
-    identity=$(security find-identity -v -p codesigning | grep "Mac Developer" | head -1 | cut -d'"' -f2)
+    identity=$(security find-identity -v -p codesigning | grep "Mac Developer" | awk '{print $2}')
     if [ -n "$identity" ]; then
         echo "$identity"
         return 0
