@@ -1,7 +1,9 @@
 #!/bin/bash
 
 # BangoCat Code Signing Script
-set -e
+set -xe
+
+source .env
 
 # Colors for output
 GREEN='\033[0;32m'
@@ -99,9 +101,9 @@ notarize_app() {
 
     echo "📤 Starting notarization process..."
 
-    # Check if we have Apple ID credentials
-    if ! xcrun altool --version &> /dev/null; then
-        print_error "altool not available. Install Xcode command line tools:"
+    # Check if we have notarytool available
+    if ! xcrun notarytool --version &> /dev/null; then
+        print_error "notarytool not available. Install Xcode command line tools:"
         echo "   xcode-select --install"
         return 1
     fi
@@ -112,38 +114,59 @@ notarize_app() {
     ditto -c -k --keepParent "$app_path" "$temp_zip"
 
     echo "📤 Uploading for notarization..."
-    print_warning "You'll need to enter your Apple ID credentials"
-    print_info "Use an app-specific password if you have 2FA enabled"
+    print_info "Using notarytool for modern notarization"
 
-    # Upload for notarization
+    # Upload for notarization using notarytool
     local upload_output
-    upload_output=$(xcrun altool --notarize-app \
-        --primary-bundle-id "$BUNDLE_ID" \
-        --username "$APPLE_ID" \
-        --password "$APPLE_ID_PASSWORD" \
-        --file "$temp_zip" 2>&1)
 
-    if echo "$upload_output" | grep -q "RequestUUID"; then
-        local request_uuid=$(echo "$upload_output" | grep "RequestUUID" | awk '{print $2}')
-        print_success "Upload successful! Request UUID: $request_uuid"
+    # Check if TEAM_ID is set, if not try to get it automatically
+    if [ -z "$TEAM_ID" ]; then
+        echo "🔍 Getting team ID automatically..."
+        local team_info
+        team_info=$(xcrun notarytool info --apple-id "$APPLE_ID" --password "$APPLE_ID_PASSWORD" 2>/dev/null)
+        if echo "$team_info" | grep -q "team_id:"; then
+            TEAM_ID=$(echo "$team_info" | grep "team_id:" | awk '{print $2}')
+            echo "📋 Found Team ID: $TEAM_ID"
+        else
+            print_error "Could not automatically determine Team ID"
+            echo "💡 Please set your Team ID:"
+            echo "   export TEAM_ID='your-team-id'"
+            echo "   You can find it at: https://developer.apple.com/account/#!/membership"
+            return 1
+        fi
+    fi
+
+    upload_output=$(xcrun notarytool submit "$temp_zip" \
+        --apple-id "$APPLE_ID" \
+        --password "$APPLE_ID_PASSWORD" \
+        --team-id "$TEAM_ID" 2>&1)
+
+    if echo "$upload_output" | grep -q "id:"; then
+        local submission_id=$(echo "$upload_output" | grep -m1 "id:" | awk '{print $2}')
+        print_success "Upload successful! Submission ID: $submission_id"
 
         echo "⏳ Waiting for notarization to complete..."
         echo "   This can take 5-15 minutes..."
 
         # Wait for notarization to complete
         while true; do
-            sleep 30
+            #sleep 30
             local status_output
-            status_output=$(xcrun altool --notarization-info "$request_uuid" \
-                --username "$APPLE_ID" \
-                --password "$APPLE_ID_PASSWORD" 2>&1)
+            status_output=$(xcrun notarytool wait "$submission_id" \
+                --apple-id "$APPLE_ID" \
+                --password "$APPLE_ID_PASSWORD" \
+                --team-id "$TEAM_ID" 2>&1)
 
-            if echo "$status_output" | grep -q "Status: success"; then
+            if echo "$status_output" | grep -q "status: Accepted"; then
                 print_success "Notarization completed successfully!"
                 break
-            elif echo "$status_output" | grep -q "Status: invalid"; then
+            elif echo "$status_output" | grep -q "status: Invalid"; then
                 print_error "Notarization failed!"
-                echo "$status_output"
+                log_output=$(xcrun notarytool log "$submission_id" \
+                    --apple-id "$APPLE_ID" \
+                    --password "$APPLE_ID_PASSWORD" \
+                    --team-id "$TEAM_ID" 2>&1)
+                echo "$log_output"
                 return 1
             else
                 echo "⏳ Still processing... (checking again in 30 seconds)"
