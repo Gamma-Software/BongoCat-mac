@@ -5,7 +5,7 @@
 	<key>CFBundleIconFile</key>
 	<string>AppIcon</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.gammasoftware.bangocat</string>
+	<string>com.leaptech.bangocat</string>
 	<key>CFBundleName</key>
 	<string>BangoCat</string>
 	<key>CFBundleShortVersionString</key>

@@ -150,10 +150,12 @@ See [`ANALYTICS_SETUP.md`](ANALYTICS_SETUP.md) for detailed setup instructions, 
 #### **🎯 Ready-to-Use (Recommended)**
 1. Download the latest `BangoCat-*.dmg` from [Releases](https://github.com/Gamma-Software/BangoCat-mac/releases)
 2. Open the DMG and drag BangoCat to Applications
-3. Launch BangoCat from Applications or Spotlight
+3. **Right-click** on BangoCat in Applications and select **"Open"** (see [Gatekeeper Guide](GATEKEEPER_GUIDE.md))
 4. Grant accessibility permissions when prompted
 
 **💡 Pro Tip**: If you're reinstalling and accessibility permissions keep being asked, use the packaged DMG instead of building from source. The official releases are code signed for consistent identity.
+
+**🔐 Security Note**: On first launch, macOS may show a security warning. This is normal for apps not signed with an Apple Developer certificate. See our [Gatekeeper Guide](GATEKEEPER_GUIDE.md) for safe launch instructions.
 
 #### **🛠️ Build from Source**
 Perfect for developers or those who want the latest features:
