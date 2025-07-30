@@ -744,19 +744,19 @@ if [ "$DEBUG_BUILD" = false ] && [ "$DELIVER_TO_GITHUB" = true ]; then
                     if ./Scripts/code_sign.sh --certificate --notarize; then
                         echo "✅ Notarization completed successfully after sourcing .env"
                     else
-                        echo "⚠️  Notarization failed or was skipped after sourcing .env"
-                        echo "   • App will be delivered without notarization"
-                        echo "   • Users may see security warnings on first launch"
+                        echo "❌  Notarization failed checkout the logs."
+                        return 1
                     fi
                 else
-                    echo "⚠️  Apple ID credentials still not set after sourcing .env"
+                    echo "❌  Apple ID credentials still not set after sourcing .env"
                     echo "💡 To enable notarization, set environment variables:"
                     echo "   export APPLE_ID='your-apple-id@example.com'"
                     echo "   export APPLE_ID_PASSWORD='your-app-specific-password'"
                     echo "   • Use an app-specific password if you have 2FA enabled"
+                    return 1
                 fi
             else
-                echo "⚠️  .env file not found, cannot retry notarization"
+                echo "❌  .env file not found, cannot retry notarization"
                 echo "💡 To enable notarization, set environment variables:"
                 echo "   export APPLE_ID='your-apple-id@example.com'"
                 echo "   export APPLE_ID_PASSWORD='your-app-specific-password'"
