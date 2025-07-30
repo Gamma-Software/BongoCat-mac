@@ -50,7 +50,7 @@ if [ "$BUILD_CONFIG" = "release" ]; then
     fi
     print_info "Cleaning previous build artifacts for fresh production build..."
     swift package clean
-    BUILD_COMMAND="swift build --configuration release --skip-build-manifest --skip-build-info"
+    BUILD_COMMAND="swift build --configuration release"
 else
     BUILD_COMMAND="swift build"
 fi
