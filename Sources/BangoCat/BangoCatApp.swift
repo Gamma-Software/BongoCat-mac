@@ -22,8 +22,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
     var preferencesWindowController: PreferencesWindowController?
 
     // App information
-    private let appVersion = "1.5.3"
-    private let appBuild = "1.5.3.202507301400"
+    private let appVersion = "1.5.4"
+    private let appBuild = "1.5.4.temp"
     private let appAuthor = "Valentin Rudloff"
     private let appWebsite = "https://valentin.pival.fr"
 
