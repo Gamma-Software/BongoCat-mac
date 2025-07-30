@@ -624,9 +624,15 @@ if command -v codesign &> /dev/null; then
     if security find-identity -v -p codesigning | grep -q "Developer ID Application\|Mac App Distribution\|Apple Development\|Mac Developer"; then
         echo "🔍 Found Apple Developer certificate, signing with it..."
         # Get the first available certificate (prioritize distribution certificates)
-        CERT_IDENTITY=$(security find-identity -v -p codesigning | grep "Developer ID Application\|Mac App Distribution\|Apple Development\|Mac Developer" | head -1 | cut -d'"' -f2)
-        if codesign --force --deep --sign "$CERT_IDENTITY" "${APP_BUNDLE}"; then
+        # Extract the identity hash (first field) from the security find-identity output
+        CERT_IDENTITY=$(security find-identity -v -p codesigning | grep "Developer ID Application\|Mac App Distribution\|Apple Development\|Mac Developer" | head -1 | awk '{print $2}')
+        if codesign --force --deep --sign "$CERT_IDENTITY" \
+            --options runtime \
+            --timestamp \
+            "${APP_BUNDLE}"; then
             echo "✅ App bundle signed with Apple Developer certificate"
+            echo "   • Hardened runtime enabled"
+            echo "   • Secure timestamp included"
             echo "   • App should launch without Gatekeeper warnings"
         else
             echo "⚠️  Certificate signing failed, falling back to ad-hoc"
@@ -698,32 +704,48 @@ if [ "$DEBUG_BUILD" = false ] && [ "$DELIVER_TO_GITHUB" = true ]; then
             echo "📤 Uploading for notarization..."
             echo "⏳ This may take 5-15 minutes..."
 
-            # Upload for notarization
-            upload_output=$(xcrun altool --notarize-app \
-                --primary-bundle-id "$BUNDLE_ID" \
-                --username "$APPLE_ID" \
-                --password "$APPLE_ID_PASSWORD" \
-                --file "$temp_zip" 2>&1)
+            # Upload for notarization using modern notarytool
+            echo "📤 Uploading for notarization using notarytool..."
 
-            if echo "$upload_output" | grep -q "RequestUUID"; then
-                request_uuid=$(echo "$upload_output" | grep "RequestUUID" | awk '{print $2}')
-                echo "✅ Upload successful! Request UUID: $request_uuid"
+            # Get team ID if not set
+            if [ -z "$TEAM_ID" ]; then
+                echo "🔍 Getting team ID automatically..."
+                team_info=$(xcrun notarytool info --apple-id "$APPLE_ID" --password "$APPLE_ID_PASSWORD" 2>/dev/null)
+                if echo "$team_info" | grep -q "team_id:"; then
+                    TEAM_ID=$(echo "$team_info" | grep "team_id:" | awk '{print $2}')
+                    echo "📋 Found Team ID: $TEAM_ID"
+                else
+                    echo "⚠️  Could not automatically determine Team ID"
+                    echo "💡 Please set your Team ID:"
+                    echo "   export TEAM_ID='your-team-id'"
+                    echo "   You can find it at: https://developer.apple.com/account/#!/membership"
+                    echo "⚠️  Continuing without notarization..."
+                    rm -f "$temp_zip"
+                    return 1
+                fi
+            fi
+
+            upload_output=$(xcrun notarytool submit "$temp_zip" \
+                --apple-id "$APPLE_ID" \
+                --password "$APPLE_ID_PASSWORD" \
+                --team-id "$TEAM_ID" 2>&1)
+
+            if echo "$upload_output" | grep -q "id:"; then
+                submission_id=$(echo "$upload_output" | grep -m1 "id:" | awk '{print $2}')
+                echo "✅ Upload successful! Submission ID: $submission_id"
 
                 echo "⏳ Waiting for notarization to complete..."
                 echo "   This can take 5-15 minutes..."
 
                 # Wait for notarization to complete
-                attempts=0
-                max_attempts=30  # 15 minutes with 30-second intervals
-                while [ $attempts -lt $max_attempts ]; do
+                while true; do
                     sleep 30
-                    attempts=$((attempts + 1))
+                    status_output=$(xcrun notarytool wait "$submission_id" \
+                        --apple-id "$APPLE_ID" \
+                        --password "$APPLE_ID_PASSWORD" \
+                        --team-id "$TEAM_ID" 2>&1)
 
-                    status_output=$(xcrun altool --notarization-info "$request_uuid" \
-                        --username "$APPLE_ID" \
-                        --password "$APPLE_ID_PASSWORD" 2>&1)
-
-                    if echo "$status_output" | grep -q "Status: success"; then
+                    if echo "$status_output" | grep -q "status: Accepted"; then
                         echo "✅ Notarization completed successfully!"
 
                         # Staple the notarization ticket to the app
@@ -731,19 +753,19 @@ if [ "$DEBUG_BUILD" = false ] && [ "$DELIVER_TO_GITHUB" = true ]; then
                         xcrun stapler staple "$APP_BUNDLE"
                         echo "✅ Notarization ticket stapled successfully!"
                         break
-                    elif echo "$status_output" | grep -q "Status: invalid"; then
+                    elif echo "$status_output" | grep -q "status: Invalid"; then
                         echo "❌ Notarization failed!"
-                        echo "$status_output"
+                        log_output=$(xcrun notarytool log "$submission_id" \
+                            --apple-id "$APPLE_ID" \
+                            --password "$APPLE_ID_PASSWORD" \
+                            --team-id "$TEAM_ID" 2>&1)
+                        echo "$log_output"
                         echo "⚠️  Continuing without notarization..."
                         break
                     else
-                        echo "⏳ Still processing... (attempt $attempts/$max_attempts)"
+                        echo "⏳ Still processing... (checking again in 30 seconds)"
                     fi
                 done
-
-                if [ $attempts -eq $max_attempts ]; then
-                    echo "⚠️  Notarization timeout - continuing without notarization"
-                fi
 
             else
                 echo "❌ Upload failed:"

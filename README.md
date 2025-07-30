@@ -1,4 +1,9 @@
-# BangoCat-mac 🐱🥁
+# BangoCat-mac
+
+<p align="center">
+  <img src="Assets/Icons/logo.png" alt="BangoCat Logo" width="180" />
+</p>
+
 
 A native macOS implementation of the beloved BangoCat overlay, written in Swift. Perfect for streamers, content creators, and anyone who wants an adorable cat companion on their desktop that reacts to their typing and interactions.
 
