@@ -1,7 +1,7 @@
 # BangoCat-mac
 
 <p align="center">
-  <img src="Sources/BangoCat/Resources/Images/menu-logo.png" alt="BangoCat Logo" width="180" />
+  <img src="Assets/Icons/logo.png" alt="BangoCat Logo" width="180" />
 </p>
 
 
