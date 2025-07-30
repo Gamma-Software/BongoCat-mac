@@ -153,8 +153,8 @@ execute_option() {
                 echo "   Usage: $0 --deliver <version>"
                 exit 1
             fi
-            echo "🏷️  Bumping version to $version, building release and delivering..."
-            rm -rf ./build; rm -rf ./Build; ./Scripts/bump_version.sh $version; ./Scripts/build.sh -r; ./Scripts/package_app.sh --deliver
+            echo "🏷️  Bumping version to $version, building release and delivering and verifying..."
+            rm -rf ./build; rm -rf ./Build; ./Scripts/bump_version.sh $version; ./Scripts/build.sh -r; ./Scripts/package_app.sh --deliver --verify
             ;;
         8)
             if [ -z "$version" ]; then
@@ -162,8 +162,8 @@ execute_option() {
                 echo "   Usage: $0 --deliver-push <version>"
                 exit 1
             fi
-            echo "🏷️  Bumping version to $version with commit/push, building release and delivering..."
-            rm -rf ./build; rm -rf ./Build; ./Scripts/bump_version.sh $version --push --commit; ./Scripts/build.sh -r; ./Scripts/package_app.sh --deliver
+            echo "🏷️  Bumping version to $version with commit/push, building release and delivering and verifying..."
+            rm -rf ./build; rm -rf ./Build; ./Scripts/bump_version.sh $version --push --commit; ./Scripts/build.sh -r; ./Scripts/package_app.sh --deliver --verify
             ;;
         *)
             echo "❌ Invalid option."
