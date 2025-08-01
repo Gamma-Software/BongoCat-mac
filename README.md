@@ -1,7 +1,7 @@
 # BangoCat-mac
 
 <p align="center">
-  <img src="Assets/Icons/logo.png" alt="BangoCat Logo" width="180" />
+  <img src="media/quick.gif" alt="BangoCat Logo" width="180" />
 </p>
 
 
