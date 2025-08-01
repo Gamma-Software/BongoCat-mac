@@ -1,4 +1,4 @@
-# BangoCat-mac
+# Free BangoCat Overlay for macOS
 
 <p align="center">
   <img src="media/quick.gif" alt="BangoCat Logo" width="500" />
