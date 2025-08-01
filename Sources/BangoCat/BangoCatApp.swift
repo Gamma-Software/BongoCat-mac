@@ -91,6 +91,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
     // Analytics management
     internal let analytics = PostHogAnalyticsManager.shared
 
+    // Active app position tracking
+    internal let positionTracker = ActiveAppPositionTracker()
+    @Published var isPositionTrackingEnabled: Bool = false
+    private let positionTrackingKey = "BangoCatPositionTracking"
+
     // Force SwiftUI updates when settings change
     @Published private var settingsUpdateTrigger: Bool = false
 
@@ -123,10 +128,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         loadPositionPreferences()
         loadPerAppPositioning()
         loadPerAppHiding()
+        loadPositionTrackingPreference()
         setupStatusBarItem()
         setupOverlayWindow()
         setupInputMonitoring()
         setupAppSwitchMonitoring()
+        setupPositionTracking()
         requestAccessibilityPermissions()
 
         // Initialize analytics and track app launch
@@ -226,6 +233,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         menu.addItem(NSMenuItem(title: "Tweet about BangoCat 🐦", action: #selector(tweetAboutBangoCat), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "Check for Updates 🔄", action: #selector(checkForUpdates), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "Auto-Start at Launch 🚀", action: #selector(toggleAutoStartAtLaunch), keyEquivalent: ""))
+        menu.addItem(NSMenuItem(title: "Track Active App Position 🔍", action: #selector(togglePositionTracking), keyEquivalent: ""))
 
         menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "About BangoCat", action: #selector(showCredits), keyEquivalent: ""))
@@ -1798,6 +1806,22 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         print("Loaded per-app hiding - enabled: \(isPerAppHidingEnabled), hidden apps: \(perAppHiddenApps)")
     }
 
+    internal func loadPositionTrackingPreference() {
+        // Load position tracking preference
+        if UserDefaults.standard.object(forKey: positionTrackingKey) != nil {
+            isPositionTrackingEnabled = UserDefaults.standard.bool(forKey: positionTrackingKey)
+        } else {
+            isPositionTrackingEnabled = false // Default disabled
+        }
+
+        print("Loaded position tracking - enabled: \(isPositionTrackingEnabled)")
+    }
+
+    internal func savePositionTrackingPreference() {
+        UserDefaults.standard.set(isPositionTrackingEnabled, forKey: positionTrackingKey)
+        print("Saved position tracking - enabled: \(isPositionTrackingEnabled)")
+    }
+
     internal func savePerAppHiding() {
         UserDefaults.standard.set(isPerAppHidingEnabled, forKey: perAppHidingKey)
         UserDefaults.standard.set(Array(perAppHiddenApps), forKey: perAppHiddenAppsKey)
@@ -1813,6 +1837,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         }
 
         print("App switch monitoring started")
+    }
+
+    private func setupPositionTracking() {
+        // Set up position tracking if enabled
+        if isPositionTrackingEnabled {
+            positionTracker.startTracking()
+            print("🔍 Position tracking started")
+        } else {
+            print("🔍 Position tracking disabled")
+        }
     }
 
     private func checkForAppSwitch() {
@@ -1915,6 +1949,28 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         trackFeatureUsed("per_app_hiding")
 
         print("Per-app hiding toggled to: \(isPerAppHidingEnabled)")
+    }
+
+    @objc internal func togglePositionTracking() {
+        isPositionTrackingEnabled.toggle()
+        savePositionTrackingPreference()
+
+        if isPositionTrackingEnabled {
+            positionTracker.startTracking()
+            print("🔍 Position tracking started")
+        } else {
+            positionTracker.stopTracking()
+            print("🔍 Position tracking stopped")
+        }
+
+        updatePositionTrackingMenuItem()
+
+        // Track position tracking toggle
+        analytics.trackConfigurationLoaded("position_tracking", success: isPositionTrackingEnabled)
+        trackSettingChanged("position_tracking")
+        trackFeatureUsed("position_tracking")
+
+        print("Position tracking toggled to: \(isPositionTrackingEnabled)")
     }
 
     @objc internal func hideForCurrentApp() {
@@ -2056,6 +2112,18 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         }
     }
 
+    private func updatePositionTrackingMenuItem() {
+        guard let menu = statusBarItem?.menu else { return }
+
+        // Find the position tracking menu item and update its state
+        for item in menu.items {
+            if item.title == "Track Active App Position 🔍" {
+                item.state = isPositionTrackingEnabled ? .on : .off
+                break
+            }
+        }
+    }
+
     private func updateHiddenAppsMenuItems() {
         guard let menu = statusBarItem?.menu else { return }
         let currentApp = getCurrentActiveApp()
@@ -2098,6 +2166,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
 
         // Update per-app hiding menu items based on current app
         updateHiddenAppsMenuItems()
+
+        // Update position tracking menu item state
+        updatePositionTrackingMenuItem()
     }
 
     // MARK: - App Lifecycle Tracking
