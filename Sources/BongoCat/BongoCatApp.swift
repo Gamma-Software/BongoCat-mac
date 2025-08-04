@@ -91,11 +91,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
     // Analytics management
     internal let analytics = PostHogAnalyticsManager.shared
 
-    // Active app position tracking
-    internal let positionTracker = ActiveAppPositionTracker()
-    @Published var isPositionTrackingEnabled: Bool = false
-    private let positionTrackingKey = "BongoCatPositionTracking"
-
     // Force SwiftUI updates when settings change
     @Published private var settingsUpdateTrigger: Bool = false
 
@@ -128,12 +123,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         loadPositionPreferences()
         loadPerAppPositioning()
         loadPerAppHiding()
-        loadPositionTrackingPreference()
         setupStatusBarItem()
         setupOverlayWindow()
         setupInputMonitoring()
         setupAppSwitchMonitoring()
-        setupPositionTracking()
         requestAccessibilityPermissions()
 
         // Initialize analytics and track app launch
@@ -973,7 +966,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         buyMeACoffee()
     }
 
-    func tweetAboutBngoCatPublic() {
+    func tweetAboutBongoCatPublic() {
         tweetAboutBongoCat()
     }
 
@@ -1805,22 +1798,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         print("Loaded per-app hiding - enabled: \(isPerAppHidingEnabled), hidden apps: \(perAppHiddenApps)")
     }
 
-    internal func loadPositionTrackingPreference() {
-        // Load position tracking preference
-        if UserDefaults.standard.object(forKey: positionTrackingKey) != nil {
-            isPositionTrackingEnabled = UserDefaults.standard.bool(forKey: positionTrackingKey)
-        } else {
-            isPositionTrackingEnabled = false // Default disabled
-        }
-
-        print("Loaded position tracking - enabled: \(isPositionTrackingEnabled)")
-    }
-
-    internal func savePositionTrackingPreference() {
-        UserDefaults.standard.set(isPositionTrackingEnabled, forKey: positionTrackingKey)
-        print("Saved position tracking - enabled: \(isPositionTrackingEnabled)")
-    }
-
     internal func savePerAppHiding() {
         UserDefaults.standard.set(isPerAppHidingEnabled, forKey: perAppHidingKey)
         UserDefaults.standard.set(Array(perAppHiddenApps), forKey: perAppHiddenAppsKey)
@@ -1836,16 +1813,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         }
 
         print("App switch monitoring started")
-    }
-
-    private func setupPositionTracking() {
-        // Set up position tracking if enabled
-        if isPositionTrackingEnabled {
-            positionTracker.startTracking()
-            print("🔍 Position tracking started")
-        } else {
-            print("🔍 Position tracking disabled")
-        }
     }
 
     private func checkForAppSwitch() {
