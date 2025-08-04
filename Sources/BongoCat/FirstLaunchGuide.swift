@@ -18,10 +18,6 @@ struct FirstLaunchGuide: View {
         VStack(spacing: 20) {
             // Header
             VStack(spacing: 10) {
-                Image(systemName: "pawprint.fill")
-                    .font(.system(size: 60))
-                    .foregroundColor(.orange)
-
                 Text("BongoCat Setup")
                     .font(.largeTitle)
                     .fontWeight(.bold)

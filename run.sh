@@ -23,6 +23,7 @@ show_usage() {
     echo "  --release-install, -ri Build release app, package and install locally"
     echo "  --deliver, -d         Bump version, build release, sign, notarize and deliver to GitHub"
     echo "  --deliver-push, -dp   Bump version with commit/push, build release, sign, notarize and deliver"
+    echo "  --app-store, -as      Build release, sign and package for App Store distribution"
     echo "  --help, -h            Show this help message"
     echo ""
     echo "Examples:"
@@ -233,6 +234,10 @@ execute_option() {
             echo "🏷️  Bumping version to $version with commit/push, building release, signing, notarizing and delivering..."
             rm -rf ./build; rm -rf ./Build; ./Scripts/bump_version.sh $version --push --commit; ./Scripts/build.sh -r; ./Scripts/package_app.sh --deliver --verify --sign-certificate
             ;;
+        9)
+            echo "🍎 Building release, signing and packaging for App Store distribution..."
+            rm -rf ./build; rm -rf ./Build; ./Scripts/build.sh -r; ./Scripts/package_app.sh --app_store --sign-certificate
+            ;;
         *)
             echo "❌ Invalid option."
             exit 1
@@ -257,10 +262,11 @@ if [ $# -eq 0 ]; then
     echo "6) Build release app, package and install locally"
     echo "7) Bump version, build release, sign, notarize and deliver to GitHub"
     echo "8) Bump version with commit/push, build release, sign, notarize and deliver"
-    echo "9) Exit"
+    echo "9) Build release, sign and package for App Store distribution"
+    echo "10) Exit"
     echo ""
 
-    read -p "Enter your choice (0-9): " choice
+    read -p "Enter your choice (0-10): " choice
 
     case $choice in
         0|1|2|3|4|5|6)
@@ -283,11 +289,14 @@ if [ $# -eq 0 ]; then
             execute_option 8 "$version"
             ;;
         9)
+            execute_option 9
+            ;;
+        10)
             echo "👋 Goodbye!"
             exit 0
             ;;
         *)
-            echo "❌ Invalid option. Please choose 0-9."
+            echo "❌ Invalid option. Please choose 0-10."
             exit 1
             ;;
     esac
@@ -330,6 +339,9 @@ else
                 exit 1
             fi
             execute_option 8 "$2"
+            ;;
+        --app-store|-as)
+            execute_option 9
             ;;
         --help|-h)
             show_usage

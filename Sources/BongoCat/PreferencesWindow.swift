@@ -793,6 +793,14 @@ class PreferencesWindowController: NSWindowController {
         window.title = "BongoCat Preferences"
         window.center()
         window.setFrameAutosaveName("PreferencesWindow")
+
+        // Make it stay on top and not dismiss when clicking outside
+        window.level = .floating
+        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+
+        // Prevent the window from being hidden when clicking outside
+        window.hidesOnDeactivate = false
+
         window.contentView = NSHostingView(rootView: PreferencesWindow(appDelegate: appDelegate))
 
         self.init(window: window)

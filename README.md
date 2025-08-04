@@ -94,9 +94,26 @@ The project includes helpful scripts in the `Scripts/` directory:
 # Create distributable DMG
 ./Scripts/package_app.sh
 
+# Package for App Store distribution
+./Scripts/package_app.sh --app_store
+
 # Clear accessibility permissions (if having issues)
 ./Scripts/clear_accessibility.sh
 ```
+
+### 🍎 App Store Deployment
+For developers wanting to distribute BongoCat through the Mac App Store:
+
+```bash
+# Quick App Store packaging
+./run.sh --app-store
+
+# Or use the interactive menu
+./run.sh
+# Select option 9: "Build release, sign and package for App Store distribution"
+```
+
+**📋 Requirements**: Apple Developer Program membership, App Store distribution certificate, and App Store Connect setup. See [App Store Guide](Scripts/app_store_guide.md) for detailed instructions.
 
 See [`Scripts/README.md`](Scripts/README.md) for detailed documentation.
 
