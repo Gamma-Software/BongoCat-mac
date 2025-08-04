@@ -5,6 +5,18 @@ All notable changes to BongoCat-mac will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [unreleased] - 2025-08-04
+
+### Modified
+
+- Introduced a new `WelcomeScreen` and `WelcomeScreenController` to guide users through initial setup.
+- Updated `BongoCatApp.swift` to show the welcome screen on first launch and added menu options for accessing the welcome guide.
+- Enhanced `PreferencesWindow` to keep it on top and prevent dismissal when clicking outside.
+
+### Deleted
+
+- Deleted `APP_STORE_GUIDE.md` and `appstore_build.sh` as part of the cleanup.
+
 ## [1.6.0] - 2025-08-04
 
 ### Modified
