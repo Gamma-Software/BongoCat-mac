@@ -20,6 +20,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
     var inputMonitor: InputMonitor?
     var statusBarItem: NSStatusItem?
     var preferencesWindowController: PreferencesWindowController?
+    var welcomeScreenController: WelcomeScreenController?
 
     // App information
     private let appVersion = "1.6.0"
@@ -154,6 +155,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
 
         // Set up app lifecycle notifications
         setupAppLifecycleNotifications()
+
+        // Show welcome screen if needed (first launch)
+        showWelcomeScreenIfNeeded()
     }
 
     func applicationWillTerminate(_ aNotification: Notification) {
@@ -214,6 +218,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         menu.addItem(NSMenuItem(title: "Show/Hide Overlay", action: #selector(toggleOverlay), keyEquivalent: ""))
         menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Settings...", action: #selector(openPreferences), keyEquivalent: ","))
+        menu.addItem(NSMenuItem(title: "Welcome Guide 🎯", action: #selector(showWelcomeGuide), keyEquivalent: ""))
         menu.addItem(NSMenuItem.separator())
 
         // Stroke counter section
@@ -238,6 +243,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         menu.addItem(NSMenuItem(title: "🧪 Test Analytics", action: #selector(testAnalytics), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "🔍 Debug Update System", action: #selector(debugUpdateSystem), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "📥 Test Download", action: #selector(testDownloadFunctionality), keyEquivalent: ""))
+        menu.addItem(NSMenuItem(title: "🔄 Reset Welcome Screen", action: #selector(resetWelcomeScreen), keyEquivalent: ""))
         #endif
 
         // Version info
@@ -887,6 +893,17 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         let alert = NSAlert()
         alert.messageText = "Download Test Started"
         alert.informativeText = "Check the console for download test results."
+        alert.alertStyle = .informational
+        alert.addButton(withTitle: "OK")
+        alert.runModal()
+    }
+
+    @objc internal func resetWelcomeScreen() {
+        resetFirstLaunchFlag()
+
+        let alert = NSAlert()
+        alert.messageText = "Welcome Screen Reset"
+        alert.informativeText = "The welcome screen will show on the next app launch."
         alert.alertStyle = .informational
         alert.addButton(withTitle: "OK")
         alert.runModal()
@@ -2411,6 +2428,60 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
 
     internal func openPreferencesPublic() {
         openPreferences()
+    }
+
+    // MARK: - Welcome Screen
+
+    @objc private func showWelcomeGuide() {
+        if welcomeScreenController == nil {
+            welcomeScreenController = WelcomeScreenController(appDelegate: self)
+        }
+
+        welcomeScreenController?.showWelcomeScreen()
+
+        // Track welcome guide access
+        analytics.trackMenuAction("show_welcome_guide")
+        trackFeatureUsed("welcome_guide")
+    }
+
+    internal func showWelcomeGuidePublic() {
+        showWelcomeGuide()
+    }
+
+        private func shouldShowWelcomeScreen() -> Bool {
+        // Check if this is the first launch
+        let hasLaunchedBefore = UserDefaults.standard.bool(forKey: "BongoCatHasLaunchedBefore")
+
+        if !hasLaunchedBefore {
+            // Mark as launched
+            UserDefaults.standard.set(true, forKey: "BongoCatHasLaunchedBefore")
+            return true
+        }
+
+        // Also show if accessibility is not enabled (for existing users)
+        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: false]
+        let isAccessibilityEnabled = AXIsProcessTrustedWithOptions(options as CFDictionary)
+
+        if !isAccessibilityEnabled {
+            return true
+        }
+
+        return false
+    }
+
+    private func showWelcomeScreenIfNeeded() {
+        if shouldShowWelcomeScreen() {
+            // Show welcome screen after a short delay to ensure app is fully initialized
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                self.showWelcomeGuide()
+            }
+        }
+    }
+
+    // For testing purposes - reset first launch flag
+    internal func resetFirstLaunchFlag() {
+        UserDefaults.standard.removeObject(forKey: "BongoCatHasLaunchedBefore")
+        print("First launch flag reset - welcome screen will show on next launch")
     }
 
         // MARK: - Additional Helper Methods
