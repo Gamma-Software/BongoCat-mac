@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Increase app switch detection interval to 0.1 seconds and make it constant
 - Rename project to BongoCat instead of BongoCat
 - Change default paw behavior to alternating
+- Implemented methods to retrieve, delete, and clear saved app positions.
+- Updated PreferencesWindow to display saved positions with app names and provide delete functionality.
+- Trigger settings update after modifying saved positions to ensure UI consistency.
 
 ## [1.5.6] - 2025-07-30
 

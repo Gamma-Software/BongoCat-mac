@@ -345,6 +345,65 @@ struct PositionPreferencesView: View {
                 }
             }
 
+                        if appDelegate.isPerAppPositioningEnabled {
+                PreferencesSection(title: "Saved App Positions") {
+                    VStack(alignment: .leading, spacing: 8) {
+                        let savedPositions = appDelegate.getSavedPositionsWithAppNames()
+
+                        if savedPositions.isEmpty {
+                            Text("No saved positions")
+                                .foregroundColor(.secondary)
+                                .italic()
+                        } else {
+                            HStack {
+                                Text("\(savedPositions.count) saved position\(savedPositions.count == 1 ? "" : "s")")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+
+                                Spacer()
+
+                                Button("Clear All") {
+                                    appDelegate.clearAllSavedPositions()
+                                }
+                                .buttonStyle(.bordered)
+                                .controlSize(.small)
+                            }
+                            .padding(.bottom, 4)
+
+                            ForEach(savedPositions, id: \.bundleID) { position in
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(position.appName)
+                                            .font(.system(size: 13, weight: .medium))
+                                        Text(position.bundleID)
+                                            .font(.system(size: 11))
+                                            .foregroundColor(.secondary)
+                                    }
+
+                                    Spacer()
+
+                                    Text("(\(Int(position.position.x)), \(Int(position.position.y)))")
+                                        .font(.system(size: 11))
+                                        .foregroundColor(.secondary)
+                                        .monospacedDigit()
+
+                                    Button("Delete") {
+                                        appDelegate.deleteSavedPosition(for: position.bundleID)
+                                    }
+                                    .buttonStyle(.bordered)
+                                    .controlSize(.small)
+                                }
+                                .padding(.vertical, 4)
+
+                                if position.bundleID != savedPositions.last?.bundleID {
+                                    Divider()
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             PreferencesSection(title: "App Visibility") {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {

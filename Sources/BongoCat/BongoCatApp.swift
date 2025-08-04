@@ -1615,6 +1615,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
             // Save position for the current active app
             perAppPositions[currentActiveApp] = position
             savePerAppPositioning()
+            triggerSettingsUpdate()
             print("Manual position saved for \(currentActiveApp): \(position)")
         } else {
             // Save position globally (original behavior)
@@ -1747,6 +1748,43 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         return "unknown"
     }
 
+    internal func getSavedPositionsWithAppNames() -> [(appName: String, bundleID: String, position: NSPoint)] {
+        var positionsWithNames: [(appName: String, bundleID: String, position: NSPoint)] = []
+
+        for (bundleID, position) in perAppPositions {
+            var appName = bundleID
+
+            // Try to get the app name from the bundle ID
+            if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID),
+               let bundle = Bundle(url: url) {
+                if let displayName = bundle.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String {
+                    appName = displayName
+                } else if let bundleName = bundle.object(forInfoDictionaryKey: "CFBundleName") as? String {
+                    appName = bundleName
+                }
+            }
+
+            positionsWithNames.append((appName: appName, bundleID: bundleID, position: position))
+        }
+
+        // Sort by app name for better organization
+        return positionsWithNames.sorted { $0.appName.lowercased() < $1.appName.lowercased() }
+    }
+
+    internal func deleteSavedPosition(for bundleID: String) {
+        perAppPositions.removeValue(forKey: bundleID)
+        savePerAppPositioning()
+        triggerSettingsUpdate()
+        print("🗑️ Deleted saved position for \(bundleID)")
+    }
+
+    internal func clearAllSavedPositions() {
+        perAppPositions.removeAll()
+        savePerAppPositioning()
+        triggerSettingsUpdate()
+        print("🗑️ Cleared all saved positions")
+    }
+
     internal func loadPerAppPositioning() {
         // Load per-app positioning preference
         if UserDefaults.standard.object(forKey: perAppPositioningKey) != nil {
@@ -1841,8 +1879,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
                 print("📍 Restoring position for \(newApp): \(savedPosition)")
                 overlayWindow?.setPositionProgrammatically(savedPosition)
             } else {
-                print("🆕 No saved position for \(newApp), using current position")
-                // Optionally, you could set a default position here
+                // Set default position to top-right corner for unknown bundle IDs or new apps
+                let defaultPosition = getCornerPosition(for: .topRight)
+                print("🆕 No saved position for \(newApp), setting to top-right corner: \(defaultPosition)")
+                overlayWindow?.setPositionProgrammatically(defaultPosition)
             }
 
             // Save the updated positions
