@@ -1701,8 +1701,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         print("Moved cat to \(corner.displayName) at position: \(position)")
     }
 
-    private func getCornerPosition(for corner: CornerPosition) -> NSPoint {
-        guard let screen = NSScreen.main else {
+    private func getCornerPosition(for corner: CornerPosition, on screen: NSScreen? = nil) -> NSPoint {
+        let targetScreen = screen ?? getCurrentScreen() ?? NSScreen.main ?? NSScreen.screens.first
+
+        guard let screen = targetScreen else {
             return NSPoint(x: 100, y: 100)
         }
 
@@ -1748,8 +1750,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         return "unknown"
     }
 
-    internal func getSavedPositionsWithAppNames() -> [(appName: String, bundleID: String, position: NSPoint)] {
-        var positionsWithNames: [(appName: String, bundleID: String, position: NSPoint)] = []
+        internal func getSavedPositionsWithAppNames() -> [(appName: String, bundleID: String, position: NSPoint, screenName: String)] {
+        var positionsWithNames: [(appName: String, bundleID: String, position: NSPoint, screenName: String)] = []
 
         for (bundleID, position) in perAppPositions {
             var appName = bundleID
@@ -1764,11 +1766,28 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
                 }
             }
 
-            positionsWithNames.append((appName: appName, bundleID: bundleID, position: position))
+            // Determine which screen this position is on
+            let screenName = getScreenNameForPosition(position)
+
+            positionsWithNames.append((appName: appName, bundleID: bundleID, position: position, screenName: screenName))
         }
 
         // Sort by app name for better organization
         return positionsWithNames.sorted { $0.appName.lowercased() < $1.appName.lowercased() }
+    }
+
+    private func getScreenNameForPosition(_ position: NSPoint) -> String {
+        let screens = getAllScreens()
+
+        for screen in screens {
+            let frame = screen.frame
+            if position.x >= frame.minX && position.x <= frame.maxX &&
+               position.y >= frame.minY && position.y <= frame.maxY {
+                return getScreenName(screen)
+            }
+        }
+
+        return "Unknown Screen"
     }
 
     internal func deleteSavedPosition(for bundleID: String) {
@@ -1783,6 +1802,96 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         savePerAppPositioning()
         triggerSettingsUpdate()
         print("🗑️ Cleared all saved positions")
+    }
+
+    // MARK: - Screen Detection and Management
+
+    internal func getCurrentScreen() -> NSScreen? {
+        guard let window = overlayWindow?.window else { return nil }
+        return window.screen
+    }
+
+    internal func getAllScreens() -> [NSScreen] {
+        return NSScreen.screens
+    }
+
+    internal func getScreenInfo() -> [(index: Int, screen: NSScreen, isCurrent: Bool)] {
+        let screens = getAllScreens()
+        let currentScreen = getCurrentScreen()
+
+        return screens.enumerated().map { index, screen in
+            let isCurrent = screen == currentScreen
+            return (index: index, screen: screen, isCurrent: isCurrent)
+        }
+    }
+
+    internal func getScreenName(_ screen: NSScreen) -> String {
+        let localizedName = screen.localizedName
+        if !localizedName.isEmpty {
+            return localizedName
+        }
+
+        // Fallback to screen dimensions if no name is available
+        let frame = screen.frame
+        return "Screen \(Int(frame.width))x\(Int(frame.height))"
+    }
+
+    internal func isOverlayOnScreen(_ screen: NSScreen) -> Bool {
+        guard let currentScreen = getCurrentScreen() else { return false }
+        return currentScreen == screen
+    }
+
+    internal func moveOverlayToScreen(_ screen: NSScreen) {
+        guard let window = overlayWindow?.window else { return }
+
+        // Get the current position relative to the current screen
+        let currentPosition = window.frame.origin
+        let currentScreen = getCurrentScreen()
+
+        // Calculate the relative position within the screen (0.0 to 1.0)
+        var relativeX: CGFloat = 0.5
+        var relativeY: CGFloat = 0.5
+
+        if let currentScreen = currentScreen {
+            let currentFrame = currentScreen.frame
+            relativeX = (currentPosition.x - currentFrame.minX) / currentFrame.width
+            relativeY = (currentPosition.y - currentFrame.minY) / currentFrame.height
+        }
+
+        // Apply the same relative position to the target screen
+        let targetFrame = screen.frame
+        let newX = targetFrame.minX + (relativeX * targetFrame.width)
+        let newY = targetFrame.minY + (relativeY * targetFrame.height)
+
+        // Ensure the window stays within the target screen bounds
+        let windowSize = window.frame.size
+        let constrainedX = max(targetFrame.minX, min(newX, targetFrame.maxX - windowSize.width))
+        let constrainedY = max(targetFrame.minY, min(newY, targetFrame.maxY - windowSize.height))
+
+        let newPosition = NSPoint(x: constrainedX, y: constrainedY)
+        overlayWindow?.setPositionProgrammatically(newPosition)
+
+        print("🖥️ Moved overlay to screen: \(getScreenName(screen))")
+    }
+
+    internal func getCurrentScreenInfo() -> String {
+        guard let currentScreen = getCurrentScreen() else {
+            return "Unknown Screen"
+        }
+
+        let screenName = getScreenName(currentScreen)
+        let frame = currentScreen.frame
+        return "\(screenName) (\(Int(frame.width))x\(Int(frame.height)))"
+    }
+
+    internal func setPositionOnScreen(_ corner: CornerPosition, screen: NSScreen) {
+        let position = getCornerPosition(for: corner, on: screen)
+        overlayWindow?.setPositionProgrammatically(position)
+        currentCornerPosition = corner
+        saveManualPosition(position)
+        updatePositionMenuItems()
+
+        print("🖥️ Moved cat to \(corner.displayName) on screen: \(getScreenName(screen))")
     }
 
     internal func loadPerAppPositioning() {

@@ -15,6 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Implemented methods to retrieve, delete, and clear saved app positions.
 - Updated PreferencesWindow to display saved positions with app names and provide delete functionality.
 - Trigger settings update after modifying saved positions to ensure UI consistency.
+- Updated `getCornerPosition` to allow specifying a screen, improving position accuracy.
+- Modified `getSavedPositionsWithAppNames` to include screen names in the saved positions data structure.
+- Added new methods for screen detection and management, including `getScreenNameForPosition`, `getCurrentScreenInfo`, and `moveOverlayToScreen`.
+- Enhanced `PreferencesWindow` to display screen information and allow moving the overlay to different screens.
+
+Signed-off-by: Valentin Rudloff <valentin.rudloff.perso@gmail.com>
 
 ## [1.5.6] - 2025-07-30
 

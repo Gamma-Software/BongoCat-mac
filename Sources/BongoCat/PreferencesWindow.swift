@@ -370,14 +370,22 @@ struct PositionPreferencesView: View {
                             }
                             .padding(.bottom, 4)
 
-                            ForEach(savedPositions, id: \.bundleID) { position in
+                                                        ForEach(savedPositions, id: \.bundleID) { position in
                                 HStack {
                                     VStack(alignment: .leading, spacing: 2) {
                                         Text(position.appName)
                                             .font(.system(size: 13, weight: .medium))
-                                        Text(position.bundleID)
-                                            .font(.system(size: 11))
-                                            .foregroundColor(.secondary)
+                                        HStack(spacing: 4) {
+                                            Text(position.bundleID)
+                                                .font(.system(size: 11))
+                                                .foregroundColor(.secondary)
+                                            Text("•")
+                                                .font(.system(size: 11))
+                                                .foregroundColor(.secondary)
+                                            Text(position.screenName)
+                                                .font(.system(size: 11))
+                                                .foregroundColor(.secondary)
+                                        }
                                     }
 
                                     Spacer()
@@ -396,6 +404,58 @@ struct PositionPreferencesView: View {
                                 .padding(.vertical, 4)
 
                                 if position.bundleID != savedPositions.last?.bundleID {
+                                    Divider()
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            if appDelegate.isPerAppPositioningEnabled {
+                PreferencesSection(title: "Screen Management") {
+                    VStack(alignment: .leading, spacing: 8) {
+                        let screenInfo = appDelegate.getScreenInfo()
+
+                        if screenInfo.isEmpty {
+                            Text("No screens detected")
+                                .foregroundColor(.secondary)
+                                .italic()
+                        } else {
+                            Text("Current Screen: \(appDelegate.getCurrentScreen().map { appDelegate.getScreenName($0) } ?? "Unknown")")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+
+                            ForEach(screenInfo, id: \.index) { info in
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        HStack {
+                                            Text(appDelegate.getScreenName(info.screen))
+                                                .font(.system(size: 13, weight: .medium))
+                                            if info.isCurrent {
+                                                Text("(Current)")
+                                                    .font(.system(size: 11))
+                                                    .foregroundColor(.blue)
+                                            }
+                                        }
+                                        Text("\(Int(info.screen.frame.width))x\(Int(info.screen.frame.height))")
+                                            .font(.system(size: 11))
+                                            .foregroundColor(.secondary)
+                                    }
+
+                                    Spacer()
+
+                                    if !info.isCurrent {
+                                        Button("Move Here") {
+                                            appDelegate.moveOverlayToScreen(info.screen)
+                                        }
+                                        .buttonStyle(.bordered)
+                                        .controlSize(.small)
+                                    }
+                                }
+                                .padding(.vertical, 4)
+
+                                if info.index != screenInfo.last?.index {
                                     Divider()
                                 }
                             }
