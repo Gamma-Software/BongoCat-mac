@@ -9,6 +9,7 @@ INSTALL_LOCAL=false
 DEBUG_BUILD=false
 VERIFY_APP=false
 SIGN_MODE="auto"
+APP_STORE=false
 while [[ $# -gt 0 ]]; do
     case $1 in
         --deliver)
@@ -35,25 +36,37 @@ while [[ $# -gt 0 ]]; do
             SIGN_MODE="certificate"
             shift
             ;;
+        --app_store)
+            APP_STORE=true
+            shift
+            ;;
         -h|--help)
-            echo "Usage: $0 [--deliver] [--install_local] [--debug] [--verify] [--sign-adhoc] [--sign-certificate] [--help]"
+            echo "Usage: $0 [--deliver] [--install_local] [--debug] [--verify] [--sign-adhoc] [--sign-certificate] [--app_store] [--help]"
             echo "  --deliver           Upload the DMG to GitHub Releases (auto-notarizes release builds)"
             echo "  --install_local     Install the app directly to /Applications"
             echo "  --debug             Create debug build instead of release build"
             echo "  --verify            Verify app signature and notarization status"
             echo "  --sign-adhoc        Sign with ad-hoc signature (no certificate required)"
             echo "  --sign-certificate  Sign with Apple Developer certificate"
+            echo "  --app_store         Package for App Store distribution (requires certificate)"
             echo "  --help              Show this help message"
             echo ""
             echo "🔐 Code Signing:"
             echo "  • Default: Auto-detect certificate, fall back to ad-hoc"
             echo "  • --sign-adhoc: Force ad-hoc signing (no certificate needed)"
             echo "  • --sign-certificate: Force certificate signing (requires certificate)"
+            echo "  • --app_store: Requires Apple Developer certificate and App Store provisioning"
             echo ""
             echo "📤 Notarization:"
             echo "  • Release builds with --deliver are automatically notarized"
             echo "  • Set APPLE_ID and APPLE_ID_PASSWORD environment variables"
             echo "  • Use app-specific password if 2FA is enabled"
+            echo ""
+            echo "🍎 App Store:"
+            echo "  • --app_store requires Apple Developer Program membership"
+            echo "  • Requires App Store provisioning profile"
+            echo "  • App will be signed with App Store distribution certificate"
+            echo "  • Creates .ipa file ready for App Store Connect"
             echo ""
             echo "🔍 Verification:"
             echo "  • --verify alone: Verify local app bundle"
@@ -567,6 +580,157 @@ verify_github_release() {
     fi
 }
 
+# Function to package for App Store distribution
+package_for_app_store() {
+    echo ""
+    echo "🍎 Starting App Store packaging process..."
+
+    # Check if we're in release mode (App Store requires release builds)
+    if [ "$DEBUG_BUILD" = true ]; then
+        echo "❌ App Store packaging requires release builds"
+        echo "💡 Remove --debug flag for App Store packaging"
+        exit 1
+    fi
+
+    # Check for Apple Developer certificate
+    if [ ! -f "Scripts/code_sign.sh" ]; then
+        echo "❌ Code signing script not found"
+        exit 1
+    fi
+
+    source "Scripts/code_sign.sh"
+    if ! check_developer_certificate; then
+        echo "❌ Apple Developer certificate required for App Store distribution"
+        echo "💡 Please install your Apple Developer certificate and try again"
+        exit 1
+    fi
+
+    # Get the certificate identity
+    local identity=$(get_certificate_identity)
+    if [ -z "$identity" ]; then
+        echo "❌ Failed to get certificate identity"
+        exit 1
+    fi
+
+    echo "✅ Using certificate: $identity"
+
+    # Check for App Store provisioning profile
+    echo "🔍 Checking for App Store provisioning profile..."
+    local provisioning_profile=""
+
+    # Look for provisioning profiles in common locations
+    local profile_locations=(
+        "~/Library/MobileDevice/Provisioning Profiles"
+        "~/Library/Developer/Xcode/Provisioning Profiles"
+        "~/Library/Developer/Xcode/Archives"
+    )
+
+    for location in "${profile_locations[@]}"; do
+        expanded_location=$(eval echo "$location")
+        if [ -d "$expanded_location" ]; then
+            # Look for BongoCat App Store provisioning profile
+            local found_profile=$(find "$expanded_location" -name "*BongoCat*AppStore*" -o -name "*${BUNDLE_ID}*AppStore*" 2>/dev/null | head -1)
+            if [ -n "$found_profile" ]; then
+                provisioning_profile="$found_profile"
+                break
+            fi
+        fi
+    done
+
+    if [ -z "$provisioning_profile" ]; then
+        echo "⚠️  No App Store provisioning profile found"
+        echo "💡 You may need to create one in Apple Developer Portal"
+        echo "   • App ID: $BUNDLE_ID"
+        echo "   • Distribution type: App Store"
+        echo "   • Download and install the provisioning profile"
+    else
+        echo "✅ Found provisioning profile: $(basename "$provisioning_profile")"
+    fi
+
+    # Create App Store package directory
+    local app_store_dir="Build/app_store"
+    echo "📁 Creating App Store package directory..."
+    rm -rf "$app_store_dir"
+    mkdir -p "$app_store_dir"
+
+    # Copy app bundle to App Store directory
+    echo "📦 Copying app bundle for App Store..."
+    cp -R "$APP_BUNDLE" "$app_store_dir/"
+
+    # Sign the app bundle for App Store distribution
+    echo "🔐 Signing app bundle for App Store distribution..."
+
+    # Remove any existing signature
+    codesign --remove-signature "${app_store_dir}/${APP_NAME}.app" 2>/dev/null || true
+
+    # Sign with App Store distribution certificate
+    if [ -n "$provisioning_profile" ]; then
+        echo "🔐 Signing with provisioning profile..."
+        codesign --force --sign "$identity" \
+            --entitlements "BongoCat.entitlements" \
+            --options runtime \
+            --timestamp \
+            --provisioning-profile "$provisioning_profile" \
+            "${app_store_dir}/${APP_NAME}.app"
+    else
+        echo "🔐 Signing without provisioning profile (may need manual upload)..."
+        codesign --force --sign "$identity" \
+            --entitlements "BongoCat.entitlements" \
+            --options runtime \
+            --timestamp \
+            "${app_store_dir}/${APP_NAME}.app"
+    fi
+
+    # Verify the signature
+    echo "🔍 Verifying App Store signature..."
+    if codesign --verify --verbose "${app_store_dir}/${APP_NAME}.app"; then
+        echo "✅ App Store signature verified"
+    else
+        echo "❌ App Store signature verification failed"
+        exit 1
+    fi
+
+    # Create .ipa file for App Store Connect
+    echo "📦 Creating .ipa file for App Store Connect..."
+    local ipa_file="Build/${APP_NAME}-${VERSION}-AppStore.ipa"
+    rm -f "$ipa_file"
+
+    # Create Payload directory
+    local payload_dir="${app_store_dir}/Payload"
+    mkdir -p "$payload_dir"
+    mv "${app_store_dir}/${APP_NAME}.app" "$payload_dir/"
+
+    # Create .ipa file
+    cd "$app_store_dir"
+    zip -r "../${APP_NAME}-${VERSION}-AppStore.ipa" Payload/
+    cd "$PROJECT_ROOT"
+
+    # Clean up temporary directory
+    rm -rf "$app_store_dir"
+
+    if [ -f "$ipa_file" ]; then
+        echo "✅ App Store package created successfully!"
+        echo "📦 IPA file: $ipa_file"
+        echo "📏 Size: $(du -h "$ipa_file" | cut -f1)"
+        echo ""
+        echo "🚀 Next steps for App Store submission:"
+        echo "   1. Open Xcode"
+        echo "   2. Go to Window > Organizer"
+        echo "   3. Click 'Distribute App'"
+        echo "   4. Select 'App Store Connect'"
+        echo "   5. Upload the .ipa file: $ipa_file"
+        echo "   6. Complete the submission process in App Store Connect"
+        echo ""
+        echo "💡 Alternative upload method:"
+        echo "   • Use Application Loader or Transporter app"
+        echo "   • Upload directly to App Store Connect"
+        echo "   • Complete metadata and review process"
+    else
+        echo "❌ Failed to create App Store package"
+        exit 1
+    fi
+}
+
 echo "🐱 Starting BongoCat packaging process..."
 echo "📍 Working from: $PROJECT_ROOT"
 echo "🔧 Build type: ${BUILD_TYPE}"
@@ -791,6 +955,11 @@ if [ "$VERIFY_APP" = true ]; then
         # Verify local app bundle
         verify_app_bundle "$APP_BUNDLE"
     fi
+fi
+
+# Package for App Store if requested
+if [ "$APP_STORE" = true ]; then
+    package_for_app_store
 fi
 
 echo ""

@@ -7,14 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased] - 2025-08-04
 
+Add App Store packaging support and update README
+
 ### Modified
 
+- Introduced functionality in `run.sh` and `package_app.sh` to build, sign, and package the app for App Store distribution.
+- Updated `README.md` with instructions for App Store deployment, including requirements and usage examples.
 - Introduced a new `WelcomeScreen` and `WelcomeScreenController` to guide users through initial setup.
 - Updated `BongoCatApp.swift` to show the welcome screen on first launch and added menu options for accessing the welcome guide.
 - Enhanced `PreferencesWindow` to keep it on top and prevent dismissal when clicking outside.
 
 ### Deleted
 
+- Removed the obsolete `prepare_appstore.sh` script to streamline the packaging process.
 - Deleted `APP_STORE_GUIDE.md` and `appstore_build.sh` as part of the cleanup.
 
 ## [1.6.0] - 2025-08-04
