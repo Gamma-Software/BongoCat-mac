@@ -234,19 +234,20 @@ sign_with_certificate() {
     fi
 }
 
-# Main execution
-echo "🔐 BongoCat Code Signing Script"
-echo "================================"
+# Main execution - only run when script is called directly
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    echo "🔐 BongoCat Code Signing Script"
+    echo "================================"
 
-# Check if app bundle exists
-if [ ! -d "$APP_BUNDLE" ]; then
-    print_error "App bundle not found: $APP_BUNDLE"
-    echo ""
-    echo "💡 Build the app first:"
-    echo "   ./Scripts/build.sh"
-    echo "   ./Scripts/package_app.sh"
-    exit 1
-fi
+    # Check if app bundle exists
+    if [ ! -d "$APP_BUNDLE" ]; then
+        print_error "App bundle not found: $APP_BUNDLE"
+        echo ""
+        echo "💡 Build the app first:"
+        echo "   ./Scripts/build.sh"
+        echo "   ./Scripts/package_app.sh"
+        exit 1
+    fi
 
 # Parse command line arguments
 SIGN_MODE="auto"
@@ -358,3 +359,5 @@ else
         echo "   • Consider notarizing for complete distribution readiness"
     fi
 fi
+
+fi  # Close the if statement for direct execution check
