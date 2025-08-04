@@ -24,6 +24,7 @@ show_usage() {
     echo "  --deliver, -d         Bump version, build release, sign, notarize and deliver to GitHub"
     echo "  --deliver-push, -dp   Bump version with commit/push, build release, sign, notarize and deliver"
     echo "  --app-store, -as      Build release, sign and package for App Store distribution"
+    echo "  --upload-app-store, -uas Upload IPA to App Store Connect"
     echo "  --help, -h            Show this help message"
     echo ""
     echo "Examples:"
@@ -238,6 +239,10 @@ execute_option() {
             echo "🍎 Building release, signing and packaging for App Store distribution..."
             rm -rf ./build; rm -rf ./Build; ./Scripts/build.sh -r; ./Scripts/package_app.sh --app_store --sign-certificate
             ;;
+        10)
+            echo "📤 Uploading IPA to App Store Connect..."
+            ./Scripts/upload_app_store.sh
+            ;;
         *)
             echo "❌ Invalid option."
             exit 1
@@ -263,10 +268,11 @@ if [ $# -eq 0 ]; then
     echo "7) Bump version, build release, sign, notarize and deliver to GitHub"
     echo "8) Bump version with commit/push, build release, sign, notarize and deliver"
     echo "9) Build release, sign and package for App Store distribution"
-    echo "10) Exit"
+    echo "10) Upload IPA to App Store Connect"
+    echo "11) Exit"
     echo ""
 
-    read -p "Enter your choice (0-10): " choice
+    read -p "Enter your choice (0-11): " choice
 
     case $choice in
         0|1|2|3|4|5|6)
@@ -292,11 +298,14 @@ if [ $# -eq 0 ]; then
             execute_option 9
             ;;
         10)
+            execute_option 10
+            ;;
+        11)
             echo "👋 Goodbye!"
             exit 0
             ;;
         *)
-            echo "❌ Invalid option. Please choose 0-10."
+            echo "❌ Invalid option. Please choose 0-11."
             exit 1
             ;;
     esac
@@ -342,6 +351,9 @@ else
             ;;
         --app-store|-as)
             execute_option 9
+            ;;
+        --upload-app-store|-uas)
+            execute_option 10
             ;;
         --help|-h)
             show_usage

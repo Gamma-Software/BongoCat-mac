@@ -8,6 +8,8 @@
 	<string>com.leaptech.bongocat</string>
 	<key>CFBundleName</key>
 	<string>BongoCat</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
 	<string>1.7.0</string>
 	<key>CFBundleVersion</key>
