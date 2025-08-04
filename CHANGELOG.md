@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Modified
 
+- Increase app switch detection interval to 0.1 seconds and make it constant
 - Rename project to BongoCat instead of BongoCat
 - Change default paw behavior to alternating
 
