@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Modified
 
-- Rename project to BongoCat instead of BangoCat
+- Rename project to BongoCat instead of BongoCat
 - Change default paw behavior to alternating
 
 ## [1.5.6] - 2025-07-30

@@ -29,58 +29,58 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
 
     // Scale management
     @Published var currentScale: Double = 0.75  // Default to Medium (75%)
-    private let scaleKey = "BangoCatScale"
+    private let scaleKey = "BongoCatScale"
 
     // Scale pulse on input management
     @Published var scaleOnInputEnabled: Bool = true
-    private let scaleOnInputKey = "BangoCatScaleOnInput"
+    private let scaleOnInputKey = "BongoCatScaleOnInput"
 
     // Rotation management
     @Published var currentRotation: Double = 0.0
-    private let rotationKey = "BangoCatRotation"
+    private let rotationKey = "BongoCatRotation"
 
     // Horizontal flip management
     @Published var isFlippedHorizontally: Bool = false
-    private let flipKey = "BangoCatFlipHorizontally"
+    private let flipKey = "BongoCatFlipHorizontally"
 
     // Ignore clicks management
     @Published var ignoreClicksEnabled: Bool = false
-    private let ignoreClicksKey = "BangoCatIgnoreClicks"
+    private let ignoreClicksKey = "BongoCatIgnoreClicks"
 
     // Click through management
     @Published var clickThroughEnabled: Bool = true  // Default enabled
-    private let clickThroughKey = "BangoCatClickThrough"
+    private let clickThroughKey = "BongoCatClickThrough"
 
     // Paw behavior management
     @Published var pawBehaviorMode: PawBehaviorMode = .random  // Default to random
-    private let pawBehaviorKey = "BangoCatPawBehavior"
+    private let pawBehaviorKey = "BongoCatPawBehavior"
 
     // Auto-start at launch management
     @Published var autoStartAtLaunchEnabled: Bool = true  // Default enabled
-    private let autoStartAtLaunchKey = "BangoCatAutoStartAtLaunch"
+    private let autoStartAtLaunchKey = "BongoCatAutoStartAtLaunch"
 
     // Position management - Enhanced for per-app positioning
     private var snapToCornerEnabled: Bool = false
-    private let snapToCornerKey = "BangoCatSnapToCorner"
+    private let snapToCornerKey = "BongoCatSnapToCorner"
     private var savedPosition: NSPoint = NSPoint(x: 100, y: 100)
-    private let savedPositionXKey = "BangoCatPositionX"
-    private let savedPositionYKey = "BangoCatPositionY"
+    private let savedPositionXKey = "BongoCatPositionX"
+    private let savedPositionYKey = "BongoCatPositionY"
     @Published var currentCornerPosition: CornerPosition = .custom
-    private let cornerPositionKey = "BangoCatCornerPosition"
+    private let cornerPositionKey = "BongoCatCornerPosition"
 
     // Per-app position management
     @Published internal var perAppPositions: [String: NSPoint] = [:]
-    private let perAppPositionsKey = "BangoCatPerAppPositions"
+    private let perAppPositionsKey = "BongoCatPerAppPositions"
     internal var currentActiveApp: String = ""
     private var appSwitchTimer: Timer?
     @Published internal var isPerAppPositioningEnabled: Bool = true  // Default enabled
-    private let perAppPositioningKey = "BangoCatPerAppPositioning"
+    private let perAppPositioningKey = "BongoCatPerAppPositioning"
 
     // Per-app hiding management
     @Published internal var perAppHiddenApps: Set<String> = []
-    private let perAppHiddenAppsKey = "BangoCatPerAppHiddenApps"
+    private let perAppHiddenAppsKey = "BongoCatPerAppHiddenApps"
     @Published internal var isPerAppHidingEnabled: Bool = true  // Default enabled
-    private let perAppHidingKey = "BangoCatPerAppHiding"
+    private let perAppHidingKey = "BongoCatPerAppHiding"
 
     // Milestone notifications management
     @Published internal var milestoneManager = MilestoneNotificationManager.shared
@@ -94,7 +94,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
     // Active app position tracking
     internal let positionTracker = ActiveAppPositionTracker()
     @Published var isPositionTrackingEnabled: Bool = false
-    private let positionTrackingKey = "BangoCatPositionTracking"
+    private let positionTrackingKey = "BongoCatPositionTracking"
 
     // Force SwiftUI updates when settings change
     @Published private var settingsUpdateTrigger: Bool = false
@@ -111,7 +111,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
     }
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
-        print("BangoCat starting...")
+        print("BongoCat starting...")
         appLaunchTime = Date()
 
         // Track app lifecycle
@@ -210,7 +210,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
                 print("🔧 Fallback to emoji icon")
             }
 
-            button.toolTip = "BangoCat - Click for menu"
+            button.toolTip = "BongoCat - Click for menu"
             print("🔧 Status bar button configured")
         } else {
             print("❌ Failed to get status bar button")
@@ -230,12 +230,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
 
         menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Buy me a coffee ☕", action: #selector(buyMeACoffee), keyEquivalent: ""))
-        menu.addItem(NSMenuItem(title: "Tweet about BangoCat 🐦", action: #selector(tweetAboutBangoCat), keyEquivalent: ""))
+        menu.addItem(NSMenuItem(title: "Tweet about BongoCat 🐦", action: #selector(tweetAboutBongoCat), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "Check for Updates 🔄", action: #selector(checkForUpdates), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "Auto-Start at Launch 🚀", action: #selector(toggleAutoStartAtLaunch), keyEquivalent: ""))
 
         menu.addItem(NSMenuItem.separator())
-        menu.addItem(NSMenuItem(title: "About BangoCat", action: #selector(showCredits), keyEquivalent: ""))
+        menu.addItem(NSMenuItem(title: "About BongoCat", action: #selector(showCredits), keyEquivalent: ""))
 
         // Developer options (only show if analytics debug is needed)
         #if DEBUG
@@ -252,7 +252,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         menu.addItem(versionItem)
 
         menu.addItem(NSMenuItem.separator())
-        menu.addItem(NSMenuItem(title: "Quit BangoCat", action: #selector(quitApp), keyEquivalent: "q"))
+        menu.addItem(NSMenuItem(title: "Quit BongoCat", action: #selector(quitApp), keyEquivalent: "q"))
 
         // Set targets for menu items
         menu.items.forEach { item in
@@ -301,7 +301,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         let iconPaths = [
             "menu-logo.png",
             "./menu-logo.png",
-            "Sources/BangoCat/Resources/menu-logo.png"
+            "Sources/BongoCat/Resources/menu-logo.png"
         ]
 
         for path in iconPaths {
@@ -414,10 +414,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         let alert = NSAlert()
         alert.messageText = "Accessibility Access Required"
         alert.informativeText = """
-        BangoCat needs accessibility access to detect your keyboard input.
+        BongoCat needs accessibility access to detect your keyboard input.
 
         If you already granted access but still see this message, try:
-        1. Remove BangoCat from Accessibility list in System Preferences
+        1. Remove BongoCat from Accessibility list in System Preferences
         2. Re-add it by running the app again
 
         This happens when the app is reinstalled or built from a different location.
@@ -443,7 +443,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
     @objc internal func resetToFactoryDefaults() {
         let alert = NSAlert()
         alert.messageText = "Reset to Factory Defaults"
-        alert.informativeText = "This will reset all BangoCat settings to their default values:\n\n• Scale: 75% (Medium)\n• Scale Pulse: Enabled\n• Rotation: Disabled\n• Flip: Disabled\n• Ignore Clicks: Disabled\n• Click Through: Enabled\n• Auto-Start at Launch: Enabled\n• Position: Default location\n• Per-App Positioning: Enabled\n• Per-App Hiding: Enabled (all hidden apps cleared)\n• Paw Behavior: Random\n• Stroke Counter: Will be reset\n\nThis action cannot be undone."
+        alert.informativeText = "This will reset all BongoCat settings to their default values:\n\n• Scale: 75% (Medium)\n• Scale Pulse: Enabled\n• Rotation: Disabled\n• Flip: Disabled\n• Ignore Clicks: Disabled\n• Click Through: Enabled\n• Auto-Start at Launch: Enabled\n• Position: Default location\n• Per-App Positioning: Enabled\n• Per-App Hiding: Enabled (all hidden apps cleared)\n• Paw Behavior: Random\n• Stroke Counter: Will be reset\n\nThis action cannot be undone."
         alert.alertStyle = .warning
         alert.addButton(withTitle: "Reset")
         alert.addButton(withTitle: "Cancel")
@@ -517,7 +517,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
             // Show confirmation
             let confirmAlert = NSAlert()
             confirmAlert.messageText = "Settings Reset"
-            confirmAlert.informativeText = "All BangoCat settings have been reset to factory defaults."
+            confirmAlert.informativeText = "All BongoCat settings have been reset to factory defaults."
             confirmAlert.alertStyle = .informational
             confirmAlert.addButton(withTitle: "OK")
             confirmAlert.runModal()
@@ -529,9 +529,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         analytics.trackMenuAction("show_credits")
 
         let alert = NSAlert()
-        alert.messageText = "About BangoCat \(getVersionString())"
+        alert.messageText = "About BongoCat \(getVersionString())"
         alert.informativeText = """
-        🐱 BangoCat for macOS 🐱
+        🐱 BongoCat for macOS 🐱
 
         Version: \(getVersionString())
         Bundle ID: \(getBundleIdentifier())
@@ -540,7 +540,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
 
         Created with ❤️ by \(appAuthor)
         Website: \(appWebsite)
-        🐛 Report Bug: github.com/Gamma-Software/BangoCat-mac/issues/new
+        🐛 Report Bug: github.com/Gamma-Software/BongoCat-mac/issues/new
 
         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -624,17 +624,17 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         }
     }
 
-    @objc internal func tweetAboutBangoCat() {
+    @objc internal func tweetAboutBongoCat() {
         // Track social share
-        analytics.trackMenuAction("tweet_about_bangocat")
+        analytics.trackMenuAction("tweet_about_bongocat")
         analytics.trackSocialShareInitiated("twitter")
         trackFeatureUsed("social_share")
 
-        let tweetText = "Just discovered BangoCat for macOS! A Bango Cat overlay for your Mac - reacts to typing and clicks in real-time! Perfect for streamers and developers ✨ #BangoCat #macOS #Swift #OpenSource\n\nDownload: https://github.com/Gamma-Software/BangoCat-mac/releases/tag/v1.0.0\nSee it in action: https://youtu.be/ZFw8m6V3qRQ"
+        let tweetText = "Just discovered BongoCat for macOS! A Bongo Cat overlay for your Mac - reacts to typing and clicks in real-time! Perfect for streamers and developers ✨ #BongoCat #macOS #Swift #OpenSource\n\nDownload: https://github.com/Gamma-Software/BongoCat-mac/releases/tag/v1.0.0\nSee it in action: https://youtu.be/ZFw8m6V3qRQ"
         if let encodedText = tweetText.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
            let tweetURL = URL(string: "https://twitter.com/intent/tweet?text=\(encodedText)") {
             NSWorkspace.shared.open(tweetURL)
-            print("Opening Tweet about BangoCat: \(tweetURL)")
+            print("Opening Tweet about BongoCat: \(tweetURL)")
         } else {
             print("Failed to create Tweet URL")
         }
@@ -646,9 +646,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         analytics.trackSupportActionTaken("bug_report")
         trackFeatureUsed("bug_report")
 
-        if let url = URL(string: "https://github.com/Gamma-Software/BangoCat-mac/issues/new") {
+        if let url = URL(string: "https://github.com/Gamma-Software/BongoCat-mac/issues/new") {
             NSWorkspace.shared.open(url)
-            print("Opening bug report: https://github.com/Gamma-Software/BangoCat-mac/issues/new")
+            print("Opening bug report: https://github.com/Gamma-Software/BongoCat-mac/issues/new")
         } else {
             print("Failed to create URL for bug report")
         }
@@ -699,7 +699,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
 
         // Create and show the changelog window
         let alert = NSAlert()
-        alert.messageText = "BangoCat Changelog"
+        alert.messageText = "BongoCat Changelog"
 
         if let content = changelogContent, let path = foundPath {
             // Successfully read the changelog file
@@ -730,7 +730,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         } else {
             // Fallback to summary if file not found
             alert.informativeText = """
-            📋 BangoCat v\(getVersionString()) - Recent Changes:
+            📋 BongoCat v\(getVersionString()) - Recent Changes:
 
             🎯 Latest Features:
             • Keyboard layout-based paw mapping for realistic typing
@@ -778,7 +778,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         if (changelogContent != nil && response == .alertSecondButtonReturn) ||
            (changelogContent == nil && response == .alertSecondButtonReturn) {
             // "Visit Repository" button clicked
-            if let url = URL(string: "https://github.com/Gamma-Software/BangoCat-mac/blob/develop/CHANGELOG.md") {
+            if let url = URL(string: "https://github.com/Gamma-Software/BongoCat-mac/blob/develop/CHANGELOG.md") {
                 NSWorkspace.shared.open(url)
                 print("Opening online changelog")
             }
@@ -799,7 +799,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         trackFeatureUsed("open_installer_dmg")
 
         // Get the path to the DMG file in the Build directory
-        let buildPath = "Build/BangoCat-\(appVersion).dmg"
+        let buildPath = "Build/BongoCat-\(appVersion).dmg"
         let currentDirectory = FileManager.default.currentDirectoryPath
         let dmgPath = "\(currentDirectory)/\(buildPath)"
 
@@ -813,7 +813,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
                 // Show confirmation to user
                 let alert = NSAlert()
                 alert.messageText = "Installer DMG Opened"
-                alert.informativeText = "The BangoCat installer DMG has been opened in Finder.\n\nTo install:\n1. Drag the BangoCat app to your Applications folder\n2. Eject the DMG when finished"
+                alert.informativeText = "The BongoCat installer DMG has been opened in Finder.\n\nTo install:\n1. Drag the BongoCat app to your Applications folder\n2. Eject the DMG when finished"
                 alert.alertStyle = .informational
                 alert.addButton(withTitle: "OK")
                 alert.runModal()
@@ -895,7 +895,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
     }
 
     internal func getBundleIdentifier() -> String {
-        return Bundle.main.bundleIdentifier ?? "com.leaptech.bangocat"
+        return Bundle.main.bundleIdentifier ?? "com.leaptech.bongocat"
     }
 
         // MARK: - Public methods for context menu
@@ -917,8 +917,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         toggleScalePulse()
     }
 
-    func toggleBangoCatRotatePublic() {
-        toggleBangoCatRotate()
+    func toggleBongoCatRotatePublic() {
+        toggleBongoCatRotate()
     }
 
     func toggleHorizontalFlipPublic() {
@@ -973,8 +973,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         buyMeACoffee()
     }
 
-    func tweetAboutBangoCatPublic() {
-        tweetAboutBangoCat()
+    func tweetAboutBngoCatPublic() {
+        tweetAboutBongoCat()
     }
 
     func reportBugPublic() {
@@ -1017,7 +1017,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
             • Info.plist (not for public repos)
          4. Rebuild the app
 
-        Once configured, BangoCat will track anonymous usage data to help improve the app.
+        Once configured, BongoCat will track anonymous usage data to help improve the app.
         """
         alert.alertStyle = .informational
         alert.addButton(withTitle: "OK")
@@ -1270,9 +1270,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         }
     }
 
-    // MARK: - Bango Cat Rotate Management
+    // MARK: - Bongo Cat Rotate Management
 
-    @objc private func toggleBangoCatRotate() {
+    @objc private func toggleBongoCatRotate() {
         // Toggle between 0 degrees and 13/-13 degrees rotation based on flip state
         if currentRotation == 0.0 {
             // When enabling rotation, use 13° if not flipped, -13° if flipped
@@ -1290,7 +1290,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         trackSettingChanged("rotation")
         trackFeatureUsed("rotation")
 
-        print("Bango Cat rotated to: \(currentRotation) degrees")
+        print("Bongo Cat rotated to: \(currentRotation) degrees")
     }
 
     @objc private func toggleHorizontalFlip() {
@@ -1439,7 +1439,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         let alert = NSAlert()
         alert.messageText = "Analytics & Privacy Settings"
         alert.informativeText = """
-        BangoCat uses analytics to improve the app experience by tracking:
+        BongoCat uses analytics to improve the app experience by tracking:
 
         📊 What We Track:
         • App launches and usage patterns
@@ -1455,7 +1455,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         🛡️ Privacy:
         • All data is anonymous
         • No personal identification
-        • Data helps improve BangoCat for everyone
+        • Data helps improve BongoCat for everyone
 
         Current Status: \(analytics.isAnalyticsEnabled ? "Analytics Enabled" : "Analytics Disabled")
         """
@@ -1477,7 +1477,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
             let confirmAlert = NSAlert()
             confirmAlert.messageText = "Analytics \(newState ? "Enabled" : "Disabled")"
             confirmAlert.informativeText = newState ?
-                "Thank you! Analytics will help us improve BangoCat." :
+                "Thank you! Analytics will help us improve BongoCat." :
                 "Analytics has been disabled. You can re-enable it anytime from the menu."
             confirmAlert.alertStyle = .informational
             confirmAlert.addButton(withTitle: "OK")
@@ -1486,7 +1486,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
             print("Analytics toggled to: \(newState)")
         } else if response == .alertThirdButtonReturn {
             // Learn more - open privacy policy or GitHub
-            if let url = URL(string: "https://github.com/Gamma-Software/BangoCat-mac#privacy") {
+            if let url = URL(string: "https://github.com/Gamma-Software/BongoCat-mac#privacy") {
                 NSWorkspace.shared.open(url)
             }
         }
@@ -1545,7 +1545,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
     private func updateRotationMenuItem() {
         guard let menu = statusBarItem?.menu else { return }
         for item in menu.items {
-            if item.title == "Bango Cat Rotate" {
+            if item.title == "Bongo Cat Rotate" {
                 item.state = (currentRotation != 0.0) ? .on : .off
                 break
             }
@@ -1971,7 +1971,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
 
             // Show confirmation with app name
             if let appName = NSWorkspace.shared.frontmostApplication?.localizedName {
-                showNotification(title: "BangoCat Hidden", message: "Cat will now hide when \(appName) is active")
+                showNotification(title: "BongoCat Hidden", message: "Cat will now hide when \(appName) is active")
             }
         }
     }
@@ -1997,7 +1997,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
 
             // Show confirmation with app name
             if let appName = NSWorkspace.shared.frontmostApplication?.localizedName {
-                showNotification(title: "BangoCat Visible", message: "Cat will now show when \(appName) is active")
+                showNotification(title: "BongoCat Visible", message: "Cat will now show when \(appName) is active")
             }
         }
     }
@@ -2225,7 +2225,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         let alert = NSAlert()
         alert.messageText = "Auto-Update \(newState ? "Enabled" : "Disabled")"
         alert.informativeText = newState ?
-            "BangoCat will automatically download and install updates when available." :
+            "BongoCat will automatically download and install updates when available." :
             "Updates will require manual download from the GitHub releases page."
         alert.alertStyle = .informational
         alert.addButton(withTitle: "OK")
