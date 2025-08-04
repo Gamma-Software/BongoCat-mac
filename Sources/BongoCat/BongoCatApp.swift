@@ -73,6 +73,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
     private let perAppPositionsKey = "BongoCatPerAppPositions"
     internal var currentActiveApp: String = ""
     private var appSwitchTimer: Timer?
+    private var appSwitchTimerInterval: TimeInterval = 0.1
     @Published internal var isPerAppPositioningEnabled: Bool = true  // Default enabled
     private let perAppPositioningKey = "BongoCatPerAppPositioning"
 
@@ -1808,7 +1809,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
     private func setupAppSwitchMonitoring() {
         // Set up a timer to periodically check for app switches
         // Using a timer approach to avoid potential permission issues with workspace notifications
-        appSwitchTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
+        appSwitchTimer = Timer.scheduledTimer(withTimeInterval: appSwitchTimerInterval, repeats: true) { [weak self] _ in
             self?.checkForAppSwitch()
         }
 
