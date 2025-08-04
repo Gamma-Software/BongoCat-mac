@@ -651,19 +651,57 @@ struct BongoCatSprite: View {
             analytics.trackImageLoadError(name, method: "Bundle.main_root")
         }
 
-        // Method 4: Try direct file paths (development fallback)
-        let possiblePaths = [
+        // Method 4: Try executable directory paths (for CLI execution)
+        if let executablePath = Bundle.main.executablePath {
+            let executableDir = URL(fileURLWithPath: executablePath).deletingLastPathComponent()
+            let possibleExecutablePaths = [
+                executableDir.appendingPathComponent("Sources/BongoCat/Resources/Images/\(name).png"),
+                executableDir.appendingPathComponent("Resources/Images/\(name).png"),
+                executableDir.appendingPathComponent("Images/\(name).png"),
+                executableDir.appendingPathComponent("\(name).png")
+            ]
+
+            for path in possibleExecutablePaths {
+                if let image = NSImage(contentsOf: path) {
+                    let loadTime = Date().timeIntervalSince(loadStartTime)
+                    analytics.trackResourceLoadTime("image", loadTime: loadTime)
+                    print("✅ Loaded image from executable directory: \(path.path)")
+                    return image
+                }
+            }
+        }
+
+        // Method 5: Try current working directory paths (for CLI execution)
+        let currentDir = FileManager.default.currentDirectoryPath
+        let possibleCurrentDirPaths = [
+            "\(currentDir)/Sources/BongoCat/Resources/Images/\(name).png",
+            "\(currentDir)/Resources/Images/\(name).png",
+            "\(currentDir)/Images/\(name).png",
+            "\(currentDir)/\(name).png"
+        ]
+
+        for path in possibleCurrentDirPaths {
+            if let image = NSImage(contentsOfFile: path) {
+                let loadTime = Date().timeIntervalSince(loadStartTime)
+                analytics.trackResourceLoadTime("image", loadTime: loadTime)
+                print("✅ Loaded image from current directory: \(path)")
+                return image
+            }
+        }
+
+        // Method 6: Try relative paths from project root (development fallback)
+        let possibleRelativePaths = [
             "Sources/BongoCat/Resources/Images/\(name).png",
             "Resources/Images/\(name).png",
             "Images/\(name).png",
             "\(name).png"
         ]
 
-        for path in possiblePaths {
+        for path in possibleRelativePaths {
             if let image = NSImage(contentsOfFile: path) {
                 let loadTime = Date().timeIntervalSince(loadStartTime)
                 analytics.trackResourceLoadTime("image", loadTime: loadTime)
-                print("✅ Loaded image from file path: \(path)")
+                print("✅ Loaded image from relative path: \(path)")
                 return image
             }
         }
@@ -671,6 +709,11 @@ struct BongoCatSprite: View {
         // All methods failed
         analytics.trackImageLoadError(name, method: "all_methods_failed")
         print("❌ Failed to load image: \(name).png from all attempted methods")
+        print("🔍 Debug info:")
+        print("  - Bundle.main.bundlePath: \(Bundle.main.bundlePath)")
+        print("  - Bundle.main.executablePath: \(Bundle.main.executablePath ?? "nil")")
+        print("  - Current working directory: \(FileManager.default.currentDirectoryPath)")
+        print("  - Home directory: \(FileManager.default.homeDirectoryForCurrentUser.path)")
         return nil
     }
 }

@@ -291,27 +291,55 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
             return resizeIconForStatusBar(bundleImage, fromPath: "NSImage named resource")
         }
 
-        // Method 4: Try direct file paths (development fallback)
-        let iconPaths = [
-            "menu-logo.png",
-            "./menu-logo.png",
-            "Sources/BongoCat/Resources/menu-logo.png"
-        ]
+        // Method 4: Try executable directory paths (for CLI execution)
+        if let executablePath = Bundle.main.executablePath {
+            let executableDir = URL(fileURLWithPath: executablePath).deletingLastPathComponent()
+            let possibleExecutablePaths = [
+                executableDir.appendingPathComponent("Sources/BongoCat/Resources/menu-logo.png"),
+                executableDir.appendingPathComponent("Resources/menu-logo.png"),
+                executableDir.appendingPathComponent("menu-logo.png")
+            ]
 
-        for path in iconPaths {
-            if let image = NSImage(contentsOfFile: path) {
-                return resizeIconForStatusBar(image, fromPath: "file path: \(path)")
+            for path in possibleExecutablePaths {
+                if let image = NSImage(contentsOf: path) {
+                    return resizeIconForStatusBar(image, fromPath: "executable directory: \(path.path)")
+                }
             }
         }
 
-        // Method 5: Try loading from current working directory
+        // Method 5: Try current working directory paths (for CLI execution)
         let currentDir = FileManager.default.currentDirectoryPath
-        let currentDirPath = "\(currentDir)/menu-logo.png"
-        if let image = NSImage(contentsOfFile: currentDirPath) {
-            return resizeIconForStatusBar(image, fromPath: "current dir: \(currentDirPath)")
+        let possibleCurrentDirPaths = [
+            "\(currentDir)/Sources/BongoCat/Resources/menu-logo.png",
+            "\(currentDir)/Resources/menu-logo.png",
+            "\(currentDir)/menu-logo.png"
+        ]
+
+        for path in possibleCurrentDirPaths {
+            if let image = NSImage(contentsOfFile: path) {
+                return resizeIconForStatusBar(image, fromPath: "current directory: \(path)")
+            }
+        }
+
+        // Method 6: Try relative paths from project root (development fallback)
+        let possibleRelativePaths = [
+            "menu-logo.png",
+            "./menu-logo.png",
+            "Sources/BongoCat/Resources/menu-logo.png",
+            "Resources/menu-logo.png"
+        ]
+
+        for path in possibleRelativePaths {
+            if let image = NSImage(contentsOfFile: path) {
+                return resizeIconForStatusBar(image, fromPath: "relative path: \(path)")
+            }
         }
 
         print("❌ Failed to load menu-logo.png from all attempted methods")
+        print("🔍 Debug info:")
+        print("  - Bundle.main.bundlePath: \(Bundle.main.bundlePath)")
+        print("  - Bundle.main.executablePath: \(Bundle.main.executablePath ?? "nil")")
+        print("  - Current working directory: \(FileManager.default.currentDirectoryPath)")
         return nil
     }
 
