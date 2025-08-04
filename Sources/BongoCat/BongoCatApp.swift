@@ -23,8 +23,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
     var welcomeScreenController: WelcomeScreenController?
 
     // App information
-    private let appVersion = "1.7.0"
-    private let appBuild = "1.7.0.202508041348"
+    private let appVersion = "1.7.1"
+    private let appBuild = "1.7.1.202508041446"
     private let appAuthor = "Valentin Rudloff"
     private let appWebsite = "https://valentin.pival.fr"
 
