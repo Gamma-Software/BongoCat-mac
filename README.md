@@ -1,21 +1,21 @@
-# BangoCat-mac
+# Free BongoCat Overlay for macOS
 
 <p align="center">
-  <img src="Assets/Icons/logo.png" alt="BangoCat Logo" width="180" />
+  <img src="media/quick.gif" alt="BongoCat Logo" width="500" />
 </p>
 
 
-A native macOS implementation of the beloved BangoCat overlay, written in Swift. Perfect for streamers, content creators, and anyone who wants an adorable cat companion on their desktop that reacts to their typing and interactions.
+A native macOS implementation of the beloved BongoCat overlay, written in Swift. Perfect for streamers, content creators, and anyone who wants an adorable cat companion on their desktop that reacts to their typing and interactions.
 
 ![Platform](https://img.shields.io/badge/Platform-macOS%2013%2B-blue) ![Language](https://img.shields.io/badge/Language-Swift-orange) ![SwiftUI](https://img.shields.io/badge/UI-SwiftUI-purple) ![Status](https://img.shields.io/badge/Status-Stable-green) ![Version](https://img.shields.io/badge/Version-1.5.6-blue)
 
-## What is BangoCat?
+## What is BongoCat?
 
-BangoCat is a popular internet meme featuring a cat playing bongos, originally created by [DitzyFlama](https://twitter.com/DitzyFlama) using [StrayRogue's](https://twitter.com/StrayRogue) adorable cat drawing. This project brings the interactive BangoCat experience to macOS as a native application.
+BongoCat is a popular internet meme featuring a cat playing bongos, originally created by [DitzyFlama](https://twitter.com/DitzyFlama) using [StrayRogue's](https://twitter.com/StrayRogue) adorable cat drawing. This project brings the interactive BongoCat experience to macOS as a native application.
 
 ## ✨ Features
 
-BangoCat is a **fully-featured**, **native macOS** typing companion with extensive customization options.
+BongoCat is a **fully-featured**, **native macOS** typing companion with extensive customization options.
 
 ### 🐱 **Core Animation System**
 - **🪟 Transparent Overlay** - Borderless, always-on-top window that works everywhere
@@ -44,105 +44,6 @@ BangoCat is a **fully-featured**, **native macOS** typing companion with extensi
 - **Position Persistence**: Saves and restores positions across app restarts
 - **Multi-Monitor Support**: Works across multiple displays
 
-### 📊 **Analytics & Tracking**
-- **📈 Comprehensive Stroke Counter**: Tracks total keystrokes and mouse clicks separately
-- **💾 Persistent Statistics**: Counters survive app restarts
-- **🔄 Counter Reset**: Easy reset functionality when needed
-- **📱 Menu Display**: Current stats always visible in status bar menu
-
-### 🎮 **Input Modes & Control**
-- **⌨️ Full Keyboard Support**: Detects all key presses and releases
-- **🖱️ Mouse Integration**: Left and right click detection
-- **🚫 Ignore Clicks Mode**: Disable mouse click reactions when needed
-- **🔇 Input Filtering**: Smart handling of key repeats and held keys
-
-### 🖥️ **System Integration**
-
-#### **📋 Status Bar Menu**
-- **🎛️ Complete Settings Access**: All features accessible from menu bar
-- **📊 Live Statistics**: Real-time stroke counter display
-- **⚙️ Quick Toggles**: Enable/disable features with single clicks
-- **ℹ️ Version Information**: Built-in version display and about dialog
-
-#### **🖱️ Context Menu**
-- **Right-click Anywhere**: Full feature access directly on the cat
-- **🚀 Quick Actions**: Scale, position, flip, and more
-- **📍 Position Shortcuts**: Instant corner positioning
-
-#### **🍎 macOS Native Integration**
-- **🔒 Accessibility Permissions**: Proper system permission handling
-- **🖥️ Multi-Space Support**: Works across all desktop spaces and full-screen apps
-- **⚡ Low Resource Usage**: Optimized native Swift implementation
-- **📺 Streaming Ready**: Perfect transparency for OBS, Streamlabs, etc.
-
-### 🛠️ **Developer Features**
-- **📦 Swift Package Manager**: Modern dependency management
-- **🔨 Build Scripts**: Automated build and packaging tools
-- **🏷️ Version Management**: Comprehensive version bump automation
-- **📖 Documentation**: Extensive documentation and examples
-- **🧪 Extensible Architecture**: Clean, modular Swift/SwiftUI codebase
-
-### 🎯 **Streaming & Content Creation**
-- **🎥 OBS Integration**: Add as Window Capture source with transparency
-- **📱 Always Visible**: Stays on top of all applications
-- **🎨 Clean Transparency**: Perfect for overlaying on content
-- **📏 Scalable Display**: Adjust size for different streaming layouts
-- **🎮 Gaming Compatible**: Works with full-screen games and applications
-
-### 🌟 **Unique BangoCat Features**
-
-#### **🎯 Per-Application Positioning**
-The **standout feature** that sets BangoCat apart:
-- **📱 App-Specific Memory**: Cat remembers different positions for each application
-- **🔄 Automatic Switching**: Instantly moves to the right spot when you switch apps
-- **💡 Smart Detection**: Uses bundle identifiers for reliable app recognition
-- **⚙️ Easy Toggle**: Enable/disable per-app positioning as needed
-
-#### **🧠 Intelligent Input Handling**
-- **🎯 Consistent Paw Assignment**: Same keys always trigger same paws
-- **⏱️ Timing Intelligence**: Proper animation durations and state management
-- **🔄 State Persistence**: Remembers settings and positions across sessions
-- **🚫 Smart Filtering**: Handles key repeats and system events gracefully
-
-### 🎮 **Perfect For**
-- **🎥 Streamers & Content Creators** - Engaging overlay for audiences
-- **💻 Developers & Writers** - Motivating typing companion
-- **🎮 Gamers** - Fun addition to gaming streams
-- **📚 Students** - Makes typing practice more enjoyable
-- **🐱 Cat Lovers** - Adorable desktop companion
-
-## 📊 Analytics Setup (Optional)
-
-BangoCat includes **optional PostHog analytics** to help improve the app with anonymous usage data. **Your privacy is protected** - no personal information is collected.
-
-### 🔒 **Secure Configuration**
-Since this is a public repository, **API keys are never committed**. Choose your preferred setup method:
-
-#### **🌍 Environment Variables (Recommended)**
-```bash
-export POSTHOG_API_KEY="ph_your_key_here"
-export POSTHOG_HOST="https://us.i.posthog.com"
-```
-
-#### **📁 Local Config File**
-```bash
-cp analytics-config.plist.template analytics-config.plist
-# Edit analytics-config.plist with your keys
-```
-
-#### **🔧 For Developers**
-See [`ANALYTICS_SETUP.md`](ANALYTICS_SETUP.md) for detailed setup instructions, including:
-- How to create a free PostHog account
-- Configuration methods for different environments
-- Privacy controls and what data is tracked
-- Testing and troubleshooting guides
-
-### 🔒 **Privacy First**
-- **✅ Anonymous tracking** - No personal identification
-- **✅ User opt-out** - Easy disable via menu
-- **✅ Transparent** - Clear explanation of what's tracked
-- **✅ Optional** - App works perfectly without analytics
-
 ## 🚀 Installation
 
 ### 📋 Requirements
@@ -153,9 +54,9 @@ See [`ANALYTICS_SETUP.md`](ANALYTICS_SETUP.md) for detailed setup instructions, 
 ### 📥 Download Options
 
 #### **🎯 Ready-to-Use (Recommended)**
-1. Download the latest `BangoCat-*.dmg` from [Releases](https://github.com/Gamma-Software/BangoCat-mac/releases)
-2. Open the DMG and drag BangoCat to Applications
-3. **Right-click** on BangoCat in Applications and select **"Open"** (see [Gatekeeper Guide](GATEKEEPER_GUIDE.md))
+1. Download the latest `BongoCat-*.dmg` from [Releases](https://github.com/Gamma-Software/BongoCat-mac/releases)
+2. Open the DMG and drag BongoCat to Applications
+3. **Right-click** on BongoCat in Applications and select **"Open"** (see [Gatekeeper Guide](GATEKEEPER_GUIDE.md))
 4. Grant accessibility permissions when prompted
 
 **💡 Pro Tip**: If you're reinstalling and accessibility permissions keep being asked, use the packaged DMG instead of building from source. The official releases are code signed for consistent identity.
@@ -168,8 +69,8 @@ Perfect for developers or those who want the latest features:
 ### Building from Source
 ```bash
 # Clone the repository
-git clone https://github.com/Gamma-Software/BangoCat-mac.git
-cd BangoCat-mac
+git clone https://github.com/Gamma-Software/BongoCat-mac.git
+cd BongoCat-mac
 
 # Quick build and test
 ./Scripts/build.sh
@@ -201,14 +102,6 @@ See [`Scripts/README.md`](Scripts/README.md) for detailed documentation.
 
 ## 🔧 Troubleshooting
 
-### Accessibility Permission Issues
-If you're having trouble with accessibility permissions after reinstalling:
-
-1. **Use the official DMG**: Download from [Releases](https://github.com/Gamma-Software/BangoCat-mac/releases) instead of building from source
-2. **Clear old permissions**: Run `./Scripts/clear_accessibility.sh` to open System Preferences
-3. **Remove from Accessibility list**: In System Preferences → Security & Privacy → Accessibility, remove BangoCat if it's there
-4. **Reinstall and grant permissions**: Launch BangoCat again and grant permissions when prompted
-
 ### Common Issues
 - **App won't start**: Right-click and select "Open" if you get a security warning
 - **Cat not animating**: Check accessibility permissions in System Preferences
@@ -222,8 +115,8 @@ For more detailed troubleshooting, see [`TROUBLESHOOTING.md`](TROUBLESHOOTING.md
 We welcome contributions from the community! Here's how you can help:
 
 #### **🐛 Bug Reports**
-- [Report a bug](https://github.com/Gamma-Software/BangoCat-mac/issues/new) using our issue tracker
-- Include macOS version, BangoCat version, and steps to reproduce
+- [Report a bug](https://github.com/Gamma-Software/BongoCat-mac/issues/new) using our issue tracker
+- Include macOS version, BongoCat version, and steps to reproduce
 - Screenshots/screen recordings are super helpful
 
 #### **💡 Feature Requests**
@@ -244,9 +137,9 @@ We welcome contributions from the community! Here's how you can help:
 
 ### Project Structure
 ```
-BangoCat-mac/
-├── Sources/BangoCat/     # Swift source code
-│   ├── BangoCatApp.swift # Main app delegate & menu logic
+BongoCat-mac/
+├── Sources/BongoCat/     # Swift source code
+│   ├── BongoCatApp.swift # Main app delegate & menu logic
 │   ├── OverlayWindow.swift # Overlay window management
 │   ├── CatView.swift     # SwiftUI cat view & animations
 │   ├── InputMonitor.swift # Global input monitoring
@@ -304,21 +197,21 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-## 💖 Support BangoCat
+## 💖 Support BongoCat
 
 ### ⭐ **Star the Project**
-If you love BangoCat, please give us a star on GitHub! It helps others discover the project.
+If you love BongoCat, please give us a star on GitHub! It helps others discover the project.
 
 ### 🐛 **Report Issues**
-Found a bug? Have a suggestion? [Report a bug](https://github.com/Gamma-Software/BangoCat-mac/issues/new) - we read every one!
+Found a bug? Have a suggestion? [Report a bug](https://github.com/Gamma-Software/BongoCat-mac/issues/new) - we read every one!
 
 ### 📢 **Spread the Word**
-- Share BangoCat with fellow developers, streamers, and cat lovers
-- Tweet about your setup with `#BangoCat`
+- Share BongoCat with fellow developers, streamers, and cat lovers
+- Tweet about your setup with `#BongoCat`
 - Write about it on your blog or social media
 
 ### 💝 **Contribute**
-Whether it's code, documentation, or just ideas - every contribution makes BangoCat better!
+Whether it's code, documentation, or just ideas - every contribution makes BongoCat better!
 
 ---
 
@@ -328,6 +221,6 @@ Whether it's code, documentation, or just ideas - every contribution makes Bango
 
 *Bringing joy to developers, streamers, and cat lovers everywhere* 🐱
 
-[🌐 Website](https://valentin.pival.fr) • [🐛 Report a Bug](https://github.com/Gamma-Software/BangoCat-mac/issues/new) • [📖 Documentation](Scripts/README.md) • [📦 Releases](https://github.com/Gamma-Software/BangoCat-mac/releases)
+[🌐 Website](https://valentin.pival.fr) • [🐛 Report a Bug](https://github.com/Gamma-Software/BongoCat-mac/issues/new) • [📖 Documentation](Scripts/README.md) • [📦 Releases](https://github.com/Gamma-Software/BongoCat-mac/releases)
 
 </div>

@@ -5,9 +5,9 @@
 	<key>CFBundleIconFile</key>
 	<string>AppIcon</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.leaptech.bangocat</string>
+	<string>com.leaptech.bongocat</string>
 	<key>CFBundleName</key>
-	<string>BangoCat</string>
+	<string>BongoCat</string>
 	<key>CFBundleShortVersionString</key>
 	<string>1.5.6</string>
 	<key>CFBundleVersion</key>

@@ -4,19 +4,19 @@
             "type": "swift",
             "request": "launch",
             "args": [],
-            "cwd": "${workspaceFolder:BangoCat-mac}",
-            "name": "Debug BangoCat",
-            "program": "${workspaceFolder:BangoCat-mac}/.build/debug/BangoCat",
-            "preLaunchTask": "swift: Build Debug BangoCat"
+            "cwd": "${workspaceFolder:BongoCat-mac}",
+            "name": "Debug BongoCat",
+            "program": "${workspaceFolder:BongoCat-mac}/.build/debug/BongoCat",
+            "preLaunchTask": "swift: Build Debug BongoCat"
         },
         {
             "type": "swift",
             "request": "launch",
             "args": [],
-            "cwd": "${workspaceFolder:BangoCat-mac}",
-            "name": "Release BangoCat",
-            "program": "${workspaceFolder:BangoCat-mac}/.build/release/BangoCat",
-            "preLaunchTask": "swift: Build Release BangoCat"
+            "cwd": "${workspaceFolder:BongoCat-mac}",
+            "name": "Release BongoCat",
+            "program": "${workspaceFolder:BongoCat-mac}/.build/release/BongoCat",
+            "preLaunchTask": "swift: Build Release BongoCat"
         }
     ]
 }

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# BangoCat Version Consistency Checker
+# BongoCat Version Consistency Checker
 # This script verifies that all version references are consistent across the project
 set -e
 
@@ -27,7 +27,7 @@ print_detail() { echo -e "${CYAN}   $1${NC}"; }
 
 # Function to show usage
 show_usage() {
-    echo "BangoCat Version Consistency Checker"
+    echo "BongoCat Version Consistency Checker"
     echo ""
     echo "Usage: $0 [--verbose] [--fix]"
     echo ""
@@ -76,7 +76,7 @@ for arg in "$@"; do
     esac
 done
 
-print_info "BangoCat Version Consistency Checker"
+print_info "BongoCat Version Consistency Checker"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 # Get current directory (should be Scripts/)
@@ -154,16 +154,16 @@ else
 fi
 
 # Swift source
-if [ -f "$PROJECT_ROOT/Sources/BangoCat/BangoCatApp.swift" ]; then
-    swift_version=$(grep -o 'private let appVersion = "[^"]*"' "$PROJECT_ROOT/Sources/BangoCat/BangoCatApp.swift" | sed 's/.*"\([^"]*\)".*/\1/' || echo "")
-    swift_build=$(grep -o 'private let appBuild = "[^"]*"' "$PROJECT_ROOT/Sources/BangoCat/BangoCatApp.swift" | sed 's/.*"\([^"]*\)".*/\1/' || echo "")
+if [ -f "$PROJECT_ROOT/Sources/BongoCat/BongoCatApp.swift" ]; then
+    swift_version=$(grep -o 'private let appVersion = "[^"]*"' "$PROJECT_ROOT/Sources/BongoCat/BongoCatApp.swift" | sed 's/.*"\([^"]*\)".*/\1/' || echo "")
+    swift_build=$(grep -o 'private let appBuild = "[^"]*"' "$PROJECT_ROOT/Sources/BongoCat/BongoCatApp.swift" | sed 's/.*"\([^"]*\)".*/\1/' || echo "")
 
     if [ -n "$swift_version" ]; then
-        add_version "Swift appVersion" "$swift_version" "$PROJECT_ROOT/Sources/BangoCat/BangoCatApp.swift"
+        add_version "Swift appVersion" "$swift_version" "$PROJECT_ROOT/Sources/BongoCat/BongoCatApp.swift"
     fi
 
     if [ -n "$swift_build" ]; then
-        add_build "Swift appBuild" "$swift_build" "$PROJECT_ROOT/Sources/BangoCat/BangoCatApp.swift"
+        add_build "Swift appBuild" "$swift_build" "$PROJECT_ROOT/Sources/BongoCat/BongoCatApp.swift"
     fi
 else
     print_warning "Swift source file not found"

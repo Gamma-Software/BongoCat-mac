@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# BangoCat Build Script
+# BongoCat Build Script
 set -xe  # Exit on error
 
 # Colors for output
@@ -34,7 +34,7 @@ elif [ -n "$1" ]; then
     exit 1
 fi
 
-print_info "Building BangoCat in $BUILD_CONFIG mode..."
+print_info "Building BongoCat in $BUILD_CONFIG mode..."
 
 # Source environment variables for production builds
 if [ "$BUILD_CONFIG" = "release" ]; then
@@ -48,6 +48,16 @@ if [ "$BUILD_CONFIG" = "release" ]; then
         print_error "Please create a .env file in the project root with necessary environment variables"
         exit 1
     fi
+
+    # Check if posthog api key and host are set
+    if [ -n "$POSTHOG_API_KEY" ] && [ -n "$POSTHOG_HOST" ]; then
+        print_info "Posthog API key and host are set"
+    else
+        print_error "Posthog API key and host are not set"
+        print_error "Please set them in the .env file"
+        exit 1
+    fi
+
     print_info "Cleaning previous build artifacts for fresh production build..."
     swift package clean
     BUILD_COMMAND="swift build --configuration release"
@@ -64,7 +74,7 @@ if $BUILD_COMMAND; then
     else
         print_info "Run with: swift run --configuration release"
         print_info "Package with: ./Scripts/package_app.sh"
-        print_info "Binary location: .build/release/BangoCat"
+        print_info "Binary location: .build/release/BongoCat"
     fi
 else
     print_error "Build failed!"

@@ -1,6 +1,6 @@
-# BangoCat Scripts
+# BongoCat Scripts
 
-This directory contains build and maintenance scripts for the BangoCat project.
+This directory contains build and maintenance scripts for the BongoCat project.
 
 ## Scripts Overview
 
@@ -41,7 +41,7 @@ Creates a professional, distributable DMG with drag-and-drop installation, optio
 - Creates an `.app` bundle with proper structure
 - Copies icons, resources, and Info.plist
 - **🔗 Creates Applications folder shortcut for easy installation**
-- **🎨 Generates professional DMG background with BangoCat branding**
+- **🎨 Generates professional DMG background with BongoCat branding**
 - **📏 Customizes DMG window layout and icon arrangement**
 - Creates compressed, read-only DMG for distribution
 - **🚀 Optionally uploads to GitHub Releases with `--deliver` flag**
@@ -85,9 +85,9 @@ Creates a professional, distributable DMG with drag-and-drop installation, optio
 - 🛡️ Perfect for development and testing workflows
 
 **Output:**
-- `Build/package/BangoCat.app` - Ready-to-install app bundle
-- `Build/BangoCat-{version}.dmg` - Professional distribution DMG
-- **With `--deliver`:** GitHub Release at https://github.com/Gamma-Software/BangoCat-mac/releases
+- `Build/package/BongoCat.app` - Ready-to-install app bundle
+- `Build/BongoCat-{version}.dmg` - Professional distribution DMG
+- **With `--deliver`:** GitHub Release at https://github.com/Gamma-Software/BongoCat-mac/releases
 
 ### 🏷️ `bump_version.sh`
 Updates version numbers across the entire project.
@@ -195,7 +195,7 @@ Comprehensive test runner with advanced features.
 - **StrokeCounterTests**: Counter functionality, persistence, concurrency
 - **CatAnimationControllerTests**: Animation logic, state management, input handling
 - **AppDelegateTests**: Settings management, per-app positioning, version info
-- **BangoCatTests**: Integration tests, memory management, performance
+- **BongoCatTests**: Integration tests, memory management, performance
 
 ## Usage Examples
 
@@ -270,8 +270,8 @@ All build outputs go to organized directories:
 ```
 Build/
 ├── package/                 # App bundle staging
-│   └── BangoCat.app        # Complete app bundle
-├── BangoCat-1.0.1.dmg      # Distributable DMG
+│   └── BongoCat.app        # Complete app bundle
+├── BongoCat-1.0.1.dmg      # Distributable DMG
 └── (previous builds...)
 ```
 
@@ -311,7 +311,7 @@ Build/
 - Check available disk space in `/Applications`
 - If permission errors occur, the script will prompt for sudo password
 - Close the app from Activity Monitor if automatic termination fails
-- Try manually removing the existing app: `sudo rm -rf "/Applications/BangoCat.app"`
+- Try manually removing the existing app: `sudo rm -rf "/Applications/BongoCat.app"`
 - Verify `/Applications` folder exists and is writable
 - On macOS Ventura+, check System Settings > Privacy & Security for blocked apps
 

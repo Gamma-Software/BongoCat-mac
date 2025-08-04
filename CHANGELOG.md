@@ -1,9 +1,30 @@
 # Changelog
 
-All notable changes to BangoCat-mac will be documented in this file.
+All notable changes to BongoCat-mac will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [unreleased] - 2025-07-31
+
+### Modified
+
+- Verify that posthog api key and host are set in the .env file
+- Increase app switch detection interval to 0.1 seconds and make it constant
+- Rename project to BongoCat instead of BongoCat
+- Change default paw behavior to alternating
+- Implemented methods to retrieve, delete, and clear saved app positions.
+- Updated PreferencesWindow to display saved positions with app names and provide delete functionality.
+- Trigger settings update after modifying saved positions to ensure UI consistency.
+- Updated `getCornerPosition` to allow specifying a screen, improving position accuracy.
+- Modified `getSavedPositionsWithAppNames` to include screen names in the saved positions data structure.
+- Added new methods for screen detection and management, including `getScreenNameForPosition`, `getCurrentScreenInfo`, and `moveOverlayToScreen`.
+- Enhanced `PreferencesWindow` to display screen information and allow moving the overlay to different screens.
+- Updated image loading logic in `BongoCatApp.swift` and `CatView.swift` to prioritize executable directory and current working directory paths for CLI execution.
+- Added debug information to assist in troubleshooting image loading failures.
+- Enhanced fallback mechanisms to include relative paths from the project root.
+
+Signed-off-by: Valentin Rudloff <valentin.rudloff.perso@gmail.com>
 
 ## [1.5.6] - 2025-07-30
 
@@ -38,7 +59,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Modified
 
-- Remove create_background.py and INSTALLATION.md files; update icon resources and references in BangoCatApp.swift to use new menu-logo.png. Add new logo assets for improved branding.
+- Remove create_background.py and INSTALLATION.md files; update icon resources and references in BongoCatApp.swift to use new menu-logo.png. Add new logo assets for improved branding.
 
 ## [1.5.2] - 2025-07-28
 
@@ -55,13 +76,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Modified
 
 - Update README and TROUBLESHOOTING documentation with accessibility permission guidance. Add clear_accessibility.sh script to assist users in managing permissions.
-- Code sign app for consistent identity to prevent permission issues on reinstall. Update package_app.sh and BangoCatApp.swift for new bundle identifier and signing process.
+- Code sign app for consistent identity to prevent permission issues on reinstall. Update package_app.sh and BongoCatApp.swift for new bundle identifier and signing process.
 
 ## [1.5.0] - 2025-07-28
 
 ### Added
 
-- **🚀 Auto-Start at Launch** - New menu option to automatically start BangoCat when you log into your Mac
+- **🚀 Auto-Start at Launch** - New menu option to automatically start BongoCat when you log into your Mac
   - Uses modern SMAppService API for macOS 13.0+ with fallback to legacy method
   - Automatically syncs with system login items state
   - Can be toggled on/off from the status bar menu, right-click context menu, and preferences window
@@ -72,7 +93,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **🚀 Auto-Start at Launch** - New menu option to automatically start BangoCat when you log into your Mac
+- **🚀 Auto-Start at Launch** - New menu option to automatically start BongoCat when you log into your Mac
   - Uses modern SMAppService API for macOS 13.0+ with fallback to legacy method
   - Automatically syncs with system login items state
   - Can be toggled on/off from the status bar menu, right-click context menu, and preferences window
@@ -104,7 +125,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
-- Remove redundant analytics tracking for window position changes and per-app position saves in BangoCatApp and PostHogAnalyticsManager classes to streamline code and improve performance.
+- Remove redundant analytics tracking for window position changes and per-app position saves in BongoCatApp and PostHogAnalyticsManager classes to streamline code and improve performance.
 
 ## [1.4.1] - 2025-07-27
 
@@ -156,7 +177,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **📋 Cursor Rules System** - Comprehensive development rules and guidelines for consistent code quality
   - **Project Context Rule** - Always-applied project structure and development guidelines
-  - **Swift Development Guidelines** - Code style, architecture patterns, and BangoCat-specific conventions
+  - **Swift Development Guidelines** - Code style, architecture patterns, and BongoCat-specific conventions
   - **Changelog Management Rule** - Automated reminders to update changelog after development sessions
   - **Version Management Guidelines** - Semantic versioning and release process documentation
   - **Testing Guidelines** - Comprehensive testing standards and best practices
@@ -170,7 +191,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Tweet about BangoCat
+- Tweet about BongoCat
 
 ## [1.0.0] - 2025-07-26
 
@@ -201,7 +222,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **🎛️ Complete Menu System**:
   - Status bar menu with all settings
   - Right-click context menu on cat overlay
-  - "Visit Website" and "About BangoCat" menu items
+  - "Visit Website" and "About BongoCat" menu items
 - **🚫 Input Control Options**:
   - Ignore clicks mode to disable mouse reactions
   - Smart input filtering for key repeats
@@ -297,10 +318,10 @@ This project follows [Semantic Versioning](https://semver.org/):
 ## Release Notes
 
 ### 🎯 Key Features Highlighted
-- **Per-App Positioning**: The standout feature that sets BangoCat apart from other implementations
+- **Per-App Positioning**: The standout feature that sets BongoCat apart from other implementations
 - **Native Performance**: Built from ground up in Swift for optimal macOS integration
 - **Streaming Ready**: Perfect transparency and positioning for content creators
-- **Comprehensive Customization**: Most feature-rich BangoCat implementation available
+- **Comprehensive Customization**: Most feature-rich BongoCat implementation available
 
 ### 🚀 Future Roadmap
 - Audio support with bongo sound effects

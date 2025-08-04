@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# BangoCat Code Signing Script
+# BongoCat Code Signing Script
 set -xe
 
 source .env
@@ -23,8 +23,8 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
 cd "$PROJECT_ROOT"
 
-APP_NAME="BangoCat"
-BUNDLE_ID="com.leaptech.bangocat"
+APP_NAME="BongoCat"
+BUNDLE_ID="com.leaptech.bongocat"
 APP_BUNDLE="Build/package/${APP_NAME}.app"
 
 # Function to check if Apple Developer certificate is available
@@ -235,7 +235,7 @@ sign_with_certificate() {
 }
 
 # Main execution
-echo "🔐 BangoCat Code Signing Script"
+echo "🔐 BongoCat Code Signing Script"
 echo "================================"
 
 # Check if app bundle exists

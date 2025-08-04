@@ -2,13 +2,13 @@
 globs: *Tests.swift,*Test.swift
 ---
 
-# Testing Guidelines for BangoCat
+# Testing Guidelines for BongoCat
 
 ## Test Structure
-Tests are located in [Tests/BangoCatTests/](mdc:Tests/BangoCatTests/) with these key files:
-- [BangoCatTests.swift](mdc:Tests/BangoCatTests/BangoCatTests.swift) - Main app tests
-- [CatAnimationControllerTests.swift](mdc:Tests/BangoCatTests/CatAnimationControllerTests.swift) - Animation logic tests
-- [StrokeCounterTests.swift](mdc:Tests/BangoCatTests/StrokeCounterTests.swift) - Input tracking tests
+Tests are located in [Tests/BongoCatTests/](mdc:Tests/BongoCatTests/) with these key files:
+- [BongoCatTests.swift](mdc:Tests/BongoCatTests/BongoCatTests.swift) - Main app tests
+- [CatAnimationControllerTests.swift](mdc:Tests/BongoCatTests/CatAnimationControllerTests.swift) - Animation logic tests
+- [StrokeCounterTests.swift](mdc:Tests/BongoCatTests/StrokeCounterTests.swift) - Input tracking tests
 
 ## Testing Principles
 - **Unit tests** for business logic and data processing
