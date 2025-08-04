@@ -20,6 +20,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Modified `getSavedPositionsWithAppNames` to include screen names in the saved positions data structure.
 - Added new methods for screen detection and management, including `getScreenNameForPosition`, `getCurrentScreenInfo`, and `moveOverlayToScreen`.
 - Enhanced `PreferencesWindow` to display screen information and allow moving the overlay to different screens.
+- Updated image loading logic in `BongoCatApp.swift` and `CatView.swift` to prioritize executable directory and current working directory paths for CLI execution.
+- Added debug information to assist in troubleshooting image loading failures.
+- Enhanced fallback mechanisms to include relative paths from the project root.
 
 Signed-off-by: Valentin Rudloff <valentin.rudloff.perso@gmail.com>
 
