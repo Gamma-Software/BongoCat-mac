@@ -48,6 +48,16 @@ if [ "$BUILD_CONFIG" = "release" ]; then
         print_error "Please create a .env file in the project root with necessary environment variables"
         exit 1
     fi
+
+    # Check if posthog api key and host are set
+    if [ -n "$POSTHOG_API_KEY" ] && [ -n "$POSTHOG_HOST" ]; then
+        print_info "Posthog API key and host are set"
+    else
+        print_error "Posthog API key and host are not set"
+        print_error "Please set them in the .env file"
+        exit 1
+    fi
+
     print_info "Cleaning previous build artifacts for fresh production build..."
     swift package clean
     BUILD_COMMAND="swift build --configuration release"
