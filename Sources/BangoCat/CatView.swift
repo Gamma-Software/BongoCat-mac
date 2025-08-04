@@ -13,9 +13,9 @@ class StrokeCounter: ObservableObject {
     // Milestone notification manager
     private let milestoneManager = MilestoneNotificationManager.shared
 
-    init(strokesKey: String = "BangoCatTotalStrokes",
-         keystrokesKey: String = "BangoCatKeystrokes",
-         mouseClicksKey: String = "BangoCatMouseClicks") {
+    init(strokesKey: String = "BongoCatTotalStrokes",
+         keystrokesKey: String = "BongoCatKeystrokes",
+         mouseClicksKey: String = "BongoCatMouseClicks") {
         self.strokesKey = strokesKey
         self.keystrokesKey = keystrokesKey
         self.mouseClicksKey = mouseClicksKey
@@ -496,8 +496,8 @@ class CatAnimationController: ObservableObject {
     }
 }
 
-// MARK: - Authentic BangoCat Sprite System using Real Images
-struct BangoCatSprite: View {
+// MARK: - Authentic BongoCat Sprite System using Real Images
+struct BongoCatSprite: View {
     let state: CatState
 
     // Pre-load all images to avoid loading issues during animation
@@ -653,7 +653,7 @@ struct BangoCatSprite: View {
 
         // Method 4: Try direct file paths (development fallback)
         let possiblePaths = [
-            "Sources/BangoCat/Resources/Images/\(name).png",
+            "Sources/BongoCat/Resources/Images/\(name).png",
             "Resources/Images/\(name).png",
             "Images/\(name).png",
             "\(name).png"
@@ -690,8 +690,8 @@ struct CatView: View {
                     Color.clear
                     //Color.red //DEBUG
 
-                    // The authentic BangoCat sprite using real images
-                    BangoCatSprite(state: animationController.currentState)
+                    // The authentic BongoCat sprite using real images
+                    BongoCatSprite(state: animationController.currentState)
                         .scaleEffect(animationController.scale)
                         .scaleEffect(x: animationController.isFlippedHorizontally ? -1 : 1, y: 1)  // Apply horizontal flip
                         .rotationEffect(.degrees(animationController.rotation))  // Apply rotation
@@ -720,9 +720,9 @@ struct CatView: View {
                                 PostHogAnalyticsManager.shared.trackContextMenuUsed("right_click", action: "buy_coffee")
                             }
 
-                            Button("Tweet about BangoCat 🐦") {
-                                animationController.appDelegate?.tweetAboutBangoCatPublic()
-                                PostHogAnalyticsManager.shared.trackContextMenuUsed("right_click", action: "tweet_about_bangocat")
+                            Button("Tweet about BongoCat 🐦") {
+                                animationController.appDelegate?.tweetAboutBongoCatPublic()
+                                PostHogAnalyticsManager.shared.trackContextMenuUsed("right_click", action: "tweet_about_bongocat")
                             }
 
                             Button("Check for Updates 🔄") {
@@ -737,14 +737,14 @@ struct CatView: View {
 
                             Divider()
 
-                            Button("About BangoCat") {
+                            Button("About BongoCat") {
                                 animationController.appDelegate?.showCreditsPublic()
-                                PostHogAnalyticsManager.shared.trackContextMenuUsed("right_click", action: "about_bangocat")
+                                PostHogAnalyticsManager.shared.trackContextMenuUsed("right_click", action: "about_bongocat")
                             }
 
                             Divider()
 
-                            Button("Quit BangoCat") {
+                            Button("Quit BongoCat") {
                                 animationController.appDelegate?.quitAppPublic()
                                 PostHogAnalyticsManager.shared.trackContextMenuUsed("right_click", action: "quit_app")
                             }

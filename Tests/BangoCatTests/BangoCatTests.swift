@@ -1,7 +1,7 @@
 import XCTest
-@testable import BangoCat
+@testable import BongoCat
 
-final class BangoCatTests: XCTestCase {
+final class BongoCatTests: XCTestCase {
 
     // MARK: - Basic Component Tests
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# BangoCat Build Script
+# BongoCat Build Script
 set -xe  # Exit on error
 
 # Colors for output
@@ -34,7 +34,7 @@ elif [ -n "$1" ]; then
     exit 1
 fi
 
-print_info "Building BangoCat in $BUILD_CONFIG mode..."
+print_info "Building BongoCat in $BUILD_CONFIG mode..."
 
 # Source environment variables for production builds
 if [ "$BUILD_CONFIG" = "release" ]; then
@@ -64,7 +64,7 @@ if $BUILD_COMMAND; then
     else
         print_info "Run with: swift run --configuration release"
         print_info "Package with: ./Scripts/package_app.sh"
-        print_info "Binary location: .build/release/BangoCat"
+        print_info "Binary location: .build/release/BongoCat"
     fi
 else
     print_error "Build failed!"

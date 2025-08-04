@@ -1,5 +1,5 @@
 import XCTest
-@testable import BangoCat
+@testable import BongoCat
 
 final class CatAnimationControllerTests: XCTestCase {
     var animationController: CatAnimationController!

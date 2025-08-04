@@ -2,16 +2,16 @@
 alwaysApply: true
 ---
 
-# BangoCat macOS Project Context
+# BongoCat macOS Project Context
 
-This is **BangoCat-mac**, a native macOS application built in Swift that displays an animated cat overlay that responds to keyboard and mouse input, popular among streamers and content creators.
+This is **BongoCat-mac**, a native macOS application built in Swift that displays an animated cat overlay that responds to keyboard and mouse input, popular among streamers and content creators.
 
 ## Project Structure
-- **Main entry point**: [main.swift](mdc:Sources/BangoCat/main.swift) and [BangoCatApp.swift](mdc:Sources/BangoCat/BangoCatApp.swift)
-- **Core components**: [CatView.swift](mdc:Sources/BangoCat/CatView.swift), [InputMonitor.swift](mdc:Sources/BangoCat/InputMonitor.swift), [OverlayWindow.swift](mdc:Sources/BangoCat/OverlayWindow.swift)
+- **Main entry point**: [main.swift](mdc:Sources/BongoCat/main.swift) and [BongoCatApp.swift](mdc:Sources/BongoCat/BongoCatApp.swift)
+- **Core components**: [CatView.swift](mdc:Sources/BongoCat/CatView.swift), [InputMonitor.swift](mdc:Sources/BongoCat/InputMonitor.swift), [OverlayWindow.swift](mdc:Sources/BongoCat/OverlayWindow.swift)
 - **Project config**: [Package.swift](mdc:Package.swift) and [Info.plist](mdc:Info.plist)
 - **Build scripts**: Located in [Scripts/](mdc:Scripts/) directory
-- **Assets**: Cat sprites in [Sources/BangoCat/Resources/Images/](mdc:Sources/BangoCat/Resources/Images/)
+- **Assets**: Cat sprites in [Sources/BongoCat/Resources/Images/](mdc:Sources/BongoCat/Resources/Images/)
 
 ## Key Features
 - **Per-app positioning**: Remembers cat position for each application

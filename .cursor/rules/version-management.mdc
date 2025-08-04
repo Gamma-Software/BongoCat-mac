@@ -4,7 +4,7 @@ description: "version management and release process"
 
 # Version Management Guidelines
 
-BangoCat follows [Semantic Versioning](https://semver.org/) with automated version management scripts.
+BongoCat follows [Semantic Versioning](https://semver.org/) with automated version management scripts.
 
 ## Version Files to Update
 When changing versions, these files need to be synchronized:

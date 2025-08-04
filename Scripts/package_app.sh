@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# BangoCat App Packaging Script
+# BongoCat App Packaging Script
 set -e
 
 # Parse command line arguments
@@ -74,8 +74,8 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
 cd "$PROJECT_ROOT"
 
-APP_NAME="BangoCat"
-BUNDLE_ID="com.leaptech.bangocat"
+APP_NAME="BongoCat"
+BUNDLE_ID="com.leaptech.bongocat"
 VERSION="1.5.6"  # Will be updated by bump_version.sh
 
 # Set build configuration based on debug flag
@@ -96,7 +96,7 @@ fi
 
 PACKAGE_DIR="Build/package"
 APP_BUNDLE="${PACKAGE_DIR}/${APP_NAME}.app"
-GITHUB_REPO="Gamma-Software/BangoCat-mac"
+GITHUB_REPO="Gamma-Software/BongoCat-mac"
 
 # Function to check if we're on the main branch
 check_main_branch() {
@@ -215,9 +215,9 @@ deliver_to_github() {
         tag_name="v${VERSION}-debug"
     fi
 
-    local release_title="BangoCat v${VERSION}"
+    local release_title="BongoCat v${VERSION}"
     if [ "$DEBUG_BUILD" = true ]; then
-        release_title="BangoCat v${VERSION} (Debug Build)"
+        release_title="BongoCat v${VERSION} (Debug Build)"
     fi
 
     # Try to parse changelog, fall back to default if parsing fails
@@ -238,15 +238,15 @@ This is a debug build intended for development and testing purposes:
 - Larger file size than release builds"
         fi
 
-        release_notes="# BangoCat v${VERSION}${build_info}
+        release_notes="# BongoCat v${VERSION}${build_info}
 
 ${changelog_notes}
 
 ## 📦 Installation Instructions
 
 1. Download the DMG file below
-2. Open the DMG and drag BangoCat.app to Applications
-3. Launch BangoCat from Applications folder
+2. Open the DMG and drag BongoCat.app to Applications
+3. Launch BongoCat from Applications folder
 4. Grant accessibility permissions when prompted
 
 ## 🔧 System Requirements
@@ -265,7 +265,7 @@ ${changelog_notes}
 ⚠️ **DEBUG BUILD** - For development and testing purposes only"
         fi
 
-        release_notes="BangoCat macOS release v${VERSION}${build_notice}
+        release_notes="BongoCat macOS release v${VERSION}${build_notice}
 
 🐱 **What's New**
 - Automatic build from commit $(git rev-parse --short HEAD)
@@ -274,8 +274,8 @@ ${changelog_notes}
 
 📦 **Installation**
 1. Download the DMG file below
-2. Open the DMG and drag BangoCat.app to Applications
-3. Launch BangoCat from Applications folder
+2. Open the DMG and drag BongoCat.app to Applications
+3. Launch BongoCat from Applications folder
 4. Grant accessibility permissions when prompted
 
 🔧 **System Requirements**
@@ -315,7 +315,7 @@ ${changelog_notes}
     echo "🔗 Release URL: $release_url"
     echo "📥 Download URL: $release_url/download/$(basename "$DMG_NAME")"
     echo ""
-    echo "✅ Your BangoCat release is now available for download!"
+    echo "✅ Your BongoCat release is now available for download!"
 }
 
 # Function to install app locally
@@ -567,7 +567,7 @@ verify_github_release() {
     fi
 }
 
-echo "🐱 Starting BangoCat packaging process..."
+echo "🐱 Starting BongoCat packaging process..."
 echo "📍 Working from: $PROJECT_ROOT"
 echo "🔧 Build type: ${BUILD_TYPE}"
 echo "📦 Build directory: ${BUILD_DIR}"
@@ -624,10 +624,10 @@ if [ -f "Assets/Icons/menu-logo.ico" ]; then
     cp "Assets/Icons/menu-logo.ico" "${APP_BUNDLE}/Contents/Resources/"
 fi
 
-# Copy all images from Sources/BangoCat/Resources
+# Copy all images from Sources/BongoCat/Resources
 echo "🎨 Copying app resources..."
-if [ -d "Sources/BangoCat/Resources" ]; then
-    cp -r "Sources/BangoCat/Resources/"* "${APP_BUNDLE}/Contents/Resources/"
+if [ -d "Sources/BongoCat/Resources" ]; then
+    cp -r "Sources/BongoCat/Resources/"* "${APP_BUNDLE}/Contents/Resources/"
 fi
 
 # Make executable runnable
@@ -702,7 +702,7 @@ echo ""
 echo "💡 DMG Enhancement Notes:"
 echo "   • For custom DMG layouts, additional permissions may be required"
 echo "   • The current DMG includes the Applications folder shortcut"
-echo "   • Users can drag BangoCat.app to Applications for easy installation"
+echo "   • Users can drag BongoCat.app to Applications for easy installation"
 echo ""
 echo "🚀 To enhance the DMG with custom backgrounds (optional):"
 echo "   • Install Python 3 + PIL: pip3 install Pillow"
@@ -805,7 +805,7 @@ echo "   📏 Proper window sizing and icon arrangement"
 echo ""
 echo "🚀 Users can now easily install by:"
 echo "   1. Opening the DMG file"
-echo "   2. Dragging BangoCat.app to the Applications folder"
+echo "   2. Dragging BongoCat.app to the Applications folder"
 echo "   3. Ejecting the DMG"
 echo ""
 echo "💡 Tip: Test the DMG by double-clicking it to ensure it looks good!"

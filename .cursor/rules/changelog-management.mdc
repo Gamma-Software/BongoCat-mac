@@ -52,13 +52,13 @@ Add changes to the `[unreleased]` section at the top of the changelog:
 ## Examples
 ```markdown
 ### Added
-- **🎯 Smart Paw Detection** - Intelligent left/right paw assignment based on keyboard layout in [InputMonitor.swift](mdc:Sources/BangoCat/InputMonitor.swift)
+- **🎯 Smart Paw Detection** - Intelligent left/right paw assignment based on keyboard layout in [InputMonitor.swift](mdc:Sources/BongoCat/InputMonitor.swift)
 
 ### Fixed
-- **🐛 Window Positioning** - Fixed cat position not saving correctly across app restarts in [OverlayWindow.swift](mdc:Sources/BangoCat/OverlayWindow.swift)
+- **🐛 Window Positioning** - Fixed cat position not saving correctly across app restarts in [OverlayWindow.swift](mdc:Sources/BongoCat/OverlayWindow.swift)
 
 ### Changed
-- **⚡ Performance** - Optimized animation rendering for better CPU usage in [CatView.swift](mdc:Sources/BangoCat/CatView.swift)
+- **⚡ Performance** - Optimized animation rendering for better CPU usage in [CatView.swift](mdc:Sources/BongoCat/CatView.swift)
 ```
 
 ## When to Update
@@ -68,4 +68,4 @@ Add changes to the `[unreleased]` section at the top of the changelog:
 - **Before committing significant changes**
 - **At the end of development sessions**
 
-Remember: The changelog is crucial for users to understand what's new, what's fixed, and what's changed in each version of BangoCat!
+Remember: The changelog is crucial for users to understand what's new, what's fixed, and what's changed in each version of BongoCat!

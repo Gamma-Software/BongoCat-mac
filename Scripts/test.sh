@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# BangoCat Test Runner Script
+# BongoCat Test Runner Script
 set -e
 
 # Colors for output
@@ -23,7 +23,7 @@ print_test() { echo -e "${CYAN}🧪 $1${NC}"; }
 
 # Function to show usage
 show_usage() {
-    echo "BangoCat Test Runner"
+    echo "BongoCat Test Runner"
     echo ""
     echo "Usage: $0 [options]"
     echo ""
@@ -83,7 +83,7 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
 cd "$PROJECT_ROOT"
 
-print_header "🧪 BangoCat Test Suite"
+print_header "🧪 BongoCat Test Suite"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 if [ "$QUIET" = false ]; then
@@ -143,7 +143,7 @@ if [ "$VERBOSE" = true ] || [ "$QUIET" = false ]; then
     eval $TEST_CMD
     TEST_RESULT=$?
 else
-    eval $TEST_CMD > /tmp/bangocat_test_output.txt 2>&1
+    eval $TEST_CMD > /tmp/bongocat_test_output.txt 2>&1
     TEST_RESULT=$?
 fi
 
@@ -162,7 +162,7 @@ else
     if [ "$QUIET" = true ]; then
         echo ""
         print_info "Test output:"
-        cat /tmp/bangocat_test_output.txt
+        cat /tmp/bongocat_test_output.txt
     fi
 fi
 
@@ -185,7 +185,7 @@ if [ "$COVERAGE" = true ]; then
         print_warning "Code coverage requires additional setup with llvm-cov"
         print_info "To enable coverage:"
         echo "  1. swift test --enable-code-coverage"
-        echo "  2. xcrun llvm-cov show .build/debug/BangoCatPackageTests.xctest/Contents/MacOS/BangoCatPackageTests -instr-profile .build/debug/codecov/default.profdata Sources/"
+        echo "  2. xcrun llvm-cov show .build/debug/BongoCatPackageTests.xctest/Contents/MacOS/BongoCatPackageTests -instr-profile .build/debug/codecov/default.profdata Sources/"
     else
         print_warning "llvm-cov not found. Coverage reporting not available."
         print_info "Install with: xcode-select --install"
@@ -193,29 +193,29 @@ if [ "$COVERAGE" = true ]; then
 fi
 
 # Show individual test file results (if available)
-if [ "$QUIET" = false ] && [ -f "/tmp/bangocat_test_output.txt" ]; then
+if [ "$QUIET" = false ] && [ -f "/tmp/bongocat_test_output.txt" ]; then
     echo ""
     print_info "Test Results by File:"
 
     # Extract test results for each file
-    if grep -q "StrokeCounterTests" /tmp/bangocat_test_output.txt; then
-        STROKE_TESTS=$(grep -c "StrokeCounterTests.*passed" /tmp/bangocat_test_output.txt || echo "0")
+    if grep -q "StrokeCounterTests" /tmp/bongocat_test_output.txt; then
+        STROKE_TESTS=$(grep -c "StrokeCounterTests.*passed" /tmp/bongocat_test_output.txt || echo "0")
         echo "  • StrokeCounterTests: ${STROKE_TESTS} tests"
     fi
 
-    if grep -q "CatAnimationControllerTests" /tmp/bangocat_test_output.txt; then
-        ANIMATION_TESTS=$(grep -c "CatAnimationControllerTests.*passed" /tmp/bangocat_test_output.txt || echo "0")
+    if grep -q "CatAnimationControllerTests" /tmp/bongocat_test_output.txt; then
+        ANIMATION_TESTS=$(grep -c "CatAnimationControllerTests.*passed" /tmp/bongocat_test_output.txt || echo "0")
         echo "  • CatAnimationControllerTests: ${ANIMATION_TESTS} tests"
     fi
 
-    if grep -q "AppDelegateTests" /tmp/bangocat_test_output.txt; then
-        DELEGATE_TESTS=$(grep -c "AppDelegateTests.*passed" /tmp/bangocat_test_output.txt || echo "0")
+    if grep -q "AppDelegateTests" /tmp/bongocat_test_output.txt; then
+        DELEGATE_TESTS=$(grep -c "AppDelegateTests.*passed" /tmp/bongocat_test_output.txt || echo "0")
         echo "  • AppDelegateTests: ${DELEGATE_TESTS} tests"
     fi
 fi
 
 # Clean up temporary files
-rm -f /tmp/bangocat_test_output.txt
+rm -f /tmp/bongocat_test_output.txt
 
 echo ""
 if [ $TEST_RESULT -eq 0 ]; then
@@ -228,7 +228,7 @@ else
     print_error "Test run completed with failures!"
     print_info "Debugging tips:"
     echo "  • Run with --verbose to see detailed error output"
-    echo "  • Check individual test files in Tests/BangoCatTests/"
+    echo "  • Check individual test files in Tests/BongoCatTests/"
     echo "  • Ensure all dependencies are properly installed"
     exit 1
 fi

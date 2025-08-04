@@ -2,14 +2,14 @@
 import PackageDescription
 
 let package = Package(
-    name: "BangoCat-mac",
+    name: "BongoCat-mac",
     platforms: [
         .macOS(.v13)
     ],
     products: [
         .executable(
-            name: "BangoCat",
-            targets: ["BangoCat"]
+            name: "BongoCat",
+            targets: ["BongoCat"]
         ),
     ],
     dependencies: [
@@ -17,7 +17,7 @@ let package = Package(
     ],
     targets: [
         .executableTarget(
-            name: "BangoCat",
+            name: "BongoCat",
             dependencies: [
                 .product(name: "PostHog", package: "posthog-ios")
             ],
@@ -26,8 +26,8 @@ let package = Package(
             ]
         ),
         .testTarget(
-            name: "BangoCatTests",
-            dependencies: ["BangoCat"]
+            name: "BongoCatTests",
+            dependencies: ["BongoCat"]
         ),
     ]
 )

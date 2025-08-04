@@ -1,11 +1,11 @@
 import XCTest
-@testable import BangoCat
+@testable import BongoCat
 
 final class StrokeCounterTests: XCTestCase {
     var strokeCounter: StrokeCounter!
-    let testStrokesKey = "TestBangoCatTotalStrokes"
-    let testKeystrokesKey = "TestBangoCatKeystrokes"
-    let testMouseClicksKey = "TestBangoCatMouseClicks"
+    let testStrokesKey = "TestBongoCatTotalStrokes"
+    let testKeystrokesKey = "TestBongoCatKeystrokes"
+    let testMouseClicksKey = "TestBongoCatMouseClicks"
 
     override func setUp() {
         super.setUp()

@@ -8,20 +8,20 @@ class MilestoneNotificationManager: NSObject, UNUserNotificationCenterDelegate, 
 
     // Milestone settings
     @Published private var notificationsEnabled: Bool = true
-    private let notificationsEnabledKey = "BangoCatMilestoneNotificationsEnabled"
+    private let notificationsEnabledKey = "BongoCatMilestoneNotificationsEnabled"
 
     // Default milestone intervals
     private var milestoneIntervals: [Int] = [100, 500, 1000, 2500, 5000, 10000, 25000, 50000, 100000, 1000000, 10000000]
-    private let milestoneIntervalsKey = "BangoCatMilestoneIntervals"
+    private let milestoneIntervalsKey = "BongoCatMilestoneIntervals"
 
     // Track last notified milestones to avoid duplicates
     private var lastNotifiedKeystrokeMilestone: Int = 0
     private var lastNotifiedClickMilestone: Int = 0
     private var lastNotifiedTotalMilestone: Int = 0
 
-    private let lastKeystrokeMilestoneKey = "BangoCatLastKeystrokeMilestone"
-    private let lastClickMilestoneKey = "BangoCatLastClickMilestone"
-    private let lastTotalMilestoneKey = "BangoCatLastTotalMilestone"
+    private let lastKeystrokeMilestoneKey = "BongoCatLastKeystrokeMilestone"
+    private let lastClickMilestoneKey = "BongoCatLastClickMilestone"
+    private let lastTotalMilestoneKey = "BongoCatLastTotalMilestone"
 
     // Track if notifications have been set up
     private var notificationsSetup: Bool = false
@@ -253,7 +253,7 @@ class MilestoneNotificationManager: NSObject, UNUserNotificationCenterDelegate, 
         let center = UNUserNotificationCenter.current()
 
         let content = UNMutableNotificationContent()
-        content.title = "\(icon) BangoCat Milestone!"
+        content.title = "\(icon) BongoCat Milestone!"
         content.body = message
         content.sound = .default
 

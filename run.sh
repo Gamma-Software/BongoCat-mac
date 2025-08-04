@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# BangoCat Build Menu Script
+# BongoCat Build Menu Script
 # Interactive menu to run different build and package commands
 
 print_info "Sourcing .env file..."
@@ -8,7 +8,7 @@ source .env
 
 # Function to show usage
 show_usage() {
-    echo "🐱 BangoCat Build Script"
+    echo "🐱 BongoCat Build Script"
     echo "========================"
     echo ""
     echo "Usage: $0 [OPTION]"
@@ -116,7 +116,7 @@ execute_option() {
 
             # Check if we're in the right directory
             if [ ! -f "Package.swift" ]; then
-                echo "❌ Error: Package.swift not found. Please run this script from the BangoCat-mac directory"
+                echo "❌ Error: Package.swift not found. Please run this script from the BongoCat-mac directory"
                 exit 1
             fi
             echo "✅ Package.swift found"
@@ -132,14 +132,14 @@ execute_option() {
             echo "✅ All required scripts found"
 
             # Check if source files exist
-            if [ ! -f "Sources/BangoCat/main.swift" ]; then
-                echo "❌ Error: Main source file not found: Sources/BangoCat/main.swift"
+            if [ ! -f "Sources/BongoCat/main.swift" ]; then
+                echo "❌ Error: Main source file not found: Sources/BongoCat/main.swift"
                 exit 1
             fi
             echo "✅ Main source file found"
 
             # Check if cat images exist
-            if [ ! -f "Sources/BangoCat/Resources/Images/base.png" ]; then
+            if [ ! -f "Sources/BongoCat/Resources/Images/base.png" ]; then
                 echo "❌ Error: Cat image resources not found"
                 exit 1
             fi
@@ -171,7 +171,7 @@ execute_option() {
             fi
 
             echo ""
-            echo "🎉 All checks passed! Your BangoCat development environment is ready."
+            echo "🎉 All checks passed! Your BongoCat development environment is ready."
             echo "   You can now proceed with building and packaging the app."
             echo ""
             echo "🔐 Code Signing Check:"
@@ -243,7 +243,7 @@ execute_option() {
 # Parse command line arguments
 if [ $# -eq 0 ]; then
     # No arguments provided, show interactive menu
-    echo "🐱 BangoCat Build Menu"
+    echo "🐱 BongoCat Build Menu"
     echo "======================"
     echo ""
     echo "Please select an option:"

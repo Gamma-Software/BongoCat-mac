@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# BangoCat Version Bump Script
+# BongoCat Version Bump Script
 # This script updates version numbers across the project
 set -e
 
@@ -19,7 +19,7 @@ print_error() { echo -e "${RED}❌ $1${NC}"; }
 
 # Function to show usage
 show_usage() {
-    echo "BangoCat Version Bump Script"
+    echo "BongoCat Version Bump Script"
     echo ""
     echo "Usage: $0 <version> [options]"
     echo ""
@@ -94,7 +94,7 @@ if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
     exit 1
 fi
 
-print_info "BangoCat Version Bump Script"
+print_info "BongoCat Version Bump Script"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 print_info "New Version: $VERSION"
 echo ""
@@ -173,7 +173,7 @@ fi
 
 # Update Swift source file
 print_info "Updating Swift source code..."
-SWIFT_FILE="$PROJECT_ROOT/Sources/BangoCat/BangoCatApp.swift"
+SWIFT_FILE="$PROJECT_ROOT/Sources/BongoCat/BongoCatApp.swift"
 
 if [ ! -f "$SWIFT_FILE" ]; then
     print_error "Swift source file not found at $SWIFT_FILE"

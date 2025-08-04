@@ -1,12 +1,12 @@
 import XCTest
-@testable import BangoCat
+@testable import BongoCat
 
 final class AutoStartTests: XCTestCase {
 
     func testAutoStartPreferenceLoading() {
         // Test that auto-start preference loads correctly
         let userDefaults = UserDefaults.standard
-        let testKey = "BangoCatAutoStartAtLaunch"
+        let testKey = "BongoCatAutoStartAtLaunch"
 
         // Test that UserDefaults.bool returns false when key doesn't exist
         userDefaults.removeObject(forKey: testKey)

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Test script for BangoCat update system
+# Test script for BongoCat update system
 # This script helps diagnose update-related issues
 
 set -e
@@ -28,7 +28,7 @@ print_error() {
     echo -e "${RED}❌ $1${NC}"
 }
 
-echo "🔍 BangoCat Update System Test"
+echo "🔍 BongoCat Update System Test"
 echo "================================"
 
 # Check current version
@@ -38,7 +38,7 @@ print_success "Current version: $CURRENT_VERSION"
 
 # Test GitHub API connectivity
 print_info "Testing GitHub API connectivity..."
-API_RESPONSE=$(curl -s -w "%{http_code}" "https://api.github.com/repos/Gamma-Software/BangoCat-mac/releases/latest" -o /tmp/latest_release.json)
+API_RESPONSE=$(curl -s -w "%{http_code}" "https://api.github.com/repos/Gamma-Software/BongoCat-mac/releases/latest" -o /tmp/latest_release.json)
 HTTP_CODE="${API_RESPONSE: -3}"
 
 if [ "$HTTP_CODE" = "200" ]; then
@@ -69,7 +69,7 @@ fi
 
 # Test download URL
 print_info "Testing download URL..."
-DOWNLOAD_URL="https://github.com/Gamma-Software/BangoCat-mac/releases/download/v$LATEST_VERSION/BangoCat-$LATEST_VERSION.dmg"
+DOWNLOAD_URL="https://github.com/Gamma-Software/BongoCat-mac/releases/download/v$LATEST_VERSION/BongoCat-$LATEST_VERSION.dmg"
 DOWNLOAD_RESPONSE=$(curl -s -I "$DOWNLOAD_URL" | head -1 | cut -d' ' -f2)
 
 if [ "$DOWNLOAD_RESPONSE" = "302" ] || [ "$DOWNLOAD_RESPONSE" = "200" ]; then
@@ -88,8 +88,8 @@ fi
 
 # Check app permissions
 print_info "Checking app permissions..."
-if [ -d "/Applications/BangoCat.app" ]; then
-    print_success "BangoCat found in Applications"
+if [ -d "/Applications/BongoCat.app" ]; then
+    print_success "BongoCat found in Applications"
 
     # Check if app can be replaced
     if [ -w "/Applications" ]; then
@@ -98,7 +98,7 @@ if [ -d "/Applications/BangoCat.app" ]; then
         print_warning "No write permission to Applications folder (may need sudo for installation)"
     fi
 else
-    print_warning "BangoCat not found in Applications folder"
+    print_warning "BongoCat not found in Applications folder"
 fi
 
 # Clean up
@@ -114,6 +114,6 @@ echo "• Download URL: HTTP $DOWNLOAD_RESPONSE"
 echo ""
 echo "💡 If you're experiencing update issues:"
 echo "1. Check your internet connection"
-echo "2. Ensure BangoCat has network permissions"
+echo "2. Ensure BongoCat has network permissions"
 echo "3. Try downloading manually from GitHub releases"
 echo "4. Check the app logs for detailed error messages"

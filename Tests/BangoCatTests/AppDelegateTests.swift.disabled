@@ -1,16 +1,16 @@
 import XCTest
-@testable import BangoCat
+@testable import BongoCat
 
 final class AppDelegateTests: XCTestCase {
     var appDelegate: AppDelegate!
     let testKeys = [
-        "TestBangoCatScale",
-        "TestBangoCatScaleOnInput",
-        "TestBangoCatRotation",
-        "TestBangoCatFlipHorizontally",
-        "TestBangoCatIgnoreClicks",
-        "TestBangoCatPerAppPositioning",
-        "TestBangoCatPerAppPositions"
+        "TestBongoCatScale",
+        "TestBongoCatScaleOnInput",
+        "TestBongoCatRotation",
+        "TestBongoCatFlipHorizontally",
+        "TestBongoCatIgnoreClicks",
+        "TestBongoCatPerAppPositioning",
+        "TestBongoCatPerAppPositions"
     ]
 
     override func setUp() {

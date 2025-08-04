@@ -497,7 +497,7 @@ struct AdvancedPreferencesView: View {
                         Spacer()
                     }
 
-                    Text("Help improve BangoCat by sharing anonymous usage data. No personal information is collected.")
+                    Text("Help improve BongoCat by sharing anonymous usage data. No personal information is collected.")
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .padding(.leading, 0)
@@ -604,8 +604,8 @@ struct AboutPreferencesView: View {
                         }
                         .buttonStyle(.bordered)
 
-                        Button("Tweet about BangoCat 🐦") {
-                            appDelegate.tweetAboutBangoCat()
+                        Button("Tweet about BongoCat 🐦") {
+                            appDelegate.tweetAboutBongoCat()
                         }
                         .buttonStyle(.bordered)
 
@@ -671,7 +671,7 @@ class PreferencesWindowController: NSWindowController {
             defer: false
         )
 
-        window.title = "BangoCat Preferences"
+        window.title = "BongoCat Preferences"
         window.center()
         window.setFrameAutosaveName("PreferencesWindow")
         window.contentView = NSHostingView(rootView: PreferencesWindow(appDelegate: appDelegate))

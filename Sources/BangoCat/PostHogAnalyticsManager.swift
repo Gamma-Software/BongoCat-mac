@@ -2,7 +2,7 @@ import Foundation
 import PostHog
 
 /**
- * PostHog Analytics Manager for BangoCat
+ * PostHog Analytics Manager for BongoCat
  *
  * Setup Instructions:
  * 1. Create a PostHog account at https://posthog.com
@@ -31,7 +31,7 @@ class PostHogAnalyticsManager: ObservableObject {
 
     // Privacy settings
     @Published private(set) var isAnalyticsEnabled: Bool = true
-    private let analyticsEnabledKey = "BangoCatAnalyticsEnabled"
+    private let analyticsEnabledKey = "BongoCatAnalyticsEnabled"
 
     // Configuration
     private let apiKey: String
@@ -91,7 +91,7 @@ class PostHogAnalyticsManager: ObservableObject {
         guard Bundle.main.bundleIdentifier != nil else {
             print("⚠️ PostHog not initialized - no bundle identifier (running via swift run?)")
             print("   Analytics will be disabled for this session")
-            print("   Use 'swift build && open .build/debug/BangoCat.app' for proper testing")
+            print("   Use 'swift build && open .build/debug/BongoCat.app' for proper testing")
 
             // Disable PostHog for this session since we can't initialize it safely
             isConfigured = false
@@ -505,19 +505,19 @@ class PostHogAnalyticsManager: ObservableObject {
 
     private func getDeviceId() -> String {
         // Create a consistent device identifier
-        if let identifier = UserDefaults.standard.string(forKey: "BangoCatDeviceId") {
+        if let identifier = UserDefaults.standard.string(forKey: "BongoCatDeviceId") {
             return identifier
         }
 
         let newIdentifier = UUID().uuidString
-        UserDefaults.standard.set(newIdentifier, forKey: "BangoCatDeviceId")
+        UserDefaults.standard.set(newIdentifier, forKey: "BongoCatDeviceId")
         return newIdentifier
     }
 
     private func incrementLaunchCount() -> Int {
-        let currentCount = UserDefaults.standard.integer(forKey: "BangoCatLaunchCount")
+        let currentCount = UserDefaults.standard.integer(forKey: "BongoCatLaunchCount")
         let newCount = currentCount + 1
-        UserDefaults.standard.set(newCount, forKey: "BangoCatLaunchCount")
+        UserDefaults.standard.set(newCount, forKey: "BongoCatLaunchCount")
         return newCount
     }
 

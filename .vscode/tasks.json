@@ -10,7 +10,7 @@
 				"-diagnostic-style=llvm"
 			],
 			"env": {},
-			"cwd": "/Users/valentinrudloff/Workspace/BangoCat-mac",
+			"cwd": "/Users/valentinrudloff/Workspace/BongoCat-mac",
 			"disableTaskQueue": true,
 			"group": "build",
 			"problemMatcher": [],
@@ -31,8 +31,8 @@
 				"clear": false
 			},
 			"problemMatcher": [],
-			"label": "BangoCat: Build Debug",
-			"detail": "Build BangoCat in debug mode using build.sh"
+			"label": "BongoCat: Build Debug",
+			"detail": "Build BongoCat in debug mode using build.sh"
 		},
 		{
 			"type": "shell",
@@ -48,8 +48,8 @@
 				"clear": false
 			},
 			"problemMatcher": [],
-			"label": "BangoCat: Build Release",
-			"detail": "Build BangoCat in release mode using build.sh"
+			"label": "BongoCat: Build Release",
+			"detail": "Build BongoCat in release mode using build.sh"
 		},
 		{
 			"type": "shell",
@@ -65,7 +65,7 @@
 				"clear": false
 			},
 			"problemMatcher": [],
-			"label": "BangoCat: Run Tests",
+			"label": "BongoCat: Run Tests",
 			"detail": "Run all tests using test.sh"
 		},
 		{
@@ -82,7 +82,7 @@
 				"clear": false
 			},
 			"problemMatcher": [],
-			"label": "BangoCat: Run Tests (Verbose)",
+			"label": "BongoCat: Run Tests (Verbose)",
 			"detail": "Run all tests with verbose output using test.sh"
 		},
 		{
@@ -99,9 +99,9 @@
 				"clear": false
 			},
 			"problemMatcher": [],
-			"label": "BangoCat: Package App",
-			"detail": "Package BangoCat into .app bundle and create DMG",
-			"dependsOn": "BangoCat: Build Release"
+			"label": "BongoCat: Package App",
+			"detail": "Package BongoCat into .app bundle and create DMG",
+			"dependsOn": "BongoCat: Build Release"
 		},
 		{
 			"type": "shell",
@@ -117,7 +117,7 @@
 				"clear": false
 			},
 			"problemMatcher": [],
-			"label": "BangoCat: Check Version Consistency",
+			"label": "BongoCat: Check Version Consistency",
 			"detail": "Check that all version numbers are consistent across project files"
 		},
 		{
@@ -134,7 +134,7 @@
 				"clear": false
 			},
 			"problemMatcher": [],
-			"label": "BangoCat: Check Version Consistency (Verbose)",
+			"label": "BongoCat: Check Version Consistency (Verbose)",
 			"detail": "Check version consistency with detailed output"
 		}
 	]

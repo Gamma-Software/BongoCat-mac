@@ -1,4 +1,4 @@
-# BangoCat Troubleshooting Guide
+# BongoCat Troubleshooting Guide
 
 ## Accessibility Permissions
 
@@ -7,7 +7,7 @@ If the cat is not animating when typing on your keyboard, the accessibility perm
 
 **Solution:**
 1. Go to **System Preferences** → **Security & Privacy** → **Accessibility**
-2. Remove BangoCat from the list if it's there
+2. Remove BongoCat from the list if it's there
 3. Re-run the app and grant permissions when prompted
 
 ### Issue: Accessibility permission keeps being asked after reinstall
@@ -15,7 +15,7 @@ This happens because macOS treats apps with different signatures as different ap
 
 **Solutions:**
 1. **Use the packaged app**: Download the official DMG from releases instead of building from source
-2. **Remove old permissions**: Clear BangoCat from Accessibility list before reinstalling
+2. **Remove old permissions**: Clear BongoCat from Accessibility list before reinstalling
 3. **Consistent builds**: The app is now code signed to maintain consistent identity
 
 ## Common Issues

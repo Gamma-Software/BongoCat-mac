@@ -1,21 +1,21 @@
-# Free BangoCat Overlay for macOS
+# Free BongoCat Overlay for macOS
 
 <p align="center">
-  <img src="media/quick.gif" alt="BangoCat Logo" width="500" />
+  <img src="media/quick.gif" alt="BongoCat Logo" width="500" />
 </p>
 
 
-A native macOS implementation of the beloved BangoCat overlay, written in Swift. Perfect for streamers, content creators, and anyone who wants an adorable cat companion on their desktop that reacts to their typing and interactions.
+A native macOS implementation of the beloved BongoCat overlay, written in Swift. Perfect for streamers, content creators, and anyone who wants an adorable cat companion on their desktop that reacts to their typing and interactions.
 
 ![Platform](https://img.shields.io/badge/Platform-macOS%2013%2B-blue) ![Language](https://img.shields.io/badge/Language-Swift-orange) ![SwiftUI](https://img.shields.io/badge/UI-SwiftUI-purple) ![Status](https://img.shields.io/badge/Status-Stable-green) ![Version](https://img.shields.io/badge/Version-1.5.6-blue)
 
-## What is BangoCat?
+## What is BongoCat?
 
-BangoCat is a popular internet meme featuring a cat playing bongos, originally created by [DitzyFlama](https://twitter.com/DitzyFlama) using [StrayRogue's](https://twitter.com/StrayRogue) adorable cat drawing. This project brings the interactive BangoCat experience to macOS as a native application.
+BongoCat is a popular internet meme featuring a cat playing bongos, originally created by [DitzyFlama](https://twitter.com/DitzyFlama) using [StrayRogue's](https://twitter.com/StrayRogue) adorable cat drawing. This project brings the interactive BongoCat experience to macOS as a native application.
 
 ## ✨ Features
 
-BangoCat is a **fully-featured**, **native macOS** typing companion with extensive customization options.
+BongoCat is a **fully-featured**, **native macOS** typing companion with extensive customization options.
 
 ### 🐱 **Core Animation System**
 - **🪟 Transparent Overlay** - Borderless, always-on-top window that works everywhere
@@ -54,9 +54,9 @@ BangoCat is a **fully-featured**, **native macOS** typing companion with extensi
 ### 📥 Download Options
 
 #### **🎯 Ready-to-Use (Recommended)**
-1. Download the latest `BangoCat-*.dmg` from [Releases](https://github.com/Gamma-Software/BangoCat-mac/releases)
-2. Open the DMG and drag BangoCat to Applications
-3. **Right-click** on BangoCat in Applications and select **"Open"** (see [Gatekeeper Guide](GATEKEEPER_GUIDE.md))
+1. Download the latest `BongoCat-*.dmg` from [Releases](https://github.com/Gamma-Software/BongoCat-mac/releases)
+2. Open the DMG and drag BongoCat to Applications
+3. **Right-click** on BongoCat in Applications and select **"Open"** (see [Gatekeeper Guide](GATEKEEPER_GUIDE.md))
 4. Grant accessibility permissions when prompted
 
 **💡 Pro Tip**: If you're reinstalling and accessibility permissions keep being asked, use the packaged DMG instead of building from source. The official releases are code signed for consistent identity.
@@ -69,8 +69,8 @@ Perfect for developers or those who want the latest features:
 ### Building from Source
 ```bash
 # Clone the repository
-git clone https://github.com/Gamma-Software/BangoCat-mac.git
-cd BangoCat-mac
+git clone https://github.com/Gamma-Software/BongoCat-mac.git
+cd BongoCat-mac
 
 # Quick build and test
 ./Scripts/build.sh
@@ -115,8 +115,8 @@ For more detailed troubleshooting, see [`TROUBLESHOOTING.md`](TROUBLESHOOTING.md
 We welcome contributions from the community! Here's how you can help:
 
 #### **🐛 Bug Reports**
-- [Report a bug](https://github.com/Gamma-Software/BangoCat-mac/issues/new) using our issue tracker
-- Include macOS version, BangoCat version, and steps to reproduce
+- [Report a bug](https://github.com/Gamma-Software/BongoCat-mac/issues/new) using our issue tracker
+- Include macOS version, BongoCat version, and steps to reproduce
 - Screenshots/screen recordings are super helpful
 
 #### **💡 Feature Requests**
@@ -137,9 +137,9 @@ We welcome contributions from the community! Here's how you can help:
 
 ### Project Structure
 ```
-BangoCat-mac/
-├── Sources/BangoCat/     # Swift source code
-│   ├── BangoCatApp.swift # Main app delegate & menu logic
+BongoCat-mac/
+├── Sources/BongoCat/     # Swift source code
+│   ├── BongoCatApp.swift # Main app delegate & menu logic
 │   ├── OverlayWindow.swift # Overlay window management
 │   ├── CatView.swift     # SwiftUI cat view & animations
 │   ├── InputMonitor.swift # Global input monitoring
@@ -197,21 +197,21 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-## 💖 Support BangoCat
+## 💖 Support BongoCat
 
 ### ⭐ **Star the Project**
-If you love BangoCat, please give us a star on GitHub! It helps others discover the project.
+If you love BongoCat, please give us a star on GitHub! It helps others discover the project.
 
 ### 🐛 **Report Issues**
-Found a bug? Have a suggestion? [Report a bug](https://github.com/Gamma-Software/BangoCat-mac/issues/new) - we read every one!
+Found a bug? Have a suggestion? [Report a bug](https://github.com/Gamma-Software/BongoCat-mac/issues/new) - we read every one!
 
 ### 📢 **Spread the Word**
-- Share BangoCat with fellow developers, streamers, and cat lovers
-- Tweet about your setup with `#BangoCat`
+- Share BongoCat with fellow developers, streamers, and cat lovers
+- Tweet about your setup with `#BongoCat`
 - Write about it on your blog or social media
 
 ### 💝 **Contribute**
-Whether it's code, documentation, or just ideas - every contribution makes BangoCat better!
+Whether it's code, documentation, or just ideas - every contribution makes BongoCat better!
 
 ---
 
@@ -221,6 +221,6 @@ Whether it's code, documentation, or just ideas - every contribution makes Bango
 
 *Bringing joy to developers, streamers, and cat lovers everywhere* 🐱
 
-[🌐 Website](https://valentin.pival.fr) • [🐛 Report a Bug](https://github.com/Gamma-Software/BangoCat-mac/issues/new) • [📖 Documentation](Scripts/README.md) • [📦 Releases](https://github.com/Gamma-Software/BangoCat-mac/releases)
+[🌐 Website](https://valentin.pival.fr) • [🐛 Report a Bug](https://github.com/Gamma-Software/BongoCat-mac/issues/new) • [📖 Documentation](Scripts/README.md) • [📦 Releases](https://github.com/Gamma-Software/BongoCat-mac/releases)
 
 </div>

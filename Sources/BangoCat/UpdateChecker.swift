@@ -44,14 +44,14 @@ class UpdateChecker: NSObject, ObservableObject {
 
     // GitHub repository information
     private let repoOwner = "Gamma-Software"
-    private let repoName = "BangoCat-mac"
-    private let releasesURL = "https://api.github.com/repos/Gamma-Software/BangoCat-mac/releases"
+    private let repoName = "BongoCat-mac"
+    private let releasesURL = "https://api.github.com/repos/Gamma-Software/BongoCat-mac/releases"
 
     // Settings keys
-    private let lastCheckDateKey = "BangoCatLastUpdateCheck"
-    private let updateNotificationsEnabledKey = "BangoCatUpdateNotificationsEnabled"
-    private let skipVersionKey = "BangoCatSkipVersion"
-    private let autoUpdateEnabledKey = "BangoCatAutoUpdateEnabled"
+    private let lastCheckDateKey = "BongoCatLastUpdateCheck"
+    private let updateNotificationsEnabledKey = "BongoCatUpdateNotificationsEnabled"
+    private let skipVersionKey = "BongoCatSkipVersion"
+    private let autoUpdateEnabledKey = "BongoCatAutoUpdateEnabled"
 
     // Settings
     @Published private var updateNotificationsEnabled: Bool = true
@@ -184,8 +184,8 @@ class UpdateChecker: NSObject, ObservableObject {
         // Create a mock release for testing
         let mockAsset = GitHubReleaseAsset(
             id: 1,
-            name: "BangoCat-1.5.4.dmg",
-            browserDownloadUrl: "https://github.com/Gamma-Software/BangoCat-mac/releases/download/v1.5.3/BangoCat-1.5.3.dmg",
+            name: "BongoCat-1.5.4.dmg",
+            browserDownloadUrl: "https://github.com/Gamma-Software/BongoCat-mac/releases/download/v1.5.3/BongoCat-1.5.3.dmg",
             size: 1024 * 1024 * 10, // 10MB
             contentType: "application/octet-stream"
         )
@@ -194,7 +194,7 @@ class UpdateChecker: NSObject, ObservableObject {
             tagName: "v1.5.4",
             name: "Test Release",
             publishedAt: "2024-01-01T00:00:00Z",
-            htmlUrl: "https://github.com/Gamma-Software/BangoCat-mac/releases/tag/v1.5.4",
+            htmlUrl: "https://github.com/Gamma-Software/BongoCat-mac/releases/tag/v1.5.4",
             draft: false,
             prerelease: false,
             assets: [mockAsset]
@@ -210,8 +210,8 @@ class UpdateChecker: NSObject, ObservableObject {
         // Create a mock release for testing
         let mockAsset = GitHubReleaseAsset(
             id: 1,
-            name: "BangoCat-1.5.4.dmg",
-            browserDownloadUrl: "https://github.com/Gamma-Software/BangoCat-mac/releases/download/v1.5.3/BangoCat-1.5.3.dmg",
+            name: "BongoCat-1.5.4.dmg",
+            browserDownloadUrl: "https://github.com/Gamma-Software/BongoCat-mac/releases/download/v1.5.3/BongoCat-1.5.3.dmg",
             size: 1024 * 1024 * 10, // 10MB
             contentType: "application/octet-stream"
         )
@@ -220,7 +220,7 @@ class UpdateChecker: NSObject, ObservableObject {
             tagName: "v1.5.4",
             name: "Test Release",
             publishedAt: "2024-01-01T00:00:00Z",
-            htmlUrl: "https://github.com/Gamma-Software/BangoCat-mac/releases/tag/v1.5.4",
+            htmlUrl: "https://github.com/Gamma-Software/BongoCat-mac/releases/tag/v1.5.4",
             draft: false,
             prerelease: false,
             assets: [mockAsset]
@@ -407,7 +407,7 @@ class UpdateChecker: NSObject, ObservableObject {
 
             print("🔄 App is up to date")
             if isManual {
-                showInfoAlert(title: "Up to Date", message: "You have the latest version of BangoCat (\(currentVersion)).")
+                showInfoAlert(title: "Up to Date", message: "You have the latest version of BongoCat (\(currentVersion)).")
             }
         }
     }
@@ -455,7 +455,7 @@ class UpdateChecker: NSObject, ObservableObject {
         let center = UNUserNotificationCenter.current()
 
         let content = UNMutableNotificationContent()
-        content.title = "🆕 BangoCat Update Available!"
+        content.title = "🆕 BongoCat Update Available!"
         content.body = "Version \(release.tagName) is now available. Click to learn more."
         content.sound = .default
 
@@ -488,7 +488,7 @@ class UpdateChecker: NSObject, ObservableObject {
         }
 
         let alert = NSAlert()
-        alert.messageText = "🆕 BangoCat Update Available!"
+        alert.messageText = "🆕 BongoCat Update Available!"
 
         let currentVersion = getCurrentVersion()
         let newVersion = release.tagName.replacingOccurrences(of: "v", with: "")
@@ -723,7 +723,7 @@ class UpdateChecker: NSObject, ObservableObject {
             // Show success alert with installation instructions
             let alert = NSAlert()
             alert.messageText = "📦 Update Downloaded Successfully!"
-            alert.informativeText = "BangoCat v\(version) has been downloaded and opened in Finder.\n\nTo install the update:\n1. Drag the BangoCat app to your Applications folder\n2. Replace the existing app when prompted\n3. Eject the DMG when finished\n4. Restart BangoCat to complete the update"
+            alert.informativeText = "BongoCat v\(version) has been downloaded and opened in Finder.\n\nTo install the update:\n1. Drag the BongoCat app to your Applications folder\n2. Replace the existing app when prompted\n3. Eject the DMG when finished\n4. Restart BongoCat to complete the update"
             alert.alertStyle = .informational
             alert.addButton(withTitle: "OK")
             alert.addButton(withTitle: "Open Applications Folder")
@@ -748,7 +748,7 @@ class UpdateChecker: NSObject, ObservableObject {
 
         let mountScript = """
         set dmgPath to "\(dmgPath)"
-        set appName to "BangoCat"
+        set appName to "BongoCat"
         set mountPoint to ""
 
         try
@@ -854,7 +854,7 @@ class UpdateChecker: NSObject, ObservableObject {
     private func showDownloadProgressAlert(onCancel: @escaping (Bool) -> Void, onInstall: @escaping (String) -> Void) {
         let alert = NSAlert()
         alert.messageText = "🔄 Downloading Update..."
-        alert.informativeText = "BangoCat is downloading the latest version.\n\nThis may take a few minutes depending on your internet connection."
+        alert.informativeText = "BongoCat is downloading the latest version.\n\nThis may take a few minutes depending on your internet connection."
         alert.alertStyle = .informational
         alert.addButton(withTitle: "OK")
 
@@ -915,9 +915,9 @@ class UpdateChecker: NSObject, ObservableObject {
     private func showInstallationSuccessAlert(version: String) {
         let alert = NSAlert()
         alert.messageText = "🎉 Update Installed Successfully!"
-        alert.informativeText = "BangoCat has been updated to version \(version). The app will restart automatically."
+        alert.informativeText = "BongoCat has been updated to version \(version). The app will restart automatically."
         alert.alertStyle = .informational
-        alert.addButton(withTitle: "Restart BangoCat")
+        alert.addButton(withTitle: "Restart BongoCat")
         alert.addButton(withTitle: "Restart Later")
 
         let response = alert.runModal()
@@ -928,7 +928,7 @@ class UpdateChecker: NSObject, ObservableObject {
     }
 
     private func restartApplication() {
-        print("🔄 Restarting BangoCat...")
+        print("🔄 Restarting BongoCat...")
 
         let path = Bundle.main.bundlePath
         let task = Process()
@@ -951,7 +951,7 @@ class UpdateChecker: NSObject, ObservableObject {
 
         let response = alert.runModal()
         if response == .alertSecondButtonReturn {
-            openUpdateURL("https://github.com/Gamma-Software/BangoCat-mac/releases")
+            openUpdateURL("https://github.com/Gamma-Software/BongoCat-mac/releases")
         }
     }
 
