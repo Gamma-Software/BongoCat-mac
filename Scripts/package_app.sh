@@ -657,15 +657,16 @@ package_for_app_store() {
     echo "📦 Copying app bundle for App Store..."
     cp -R "$APP_BUNDLE" "$app_store_dir/"
 
-    # Sign the app bundle for App Store distribution
+    # Sign the app bundle for App Store distribution with entitlements
     echo "🔐 Signing app bundle for App Store distribution..."
+    echo "🔐 Applying entitlements for App Sandbox..."
 
     # Remove any existing signature
     codesign --remove-signature "${app_store_dir}/${APP_NAME}.app" 2>/dev/null || true
 
-    # Sign with App Store distribution certificate
+    # Sign with App Store distribution certificate and entitlements
     if [ -n "$provisioning_profile" ]; then
-        echo "🔐 Signing with provisioning profile..."
+        echo "🔐 Signing with provisioning profile and entitlements..."
         codesign --force --sign "$identity" \
             --entitlements "BongoCat.entitlements" \
             --options runtime \
@@ -681,50 +682,109 @@ package_for_app_store() {
             "${app_store_dir}/${APP_NAME}.app"
     fi
 
-    # Verify the signature
-    echo "🔍 Verifying App Store signature..."
+    # Verify the signature and entitlements
+    echo "🔍 Verifying App Store signature and entitlements..."
     if codesign --verify --verbose "${app_store_dir}/${APP_NAME}.app"; then
         echo "✅ App Store signature verified"
+
+        # Verify entitlements are applied
+        echo "🔍 Checking entitlements..."
+        if codesign -d --entitlements :- "${app_store_dir}/${APP_NAME}.app" | grep -q "com.apple.security.app-sandbox"; then
+            echo "✅ App Sandbox entitlement verified"
+        else
+            echo "⚠️  App Sandbox entitlement not found - this may cause App Store rejection"
+        fi
     else
         echo "❌ App Store signature verification failed"
         exit 1
     fi
 
-    # Create .ipa file for App Store Connect
-    echo "📦 Creating .ipa file for App Store Connect..."
-    local ipa_file="Build/${APP_NAME}-${VERSION}-AppStore.ipa"
-    rm -f "$ipa_file"
+    # Create .pkg file for macOS App Store
+    echo "📦 Creating .pkg file for macOS App Store..."
+    local pkg_file="Build/${APP_NAME}-${VERSION}-AppStore.pkg"
+    rm -f "$pkg_file"
 
-    # Create Payload directory
-    local payload_dir="${app_store_dir}/Payload"
-    mkdir -p "$payload_dir"
-    mv "${app_store_dir}/${APP_NAME}.app" "$payload_dir/"
+    # Create temporary directory for package structure
+    local temp_dir="/tmp/${APP_NAME}-pkg"
+    rm -rf "$temp_dir"
+    mkdir -p "$temp_dir/Applications"
 
-    # Create .ipa file
-    cd "$app_store_dir"
-    zip -r "../${APP_NAME}-${VERSION}-AppStore.ipa" Payload/
-    cd "$PROJECT_ROOT"
+    # Copy app to Applications folder
+    cp -R "${app_store_dir}/${APP_NAME}.app" "$temp_dir/Applications/"
+
+    # Create component plist
+    local component_plist="$temp_dir/component.plist"
+    cat > "$component_plist" << EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<array>
+    <dict>
+        <key>BundleHasStrictIdentifier</key>
+        <true/>
+        <key>BundleIsRelocatable</key>
+        <false/>
+        <key>BundleIsVersionChecked</key>
+        <true/>
+        <key>BundleOverwriteAction</key>
+        <string>upgrade</string>
+        <key>RootRelative</key>
+        <true/>
+        <key>BundleVersion</key>
+        <string>1.0</string>
+    </dict>
+</array>
+</plist>
+EOF
+
+    # Create .pkg file with proper App Store signing
+    echo "📦 Building .pkg file with App Store signing..."
+
+    # Check for 3rd Party Mac Developer Installer certificate
+    local installer_cert=""
+    installer_cert=$(security find-identity -v | grep "3rd Party Mac Developer Installer" | awk '{print $2}' | head -1)
+
+    if [ -n "$installer_cert" ]; then
+        echo "✅ Found 3rd Party Mac Developer Installer certificate: $installer_cert"
+        echo "🔐 Signing package with App Store certificate..."
+        productbuild \
+            --sign "$installer_cert" \
+            --component "$temp_dir/Applications/${APP_NAME}.app" \
+            "/Applications" \
+            --identifier "$BUNDLE_ID" \
+            --version "1.0" \
+            "$pkg_file"
+    else
+        echo "⚠️  3rd Party Mac Developer Installer certificate not found"
+        echo "📦 Creating unsigned package (will need manual signing for App Store)"
+        productbuild \
+            --component "$temp_dir/Applications/${APP_NAME}.app" \
+            "/Applications" \
+            --identifier "$BUNDLE_ID" \
+            --version "1.0" \
+            "$pkg_file"
+    fi
 
     # Clean up temporary directory
+    rm -rf "$temp_dir"
     rm -rf "$app_store_dir"
 
-    if [ -f "$ipa_file" ]; then
+    if [ -f "$pkg_file" ]; then
         echo "✅ App Store package created successfully!"
-        echo "📦 IPA file: $ipa_file"
-        echo "📏 Size: $(du -h "$ipa_file" | cut -f1)"
+        echo "📦 PKG file: $pkg_file ($(du -h "$pkg_file" | cut -f1))"
         echo ""
         echo "🚀 Next steps for App Store submission:"
-        echo "   1. Open Xcode"
-        echo "   2. Go to Window > Organizer"
-        echo "   3. Click 'Distribute App'"
-        echo "   4. Select 'App Store Connect'"
-        echo "   5. Upload the .ipa file: $ipa_file"
-        echo "   6. Complete the submission process in App Store Connect"
+        echo "   1. Create macOS app in App Store Connect (if not done)"
+        echo "   2. Upload using one of these methods:"
+        echo "      • Xcode Organizer: Window > Organizer > Distribute App"
+        echo "      • Transporter app: Upload directly to App Store Connect"
+        echo "      • Command line: ./Scripts/upload_app_store.sh"
+        echo "   3. Complete metadata and review process"
         echo ""
-        echo "💡 Alternative upload method:"
-        echo "   • Use Application Loader or Transporter app"
-        echo "   • Upload directly to App Store Connect"
-        echo "   • Complete metadata and review process"
+        echo "💡 Package file created:"
+        echo "   • $pkg_file - For macOS App Store (requires proper signing)"
+        echo ""
+        echo "⚠️  Note: .pkg file needs '3rd Party Mac Developer Installer' certificate for App Store"
     else
         echo "❌ Failed to create App Store package"
         exit 1

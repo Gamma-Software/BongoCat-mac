@@ -60,7 +60,29 @@ if [ "$BUILD_CONFIG" = "release" ]; then
 
     print_info "Cleaning previous build artifacts for fresh production build..."
     swift package clean
-    BUILD_COMMAND="swift build --configuration release"
+
+    if [ "$BUILD_CONFIG" = "release" ]; then
+        print_info "Building universal binary for App Store (Intel + Apple Silicon)..."
+
+        # Build for Intel
+        print_info "Building for Intel (x86_64)..."
+        swift build --configuration release --triple x86_64-apple-macos13.0
+
+        # Build for Apple Silicon
+        print_info "Building for Apple Silicon (arm64)..."
+        swift build --configuration release --triple arm64-apple-macos13.0
+
+        # Create universal binary
+        print_info "Creating universal binary..."
+        lipo -create -output .build/release/BongoCat \
+            .build/x86_64-apple-macos/release/BongoCat \
+            .build/arm64-apple-macos/release/BongoCat
+
+        print_success "Universal binary created successfully!"
+        BUILD_COMMAND="echo 'Universal binary already built'"
+    else
+        BUILD_COMMAND="swift build"
+    fi
 else
     BUILD_COMMAND="swift build"
 fi

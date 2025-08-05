@@ -186,39 +186,100 @@ upload_with_altool() {
 
     print_info "Starting upload with altool..."
 
-    # For macOS, we need to use the app bundle directly, not IPA
-    print_warning "altool expects app bundle for macOS, not IPA file"
-    print_info "Using app bundle for macOS upload..."
+    # For macOS, we need to use a .pkg file, not IPA or zip
+    print_warning "altool expects .pkg file for macOS apps"
+    print_info "Using .pkg file for macOS upload..."
 
-    local app_bundle="Build/package/${APP_NAME}.app"
-    if [ ! -d "$app_bundle" ]; then
-        print_error "App bundle not found: $app_bundle"
-        echo ""
-        echo "💡 Create the app bundle first:"
-        echo "   ./run.sh --app-store"
-        return 1
+    # Check if we have a .pkg file
+    local pkg_file=""
+    if [ -n "$PKG_FILE" ]; then
+        pkg_file="$PKG_FILE"
+    else
+        # Auto-detect .pkg file
+        pkg_file=$(find Build/ -name "*.pkg" -type f | head -1)
     fi
 
-    # Create a temporary zip for upload
-    local temp_zip="/tmp/${APP_NAME}-upload.zip"
-    print_info "Creating temporary zip for upload..."
-    ditto -c -k --keepParent "$app_bundle" "$temp_zip"
+    if [ -z "$pkg_file" ] || [ ! -f "$pkg_file" ]; then
+        print_error "No .pkg file found"
+        print_info "Creating .pkg file first..."
+        ./Scripts/create_pkg.sh
+        pkg_file=$(find Build/ -name "*.pkg" -type f | head -1)
+        if [ -z "$pkg_file" ]; then
+            print_error "Failed to create .pkg file"
+            return 1
+        fi
+    fi
+
+    print_success "Using .pkg file: $pkg_file"
+
+            # First validate the app
+    print_info "Validating app before upload..."
+    echo "Running: xcrun altool --validate-app -f $pkg_file -t macos -u $APPLE_ID -p [HIDDEN] --output-format xml"
+
+    validation_output=$(xcrun altool --validate-app \
+        -f "$pkg_file" \
+        -t macos \
+        -u "$APPLE_ID" \
+        -p "$APPLE_ID_PASSWORD" \
+        --output-format xml 2>&1)
+
+    validation_exit_code=$?
+
+    echo "Validation exit code: $validation_exit_code"
+    echo "Validation output:"
+    echo "$validation_output"
+
+    if [ $validation_exit_code -eq 0 ]; then
+        print_success "App validation passed!"
+    else
+        print_error "App validation failed:"
+        echo "$validation_output"
+        echo ""
+
+        # Check for specific validation errors
+        if echo "$validation_output" | grep -q "platform iOS App"; then
+            print_error "App was created for iOS instead of macOS"
+            echo ""
+            echo "💡 Solution: Delete the iOS app and create a new macOS app"
+            echo ""
+            echo "📋 Steps to fix:"
+            echo "   1. Go to https://appstoreconnect.apple.com"
+            echo "   2. Click 'My Apps'"
+            echo "   3. Find your BongoCat app"
+            echo "   4. Click '...' next to the app"
+            echo "   5. Select 'Delete App'"
+            echo "   6. Create a new app:"
+            echo "      • Click '+' to add new app"
+            echo "      • Select 'macOS' (not iOS!)"
+            echo "      • Name: BongoCat"
+            echo "      • Bundle ID: $BUNDLE_ID"
+            echo "      • SKU: bongocat-macos"
+            echo "   7. Run this script again"
+        else
+            echo "💡 Check the validation output above for specific issues"
+        fi
+
+        rm -f "$temp_zip"
+        return 1
+    fi
 
         # Upload the app
     print_info "Uploading to App Store Connect..."
     print_warning "Note: App must exist in App Store Connect first"
 
     upload_output=$(xcrun altool --upload-app \
-        --type macos \
-        --file "$temp_zip" \
-        --username "$APPLE_ID" \
-        --password "$APPLE_ID_PASSWORD" \
-        --verbose 2>&1)
+        -f "$pkg_file" \
+        -t macos \
+        -u "$APPLE_ID" \
+        -p "$APPLE_ID_PASSWORD" \
+        --output-format xml 2>&1)
 
     upload_exit_code=$?
 
-    # Clean up temp file
-    rm -f "$temp_zip"
+    # Always show the output for debugging
+    echo "Upload output:"
+    echo "$upload_output"
+    echo "Exit code: $upload_exit_code"
 
     if [ $upload_exit_code -eq 0 ] && echo "$upload_output" | grep -q "No errors uploading"; then
         print_success "Upload completed successfully with altool!"
@@ -243,6 +304,25 @@ upload_with_altool() {
         echo "   6. Click 'Create'"
         echo "   7. Run this script again"
         return 1
+    elif echo "$upload_output" | grep -q "platform iOS App"; then
+        print_error "App was created for iOS instead of macOS"
+        echo ""
+        echo "💡 Solution: Delete the iOS app and create a new macOS app"
+        echo ""
+        echo "📋 Steps to fix:"
+        echo "   1. Go to https://appstoreconnect.apple.com"
+        echo "   2. Click 'My Apps'"
+        echo "   3. Find your BongoCat app"
+        echo "   4. Click '...' next to the app"
+        echo "   5. Select 'Delete App'"
+        echo "   6. Create a new app:"
+        echo "      • Click '+' to add new app"
+        echo "      • Select 'macOS' (not iOS!)"
+        echo "      • Name: BongoCat"
+        echo "      • Bundle ID: $BUNDLE_ID"
+        echo "      • SKU: bongocat-macos"
+        echo "   7. Run this script again"
+        return 1
     elif echo "$upload_output" | grep -q "ERROR ITMS-"; then
         print_error "Upload failed with ITMS error:"
         echo "$upload_output" | grep "ERROR ITMS-"
@@ -255,6 +335,10 @@ upload_with_altool() {
     else
         print_error "Upload failed with altool:"
         echo "$upload_output"
+        echo ""
+        echo "🔍 Debug information:"
+        echo "   Exit code: $upload_exit_code"
+        echo "   Output length: ${#upload_output} characters"
         return 1
     fi
 }
