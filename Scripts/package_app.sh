@@ -89,7 +89,7 @@ cd "$PROJECT_ROOT"
 
 APP_NAME="BongoCat"
 BUNDLE_ID="com.leaptech.bongocat"
-VERSION="1.7.1"  # Will be updated by bump_version.sh
+VERSION="1.8.0"  # Will be updated by bump_version.sh
 
 # Set build configuration based on debug flag
 if [ "$DEBUG_BUILD" = true ]; then

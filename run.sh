@@ -3,41 +3,75 @@
 # BongoCat Build Menu Script
 # Interactive menu to run different build and package commands
 
+# Colors for output
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+print_info() { echo -e "${BLUE}ℹ️  $1${NC}"; }
+print_success() { echo -e "${GREEN}✅ $1${NC}"; }
+print_error() { echo -e "${RED}❌ $1${NC}"; }
+print_warning() { echo -e "${YELLOW}⚠️  $1${NC}"; }
+
 print_info "Sourcing .env file..."
 source .env
 
 # Function to show usage
 show_usage() {
-    echo "🐱 BongoCat Build Script"
-    echo "========================"
+    echo "🐱 BongoCat Build Menu"
+    echo "======================"
     echo ""
     echo "Usage: $0 [OPTION]"
     echo ""
-    echo "Options:"
-    echo "  --verify, -v          Verify setup and dependencies"
-    echo "  --debug-run, -dr      Build debug app and run"
-    echo "  --debug-package, -dp  Build debug app and package"
-    echo "  --debug-install, -di  Build debug app, package and install locally"
-    echo "  --release-run, -rr    Build release app and run"
-    echo "  --release-package, -rp Build release app and package"
-    echo "  --release-install, -ri Build release app, package and install locally"
-    echo "  --deliver, -d         Bump version, build release, sign, notarize and deliver to GitHub"
-    echo "  --deliver-push, -dp   Bump version with commit/push, build release, sign, notarize and deliver"
-    echo "  --app-store, -as      Build release, sign and package for App Store distribution"
-    echo "  --upload-app-store, -uas Upload IPA to App Store Connect"
-    echo "  --help, -h            Show this help message"
+    echo "Build Options:"
+    echo "  --verify, -v          Verify environment and setup"
+    echo "  --build, -b           Build app (debug or release)"
+    echo "  --test, -t            Run tests"
+    echo "  --run, -r             Run the app"
+    echo "  --install, -i         Install app locally"
+    echo ""
+    echo "Package Options:"
+    echo "  --package, -p         Package app (DMG and PKG)"
+    echo "  --sign, -s            Sign app and notarize"
+    echo "  --push, -u            Push to GitHub and/or App Store"
+    echo ""
+    echo "Combined Workflows:"
+    echo "  --debug-all, -da      Build debug, test, run, install"
+    echo "  --release-all, -ra    Build release, package, sign, push"
+    echo "  --deliver, -d         Complete delivery workflow"
+    echo "  --app-store, -as      App Store distribution workflow"
+    echo ""
+    echo "Version Management:"
+    echo "  --check-versions, -cv Check version consistency"
+    echo "  --bump-version, -bv   Bump version (requires version number)"
+    echo ""
+    echo "Custom Combinations:"
+    echo "  --build-test-run, -btr           Build + Test + Run"
+    echo "  --build-package-sign, -bps       Build + Package + Sign"
+    echo "  --build-package-sign-push, -bpsp Build + Package + Sign + Push"
+    echo "  --build-test-package-sign, -btps Build + Test + Package + Sign"
+    echo "  --build-test-package-sign-push, -btpsp Build + Test + Package + Sign + Push"
     echo ""
     echo "Examples:"
     echo "  $0 --verify"
-    echo "  $0 --debug-run"
-    echo "  $0 --release-package"
+    echo "  $0 --build --test"
+    echo "  $0 --release-all"
     echo "  $0 --deliver 1.3.0"
+    echo "  $0 --check-versions"
+    echo "  $0 --bump-version 1.3.0"
+    echo "  $0 --build-test-run"
+    echo "  $0 --build-package-sign-push"
     echo ""
-    echo "🔐 Code Signing & Notarization:"
-    echo "  • Delivery options automatically sign and notarize the app"
-    echo "  • Requires Apple Developer certificate for notarization"
-    echo "  • Set APPLE_ID and APPLE_ID_PASSWORD for notarization"
-    echo "  • Falls back to ad-hoc signing if no certificate available"
+    echo "🔧 Build Scripts:"
+    echo "  • build.sh: Build, test, run, install"
+    echo "  • verify.sh: Environment and signature verification"
+    echo "  • package.sh: DMG and PKG generation"
+    echo "  • sign.sh: Code signing and notarization"
+    echo "  • push.sh: GitHub and App Store distribution"
+    echo "  • bump_version.sh: Version management"
+    echo "  • check_version.sh: Version consistency verification"
     echo ""
     echo "If no arguments are provided, the interactive menu will be shown."
 }
@@ -70,15 +104,15 @@ check_delivery_prerequisites() {
     fi
 
     # Check for code signing certificate
-    if [ -f "Scripts/code_sign.sh" ]; then
-        source "Scripts/code_sign.sh"
+    if [ -f "Scripts/sign.sh" ]; then
+        source "Scripts/sign.sh"
         if check_developer_certificate; then
             echo "✅ Apple Developer certificate found"
         else
             echo "⚠️  No Apple Developer certificate found - will use ad-hoc signing"
         fi
     else
-        echo "⚠️  Code signing script not found"
+        echo "⚠️  Sign script not found"
     fi
 
     echo ""
@@ -91,157 +125,68 @@ execute_option() {
 
     case $choice in
         0)
-            echo "🔍 Verifying setup and dependencies..."
-            echo ""
-
-            # Check if we're on macOS
-            if [[ "$OSTYPE" != "darwin"* ]]; then
-                echo "❌ Error: This script is designed for macOS only"
-                exit 1
-            fi
-            echo "✅ macOS detected"
-
-            # Check if Xcode Command Line Tools are installed
-            if ! command -v xcodebuild &> /dev/null; then
-                echo "❌ Error: Xcode Command Line Tools not found"
-                echo "   Please install with: xcode-select --install"
-                exit 1
-            fi
-            echo "✅ Xcode Command Line Tools found"
-
-            # Check Swift version
-            if ! command -v swift &> /dev/null; then
-                echo "❌ Error: Swift not found"
-                exit 1
-            fi
-            echo "✅ Swift found: $(swift --version | head -n 1)"
-
-            # Check if we're in the right directory
-            if [ ! -f "Package.swift" ]; then
-                echo "❌ Error: Package.swift not found. Please run this script from the BongoCat-mac directory"
-                exit 1
-            fi
-            echo "✅ Package.swift found"
-
-            # Check if required scripts exist
-            required_scripts=("Scripts/build.sh" "Scripts/package_app.sh" "Scripts/bump_version.sh")
-            for script in "${required_scripts[@]}"; do
-                if [ ! -f "$script" ]; then
-                    echo "❌ Error: Required script not found: $script"
-                    exit 1
-                fi
-            done
-            echo "✅ All required scripts found"
-
-            # Check if source files exist
-            if [ ! -f "Sources/BongoCat/main.swift" ]; then
-                echo "❌ Error: Main source file not found: Sources/BongoCat/main.swift"
-                exit 1
-            fi
-            echo "✅ Main source file found"
-
-            # Check if cat images exist
-            if [ ! -f "Sources/BongoCat/Resources/Images/base.png" ]; then
-                echo "❌ Error: Cat image resources not found"
-                exit 1
-            fi
-            echo "✅ Cat image resources found"
-
-            # Check if Info.plist exists
-            if [ ! -f "Info.plist" ]; then
-                echo "❌ Error: Info.plist not found"
-                exit 1
-            fi
-            echo "✅ Info.plist found"
-
-            # Try to resolve dependencies
-            echo "📦 Resolving Swift Package dependencies..."
-            if swift package resolve; then
-                echo "✅ Dependencies resolved successfully"
-            else
-                echo "❌ Error: Failed to resolve dependencies"
-                exit 1
-            fi
-
-            # Check if we can build the project
-            echo "🔨 Testing build process..."
-            if swift build --configuration debug; then
-                echo "✅ Debug build successful"
-            else
-                echo "❌ Error: Debug build failed"
-                exit 1
-            fi
-
-            echo ""
-            echo "🎉 All checks passed! Your BongoCat development environment is ready."
-            echo "   You can now proceed with building and packaging the app."
-            echo ""
-            echo "🔐 Code Signing Check:"
-            # Source the code signing script to check certificate availability
-            if [ -f "Scripts/code_sign.sh" ]; then
-                source "Scripts/code_sign.sh"
-                if check_developer_certificate; then
-                    echo "✅ Apple Developer certificate found - notarization will be available"
-                else
-                    echo "⚠️  No Apple Developer certificate found - will use ad-hoc signing"
-                    echo "   • Users will need to right-click and select 'Open' on first launch"
-                    echo "   • Consider getting an Apple Developer certificate for distribution"
-                fi
-            else
-                echo "⚠️  Code signing script not found - signing status unknown"
-            fi
+            echo "🔍 Verifying environment and setup..."
+            ./Scripts/verify.sh --all
             ;;
         1)
-            echo "🔨 Building debug app and running..."
-            rm -rf ./build; ./Scripts/build.sh; swift run
+            echo "🔨 Building app..."
+            ./Scripts/build.sh
             ;;
         2)
-            echo "📦 Building debug app and packaging..."
-            rm -rf ./build; rm -rf ./Build; ./Scripts/build.sh; ./Scripts/package_app.sh --debug
+            echo "🧪 Running tests..."
+            ./Scripts/build.sh --test
             ;;
         3)
-            echo "📦 Building debug app, packaging and installing locally..."
-            rm -rf ./build; rm -rf ./Build; ./Scripts/build.sh; ./Scripts/package_app.sh --debug --install_local
+            echo "🚀 Running app..."
+            ./Scripts/build.sh --run
             ;;
         4)
-            echo "🚀 Building release app and running..."
-            rm -rf ./build; ./Scripts/build.sh -r; swift run --configuration release
+            echo "📦 Installing app locally..."
+            ./Scripts/build.sh --install
             ;;
         5)
-            echo "🚀 Building release app and packaging..."
-            rm -rf ./build; rm -rf ./Build; ./Scripts/build.sh -r; ./Scripts/package_app.sh
+            echo "📦 Packaging app..."
+            ./Scripts/package.sh
             ;;
         6)
-            echo "🚀 Building release app, packaging and installing locally..."
-            rm -rf ./build; rm -rf ./Build; ./Scripts/build.sh -r; ./Scripts/package_app.sh --install_local
+            echo "🔐 Signing app..."
+            ./Scripts/sign.sh --app
             ;;
         7)
+            echo "🚀 Pushing to distribution..."
+            ./Scripts/push.sh
+            ;;
+        8)
+            echo "🔨 Complete debug workflow..."
+            ./Scripts/build.sh --all
+            ;;
+        9)
+            echo "🚀 Complete release workflow..."
+            ./Scripts/build.sh --release
+            ./Scripts/package.sh
+            ./Scripts/sign.sh --app
+            ./Scripts/push.sh
+            ;;
+        10)
             if [ -z "$version" ]; then
                 echo "❌ Version number is required for deliver option!"
                 echo "   Usage: $0 --deliver <version>"
                 exit 1
             fi
             check_delivery_prerequisites
-            echo "🏷️  Bumping version to $version, building release, signing, notarizing and delivering..."
-            rm -rf ./build; rm -rf ./Build; ./Scripts/bump_version.sh $version; ./Scripts/build.sh -r; ./Scripts/package_app.sh --deliver --verify --sign-certificate
+            echo "🏷️  Complete delivery workflow for version $version..."
+            ./Scripts/push.sh --bump "$version" --commit --push-commit
+            ./Scripts/build.sh --release
+            ./Scripts/package.sh
+            ./Scripts/sign.sh --all
+            ./Scripts/push.sh --all
             ;;
-        8)
-            if [ -z "$version" ]; then
-                echo "❌ Version number is required for deliver-push option!"
-                echo "   Usage: $0 --deliver-push <version>"
-                exit 1
-            fi
-            check_delivery_prerequisites
-            echo "🏷️  Bumping version to $version with commit/push, building release, signing, notarizing and delivering..."
-            rm -rf ./build; rm -rf ./Build; ./Scripts/bump_version.sh $version --push --commit; ./Scripts/build.sh -r; ./Scripts/package_app.sh --deliver --verify --sign-certificate
-            ;;
-        9)
-            echo "🍎 Building release, signing and packaging for App Store distribution..."
-            rm -rf ./build; rm -rf ./Build; ./Scripts/build.sh -r; ./Scripts/package_app.sh --app_store --sign-certificate
-            ;;
-        10)
-            echo "📤 Uploading IPA to App Store Connect..."
-            ./Scripts/upload_app_store.sh
+        11)
+            echo "🍎 App Store distribution workflow..."
+            ./Scripts/build.sh --release
+            ./Scripts/package.sh --app-store
+            ./Scripts/sign.sh --app
+            ./Scripts/push.sh --app-store
             ;;
         *)
             echo "❌ Invalid option."
@@ -258,54 +203,114 @@ if [ $# -eq 0 ]; then
     echo ""
     echo "Please select an option:"
     echo ""
-    echo "0) Verify setup and dependencies"
-    echo "1) Build debug app and run"
-    echo "2) Build debug app and package"
-    echo "3) Build debug app, package and install locally"
-    echo "4) Build release app and run"
-    echo "5) Build release app and package"
-    echo "6) Build release app, package and install locally"
-    echo "7) Bump version, build release, sign, notarize and deliver to GitHub"
-    echo "8) Bump version with commit/push, build release, sign, notarize and deliver"
-    echo "9) Build release, sign and package for App Store distribution"
-    echo "10) Upload IPA to App Store Connect"
-    echo "11) Exit"
+    echo "🔧 Build Options:"
+    echo "0) Verify environment and setup"
+    echo "1) Build app"
+    echo "2) Run tests"
+    echo "3) Run app"
+    echo "4) Install app locally"
+    echo ""
+    echo "📦 Package Options:"
+    echo "5) Package app (DMG and PKG)"
+    echo "6) Sign app"
+    echo "7) Push to distribution"
+    echo ""
+    echo "🔍 Verification Options:"
+    echo "8) Verify signatures comprehensively"
+    echo "9) Check version consistency"
+    echo ""
+    echo "🏷️ Version Management:"
+    echo "10) Bump version (interactive)"
+    echo ""
+    echo "🚀 Workflows:"
+    echo "11) Complete debug workflow"
+    echo "12) Complete release workflow"
+    echo "13) Complete delivery workflow"
+    echo "14) App Store distribution workflow"
+    echo ""
+    echo "🔄 Custom Combinations:"
+    echo "15) Build + Test + Run"
+    echo "16) Build + Package + Sign"
+    echo "17) Build + Package + Sign + Push"
+    echo "18) Build + Test + Package + Sign"
+    echo "19) Build + Test + Package + Sign + Push"
+    echo ""
+    echo "20) Exit"
     echo ""
 
-    read -p "Enter your choice (0-11): " choice
+    read -p "Enter your choice (0-20): " choice
 
     case $choice in
-        0|1|2|3|4|5|6)
+        0|1|2|3|4|5|6|7)
             execute_option $choice
             ;;
-        7)
-            read -p "Enter version number (e.g., 1.3.0): " version
-            if [ -z "$version" ]; then
-                echo "❌ Version number is required!"
-                exit 1
-            fi
-            execute_option 7 "$version"
-            ;;
         8)
-            read -p "Enter version number (e.g., 1.3.0): " version
-            if [ -z "$version" ]; then
-                echo "❌ Version number is required!"
-                exit 1
-            fi
-            execute_option 8 "$version"
+            echo "🔍 Verifying signatures comprehensively..."
+            ./Scripts/verify.sh --signatures
             ;;
         9)
-            execute_option 9
+            echo "🔍 Checking version consistency..."
+            ./Scripts/check_version.sh
             ;;
         10)
-            execute_option 10
+            echo "🏷️ Bumping version (interactive)..."
+            read -p "Enter new version number (e.g., 1.3.0): " version
+            if [ -z "$version" ]; then
+                echo "❌ Version number is required!"
+                exit 1
+            fi
+            ./Scripts/bump_version.sh "$version"
             ;;
-        11)
+        11|12|13|14)
+            execute_option $choice
+            ;;
+        15)
+            read -p "Enter version number (e.g., 1.3.0): " version
+            if [ -z "$version" ]; then
+                echo "❌ Version number is required!"
+                exit 1
+            fi
+            execute_option 15 "$version"
+            ;;
+        16)
+            execute_option 16
+            ;;
+        17)
+            echo "🔄 Build + Test + Run workflow..."
+            ./Scripts/build.sh --test --run
+            ;;
+        18)
+            echo "🔄 Build + Package + Sign workflow..."
+            ./Scripts/build.sh --release
+            ./Scripts/package.sh
+            ./Scripts/sign.sh --app
+            ;;
+        19)
+            echo "🔄 Build + Package + Sign + Push workflow..."
+            ./Scripts/build.sh --release
+            ./Scripts/package.sh
+            ./Scripts/sign.sh --app
+            ./Scripts/push.sh --github
+            ;;
+        20)
+            echo "🔄 Build + Test + Package + Sign workflow..."
+            ./Scripts/build.sh --release --test
+            ./Scripts/package.sh
+            ./Scripts/sign.sh --app
+            ;;
+        21)
+            echo "🔄 Build + Test + Package + Sign + Push workflow..."
+            ./Scripts/build.sh --release --test
+            ./Scripts/package.sh
+            ./Scripts/sign.sh --app
+            ./Scripts/push.sh --github
+            ;;
+        22)
             echo "👋 Goodbye!"
             exit 0
             ;;
         *)
-            echo "❌ Invalid option. Please choose 0-11."
+            echo "❌ Invalid option. Please choose 0-22."
             exit 1
             ;;
     esac
@@ -315,23 +320,32 @@ else
         --verify|-v)
             execute_option 0
             ;;
-        --debug-run|-dr)
+        --build|-b)
             execute_option 1
             ;;
-        --debug-package|-dp)
+        --test|-t)
             execute_option 2
             ;;
-        --debug-install|-di)
+        --run|-r)
             execute_option 3
             ;;
-        --release-run|-rr)
+        --install|-i)
             execute_option 4
             ;;
-        --release-package|-rp)
+        --package|-p)
             execute_option 5
             ;;
-        --release-install|-ri)
+        --sign|-s)
             execute_option 6
+            ;;
+        --push|-u)
+            execute_option 7
+            ;;
+        --debug-all|-da)
+            execute_option 8
+            ;;
+        --release-all|-ra)
+            execute_option 9
             ;;
         --deliver|-d)
             if [ -z "$2" ]; then
@@ -339,21 +353,53 @@ else
                 echo "   Usage: $0 --deliver <version>"
                 exit 1
             fi
-            execute_option 7 "$2"
-            ;;
-        --deliver-push|-dp)
-            if [ -z "$2" ]; then
-                echo "❌ Version number is required for deliver-push option!"
-                echo "   Usage: $0 --deliver-push <version>"
-                exit 1
-            fi
-            execute_option 8 "$2"
+            execute_option 10 "$2"
             ;;
         --app-store|-as)
-            execute_option 9
+            execute_option 11
             ;;
-        --upload-app-store|-uas)
-            execute_option 10
+        --check-versions|-cv)
+            echo "🔍 Checking version consistency..."
+            ./Scripts/check_version.sh
+            ;;
+        --bump-version|-bv)
+            if [ -z "$2" ]; then
+                echo "❌ Version number is required for bump-version option!"
+                echo "   Usage: $0 --bump-version <version>"
+                exit 1
+            fi
+            echo "🏷️ Bumping version to $2..."
+            ./Scripts/bump_version.sh "$2"
+            ;;
+        --build-test-run|-btr)
+            echo "🔄 Build + Test + Run workflow..."
+            ./Scripts/build.sh --test --run
+            ;;
+        --build-package-sign|-bps)
+            echo "🔄 Build + Package + Sign workflow..."
+            ./Scripts/build.sh --release
+            ./Scripts/package.sh
+            ./Scripts/sign.sh --app
+            ;;
+        --build-package-sign-push|-bpsp)
+            echo "🔄 Build + Package + Sign + Push workflow..."
+            ./Scripts/build.sh --release
+            ./Scripts/package.sh
+            ./Scripts/sign.sh --app
+            ./Scripts/push.sh --github
+            ;;
+        --build-test-package-sign|-btps)
+            echo "🔄 Build + Test + Package + Sign workflow..."
+            ./Scripts/build.sh --release --test
+            ./Scripts/package.sh
+            ./Scripts/sign.sh --app
+            ;;
+        --build-test-package-sign-push|-btpsp)
+            echo "🔄 Build + Test + Package + Sign + Push workflow..."
+            ./Scripts/build.sh --release --test
+            ./Scripts/package.sh
+            ./Scripts/sign.sh --app
+            ./Scripts/push.sh --github
             ;;
         --help|-h)
             show_usage
