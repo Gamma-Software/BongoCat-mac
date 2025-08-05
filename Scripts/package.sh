@@ -22,12 +22,11 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 cd "$PROJECT_ROOT"
 
 # Default values
-CREATE_DMG=true
-CREATE_PKG=true
+CREATE_APP=false
+CREATE_DMG=false
+CREATE_PKG=false
 DEBUG_BUILD=false
 APP_STORE=false
-DMG_ONLY=false
-PKG_ONLY=false
 
 # Load environment variables
 if [ -f ".env" ]; then
@@ -41,20 +40,29 @@ show_usage() {
     echo ""
     echo "Usage: $0 [OPTIONS]"
     echo ""
+    echo "⚠️  REQUIRED: Choose one or more package type options"
+    echo ""
     echo "Package Options:"
-    echo "  --dmg-only, -d         Create only DMG file"
-    echo "  --pkg-only, -p         Create only PKG file"
+    echo "  --app, -A         Create APP bundle"
+    echo "  --dmg, -d         Create DMG file"
+    echo "  --pkg, -p         Create PKG file"
     echo "  --debug, -D            Package debug build"
     echo "  --app-store, -a        Package for App Store distribution"
     echo ""
     echo "Examples:"
-    echo "  $0"
-    echo "  $0 --dmg-only"
-    echo "  $0 --pkg-only"
-    echo "  $0 --debug"
-    echo "  $0 --app-store"
+    echo "  $0 --app              # Create app bundle only"
+    echo "  $0 --dmg              # Create DMG only"
+    echo "  $0 --pkg              # Create PKG only"
+    echo "  $0 --app --dmg        # Create both app bundle and DMG"
+    echo "  $0 --app --pkg        # Create both app bundle and PKG"
+    echo "  $0 --dmg --pkg        # Create both DMG and PKG"
+    echo "  $0 --app --dmg --pkg  # Create all three package types"
+    echo "  $0 --app --debug      # Create debug app bundle"
+    echo "  $0 --dmg --debug      # Create debug DMG"
+    echo "  $0 --app-store        # Create App Store package"
     echo ""
     echo "📦 Package Types:"
+    echo "  • APP: Application bundle (.app)"
     echo "  • DMG: Disk image for direct distribution"
     echo "  • PKG: Installer package for system installation"
     echo "  • App Store: IPA file for App Store Connect"
@@ -67,17 +75,19 @@ show_usage() {
     echo "  • Requires Apple Developer Program membership"
     echo "  • Creates .ipa file ready for App Store Connect"
     echo "  • App will be signed with App Store distribution certificate"
+    echo ""
+    echo "💡 Tip: Run without arguments to see this help menu"
 }
 
 # Function to get version from Info.plist
 get_version() {
-    local version=$(defaults read Info.plist CFBundleShortVersionString 2>/dev/null || echo "1.0.0")
+    local version=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" Info.plist 2>/dev/null || echo "1.0.0")
     echo "$version"
 }
 
 # Function to get build version from Info.plist
 get_build_version() {
-    local build_version=$(defaults read Info.plist CFBundleVersion 2>/dev/null || echo "1")
+    local build_version=$(/usr/libexec/PlistBuddy -c "Print :CFBundleVersion" Info.plist 2>/dev/null || echo "1")
     echo "$build_version"
 }
 
@@ -173,6 +183,8 @@ create_dmg() {
         print_error "App bundle not found: $app_bundle"
         print_info "Run ./Scripts/build.sh first"
         return 1
+    else
+        print_info "App bundle found here: $app_bundle"
     fi
 
     # Create DMG
@@ -274,18 +286,23 @@ create_app_store_package() {
 }
 
 # Parse command line arguments
+if [ $# -eq 0 ]; then
+    show_usage
+    exit 0
+fi
+
 while [[ $# -gt 0 ]]; do
     case $1 in
-        --dmg-only|-d)
-            CREATE_DMG=true
-            CREATE_PKG=false
-            DMG_ONLY=true
+        --app|-A)
+            CREATE_APP=true
             shift
             ;;
-        --pkg-only|-p)
-            CREATE_DMG=false
+        --dmg|-d)
+            CREATE_DMG=true
+            shift
+            ;;
+        --pkg|-p)
             CREATE_PKG=true
-            PKG_ONLY=true
             shift
             ;;
         --debug|-D)
@@ -325,40 +342,72 @@ if [ ! -f "Package.swift" ]; then
     exit 1
 fi
 
-# Create app bundle first
-create_app_bundle
+# Validate that at least one package type option is selected
+if [ "$CREATE_APP" != true ] && [ "$CREATE_DMG" != true ] && [ "$CREATE_PKG" != true ] && [ "$APP_STORE" != true ]; then
+    print_error "No package type selected. Please choose one of: --app, --dmg, --pkg, or --app-store"
+    echo ""
+    show_usage
+    exit 1
+fi
+
+
+# Check if app bundle is needed and create it if it doesn't exist
+app_name="BongoCat"
+if [ "$DEBUG_BUILD" = true ]; then
+    app_name="BongoCat-debug"
+fi
+app_bundle="Build/package/${app_name}.app"
+
+if [ "$CREATE_APP" = true ]; then
+    if [ ! -d "$app_bundle" ]; then
+        print_info "App bundle not found, creating it first..."
+        create_app_bundle
+    else
+        print_info "App bundle already exists: $app_bundle"
+    fi
+fi
 
 # Create packages based on options
+if [ "$CREATE_APP" = true ]; then
+    echo ""
+    print_success "App bundle creation completed!"
+    if [ "$DEBUG_BUILD" = true ]; then
+        print_info "Created: Build/package/BongoCat-debug.app"
+    else
+        print_info "Created: Build/package/BongoCat.app"
+    fi
+fi
+
 if [ "$APP_STORE" = true ]; then
     create_app_store_package
-elif [ "$CREATE_DMG" = true ]; then
+fi
+
+if [ "$CREATE_DMG" = true ]; then
     create_dmg
 fi
 
-if [ "$CREATE_PKG" = true ] && [ "$APP_STORE" = false ]; then
+if [ "$CREATE_PKG" = true ]; then
     create_pkg
 fi
 
 echo ""
 print_success "Packaging completed successfully!"
 
-# Verify signatures if files were created
-if [ "$CREATE_DMG" = true ] || [ "$CREATE_PKG" = true ] || [ "$APP_STORE" = true ]; then
-    echo ""
-    print_info "Verifying package signatures..."
-    if ./Scripts/verify.sh --signatures; then
-        print_success "Package signature verification passed!"
-    else
-        print_warning "Package signature verification failed or incomplete"
-    fi
-fi
+
 
 echo ""
 print_info "Created files:"
-if [ "$CREATE_DMG" = true ] && [ "$APP_STORE" = false ]; then
+if [ "$CREATE_APP" = true ]; then
+    if [ "$DEBUG_BUILD" = true ]; then
+        print_info "  • APP: Build/package/BongoCat-debug.app"
+    else
+        print_info "  • APP: Build/package/BongoCat.app"
+    fi
+fi
+if [ "$CREATE_DMG" = true ]; then
     print_info "  • DMG: Build/BongoCat-$(get_version).dmg"
 fi
-if [ "$CREATE_PKG" = true ] && [ "$APP_STORE" = false ]; then
+if [ "$CREATE_PKG" = true ]; then
     print_info "  • PKG: Build/BongoCat-$(get_version).pkg"
 fi
 if [ "$APP_STORE" = true ]; then
@@ -367,9 +416,7 @@ fi
 echo ""
 print_info "Next steps:"
 if [ "$APP_STORE" = true ]; then
-    print_info "  • Sign: ./Scripts/sign.sh --app"
     print_info "  • Upload: ./Scripts/push.sh --app-store"
 else
-    print_info "  • Sign: ./Scripts/sign.sh --app"
     print_info "  • Push: ./Scripts/push.sh"
 fi

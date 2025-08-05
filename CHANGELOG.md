@@ -5,6 +5,21 @@ All notable changes to BongoCat-mac will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.1] - 2025-08-06
+
+Update environment configuration, enhance packaging scripts, and improve notarization process
+
+### Modified
+
+- Updated `.env.template` to include new environment variables for Apple Developer account.
+- Enhanced `BongoCat.entitlements` with additional security keys for improved app performance.
+- Modified `run.sh` to support new build options and added verbose output for debugging.
+- Updated `package.sh` to allow for flexible package creation options and improved error handling.
+- Removed obsolete scripts related to code signing and packaging, streamlining the workflow.
+- Improved `verify.sh` to include detailed checks for notarization status and added verbose output options.
+
+These changes enhance the overall development and deployment process for the BongoCat application, ensuring better compliance and user experience.
+
 ## [1.8.0] - 2025-08-05
 
 ### Modified

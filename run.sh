@@ -15,6 +15,9 @@ print_success() { echo -e "${GREEN}✅ $1${NC}"; }
 print_error() { echo -e "${RED}❌ $1${NC}"; }
 print_warning() { echo -e "${YELLOW}⚠️  $1${NC}"; }
 
+# Default values
+VERBOSE=true
+
 print_info "Sourcing .env file..."
 source .env
 
@@ -27,7 +30,9 @@ show_usage() {
     echo ""
     echo "Build Options:"
     echo "  --verify, -v          Verify environment and setup"
-    echo "  --build, -b           Build app (debug or release)"
+    echo "  --build, -b           Build app (debug)"
+    echo "  --build-debug, -bd    Build app in debug mode"
+    echo "  --build-release, -br  Build app in release mode"
     echo "  --test, -t            Run tests"
     echo "  --run, -r             Run the app"
     echo "  --install, -i         Install app locally"
@@ -46,16 +51,19 @@ show_usage() {
     echo "Version Management:"
     echo "  --check-versions, -cv Check version consistency"
     echo "  --bump-version, -bv   Bump version (requires version number)"
+    echo "  --verify-signatures, -vs Verify signatures comprehensively"
+    echo ""
+    echo "Debug Options:"
+    echo "  --verbose, -V         Enable verbose output for debugging"
     echo ""
     echo "Custom Combinations:"
     echo "  --build-test-run, -btr           Build + Test + Run"
-    echo "  --build-package-sign, -bps       Build + Package + Sign"
-    echo "  --build-package-sign-push, -bpsp Build + Package + Sign + Push"
     echo "  --build-test-package-sign, -btps Build + Test + Package + Sign"
     echo "  --build-test-package-sign-push, -btpsp Build + Test + Package + Sign + Push"
     echo ""
     echo "Examples:"
     echo "  $0 --verify"
+    echo "  $0 --verify --verbose"
     echo "  $0 --build --test"
     echo "  $0 --release-all"
     echo "  $0 --deliver 1.3.0"
@@ -126,48 +134,63 @@ execute_option() {
     case $choice in
         0)
             echo "🔍 Verifying environment and setup..."
-            ./Scripts/verify.sh --all
+            if [ "$VERBOSE" = true ]; then
+                ./Scripts/verify.sh --all --verbose
+            else
+                ./Scripts/verify.sh --all
+            fi
             ;;
         1)
-            echo "🔨 Building app..."
-            ./Scripts/build.sh
+            echo "🔨 Building app (debug)..."
+            ./Scripts/build.sh --debug
             ;;
         2)
+            echo "🔨 Building app (release)..."
+            ./Scripts/build.sh --release
+            ;;
+        3)
             echo "🧪 Running tests..."
             ./Scripts/build.sh --test
             ;;
-        3)
+        4)
             echo "🚀 Running app..."
             ./Scripts/build.sh --run
             ;;
-        4)
+        5)
             echo "📦 Installing app locally..."
             ./Scripts/build.sh --install
             ;;
-        5)
+        6)
             echo "📦 Packaging app..."
             ./Scripts/package.sh
             ;;
-        6)
+        7)
             echo "🔐 Signing app..."
             ./Scripts/sign.sh --app
             ;;
-        7)
+        8)
             echo "🚀 Pushing to distribution..."
             ./Scripts/push.sh
             ;;
-        8)
+        12)
             echo "🔨 Complete debug workflow..."
             ./Scripts/build.sh --all
             ;;
-        9)
+        13)
             echo "🚀 Complete release workflow..."
             ./Scripts/build.sh --release
-            ./Scripts/package.sh
+            ./Scripts/package.sh --app
             ./Scripts/sign.sh --app
-            ./Scripts/push.sh
+            ./Scripts/package.sh --dmg
+            ./Scripts/sign.sh --dmg
+            ./Scripts/sign.sh --notarize-dmg
+            ./Scripts/package.sh --pkg
+            ./Scripts/sign.sh --pkg
+            ./Scripts/verify.sh --signatures
+            ./Scripts/verify.sh --notarize-dmg
+            ./Scripts/push.sh --all
             ;;
-        10)
+        14)
             if [ -z "$version" ]; then
                 echo "❌ Version number is required for deliver option!"
                 echo "   Usage: $0 --deliver <version>"
@@ -181,7 +204,7 @@ execute_option() {
             ./Scripts/sign.sh --all
             ./Scripts/push.sh --all
             ;;
-        11)
+        15)
             echo "🍎 App Store distribution workflow..."
             ./Scripts/build.sh --release
             ./Scripts/package.sh --app-store
@@ -204,55 +227,58 @@ if [ $# -eq 0 ]; then
     echo "Please select an option:"
     echo ""
     echo "🔧 Build Options:"
-    echo "0) Verify environment and setup"
-    echo "1) Build app"
-    echo "2) Run tests"
-    echo "3) Run app"
-    echo "4) Install app locally"
+echo "0) Verify environment and setup"
+echo "1) Build app (debug)"
+echo "2) Build app (release)"
+echo "3) Run tests"
+echo "4) Run app"
+echo "5) Install app locally"
     echo ""
     echo "📦 Package Options:"
-    echo "5) Package app (DMG and PKG)"
-    echo "6) Sign app"
-    echo "7) Push to distribution"
+echo "6) Package app (DMG and PKG)"
+echo "7) Sign app"
+echo "8) Push to distribution"
     echo ""
     echo "🔍 Verification Options:"
-    echo "8) Verify signatures comprehensively"
-    echo "9) Check version consistency"
+echo "9) Verify signatures comprehensively"
+echo "10) Check version consistency"
     echo ""
     echo "🏷️ Version Management:"
-    echo "10) Bump version (interactive)"
+echo "11) Bump version (interactive)"
     echo ""
     echo "🚀 Workflows:"
-    echo "11) Complete debug workflow"
-    echo "12) Complete release workflow"
-    echo "13) Complete delivery workflow"
-    echo "14) App Store distribution workflow"
+echo "12) Complete debug workflow"
+echo "13) Complete release workflow"
+echo "14) Complete delivery workflow"
+echo "15) App Store distribution workflow"
     echo ""
     echo "🔄 Custom Combinations:"
-    echo "15) Build + Test + Run"
-    echo "16) Build + Package + Sign"
-    echo "17) Build + Package + Sign + Push"
-    echo "18) Build + Test + Package + Sign"
-    echo "19) Build + Test + Package + Sign + Push"
+echo "16) Build + Test + Run"
+echo "17) Build + Test + Package + Sign"
+echo "18) Build + Test + Package + Sign + Push"
     echo ""
-    echo "20) Exit"
+    echo "19) Exit"
     echo ""
 
-    read -p "Enter your choice (0-20): " choice
+    read -p "Enter your choice (0-19): " choice
 
     case $choice in
-        0|1|2|3|4|5|6|7)
+        0|1|2|3|4|5|6|7|8)
             execute_option $choice
             ;;
-        8)
-            echo "🔍 Verifying signatures comprehensively..."
-            ./Scripts/verify.sh --signatures
-            ;;
         9)
+            echo "🔍 Verifying signatures comprehensively..."
+            if [ "$VERBOSE" = true ]; then
+                ./Scripts/verify.sh --signatures --verbose
+            else
+                ./Scripts/verify.sh --signatures
+            fi
+            ;;
+        10)
             echo "🔍 Checking version consistency..."
             ./Scripts/check_version.sh
             ;;
-        10)
+        11)
             echo "🏷️ Bumping version (interactive)..."
             read -p "Enter new version number (e.g., 1.3.0): " version
             if [ -z "$version" ]; then
@@ -261,91 +287,94 @@ if [ $# -eq 0 ]; then
             fi
             ./Scripts/bump_version.sh "$version"
             ;;
-        11|12|13|14)
+        12|13|14|15)
             execute_option $choice
             ;;
-        15)
-            read -p "Enter version number (e.g., 1.3.0): " version
-            if [ -z "$version" ]; then
-                echo "❌ Version number is required!"
-                exit 1
-            fi
-            execute_option 15 "$version"
-            ;;
         16)
-            execute_option 16
-            ;;
-        17)
             echo "🔄 Build + Test + Run workflow..."
             ./Scripts/build.sh --test --run
             ;;
-        18)
-            echo "🔄 Build + Package + Sign workflow..."
-            ./Scripts/build.sh --release
-            ./Scripts/package.sh
-            ./Scripts/sign.sh --app
-            ;;
-        19)
-            echo "🔄 Build + Package + Sign + Push workflow..."
-            ./Scripts/build.sh --release
-            ./Scripts/package.sh
-            ./Scripts/sign.sh --app
-            ./Scripts/push.sh --github
-            ;;
-        20)
+        17)
             echo "🔄 Build + Test + Package + Sign workflow..."
             ./Scripts/build.sh --release --test
             ./Scripts/package.sh
             ./Scripts/sign.sh --app
             ;;
-        21)
+        18)
             echo "🔄 Build + Test + Package + Sign + Push workflow..."
             ./Scripts/build.sh --release --test
             ./Scripts/package.sh
             ./Scripts/sign.sh --app
             ./Scripts/push.sh --github
             ;;
-        22)
+        19)
             echo "👋 Goodbye!"
             exit 0
             ;;
         *)
-            echo "❌ Invalid option. Please choose 0-22."
+            echo "❌ Invalid option. Please choose 0-19."
             exit 1
             ;;
     esac
 else
     # Parse command line arguments
+    # Handle verbose flag first
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --verbose|-V)
+                VERBOSE=true
+                shift
+                ;;
+            *)
+                break
+                ;;
+        esac
+    done
+
+    # Reset arguments after processing verbose flag
+    set -- "$@"
+
     case "$1" in
         --verify|-v)
-            execute_option 0
+            if [ "$VERBOSE" = true ]; then
+                echo "🔍 Verifying environment and setup..."
+                ./Scripts/verify.sh --all --verbose
+            else
+                execute_option 0
+            fi
             ;;
         --build|-b)
             execute_option 1
             ;;
-        --test|-t)
+        --build-debug|-bd)
+            execute_option 1
+            ;;
+        --build-release|-br)
             execute_option 2
             ;;
-        --run|-r)
+        --test|-t)
             execute_option 3
             ;;
-        --install|-i)
+        --run|-r)
             execute_option 4
             ;;
-        --package|-p)
+        --install|-i)
             execute_option 5
             ;;
-        --sign|-s)
+        --package|-p)
             execute_option 6
             ;;
-        --push|-u)
+        --sign|-s)
             execute_option 7
             ;;
-        --debug-all|-da)
+        --push|-u)
             execute_option 8
             ;;
+        --debug-all|-da)
+            execute_option 12
+            ;;
         --release-all|-ra)
-            execute_option 9
+            execute_option 13
             ;;
         --deliver|-d)
             if [ -z "$2" ]; then
@@ -353,14 +382,22 @@ else
                 echo "   Usage: $0 --deliver <version>"
                 exit 1
             fi
-            execute_option 10 "$2"
+            execute_option 14 "$2"
             ;;
         --app-store|-as)
-            execute_option 11
+            execute_option 15
             ;;
         --check-versions|-cv)
             echo "🔍 Checking version consistency..."
             ./Scripts/check_version.sh
+            ;;
+        --verify-signatures|-vs)
+            echo "🔍 Verifying signatures comprehensively..."
+            if [ "$VERBOSE" = true ]; then
+                ./Scripts/verify.sh --signatures --verbose
+            else
+                ./Scripts/verify.sh --signatures
+            fi
             ;;
         --bump-version|-bv)
             if [ -z "$2" ]; then

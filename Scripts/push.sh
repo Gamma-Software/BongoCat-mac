@@ -79,7 +79,7 @@ show_usage() {
 
 # Function to get version from Info.plist
 get_version() {
-    local version=$(defaults read Info.plist CFBundleShortVersionString 2>/dev/null || echo "1.0.0")
+    local version=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" Info.plist 2>/dev/null || echo "1.0.0")
     echo "$version"
 }
 

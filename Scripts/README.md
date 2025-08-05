@@ -87,15 +87,15 @@ Génération du DMG et création du PKG.
 ```
 
 **Options:**
-- `--dmg-only, -d` : Créer seulement le fichier DMG
-- `--pkg-only, -p` : Créer seulement le fichier PKG
+- `--dmg, -d` : Créer seulement le fichier DMG
+- `--pkg, -p` : Créer seulement le fichier PKG
 - `--debug, -D` : Packager le build debug
 - `--app-store, -a` : Packager pour la distribution App Store
 
 **Exemples:**
 ```bash
 ./Scripts/package.sh
-./Scripts/package.sh --dmg-only
+./Scripts/package.sh --dmg
 ./Scripts/package.sh --app-store
 ```
 

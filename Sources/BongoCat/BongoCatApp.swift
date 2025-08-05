@@ -658,7 +658,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         analytics.trackSocialShareInitiated("twitter")
         trackFeatureUsed("social_share")
 
-        let tweetText = "Just discovered BongoCat for macOS! A Bongo Cat overlay for your Mac - reacts to typing and clicks in real-time! Perfect for streamers and developers ✨ #BongoCat #macOS #Swift #OpenSource\n\nDownload: https://github.com/Gamma-Software/BongoCat-mac/releases/tag/v1.0.0\nSee it in action: https://youtu.be/ZFw8m6V3qRQ"
+        let tweetText = "Just discovered BongoCat for macOS! A Bongo Cat overlay for your Mac - reacts to typing and clicks in real-time! Perfect for streamers and developers ✨ #BongoCat #macOS #Swift #OpenSource\n\nDownload: https://github.com/Gamma-Software/BongoCat-mac/releases/tag/v1.8.0\nSee it in action: https://youtu.be/ZFw8m6V3qRQ"
         if let encodedText = tweetText.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
            let tweetURL = URL(string: "https://twitter.com/intent/tweet?text=\(encodedText)") {
             NSWorkspace.shared.open(tweetURL)
