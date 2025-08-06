@@ -193,11 +193,10 @@ struct WelcomeScreen: View {
 
                     VStack(alignment: .leading, spacing: 8) {
                         StepInstruction(number: 1, text: "Open System Preferences")
-                        StepInstruction(number: 2, text: "Go to Security & Privacy")
-                        StepInstruction(number: 3, text: "Click the Privacy tab")
-                        StepInstruction(number: 4, text: "Select Accessibility from the left sidebar")
-                        StepInstruction(number: 5, text: "Click the lock icon and enter your password")
-                        StepInstruction(number: 6, text: "Check the box next to BongoCat")
+                        StepInstruction(number: 2, text: "Go to Privacy & Security")
+                        StepInstruction(number: 3, text: "Select Accessibility from the left sidebar")
+                        StepInstruction(number: 4, text: "Click the lock icon and enter your password")
+                        StepInstruction(number: 5, text: "Check the box next to BongoCat")
                     }
 
                     Button("Open System Preferences") {

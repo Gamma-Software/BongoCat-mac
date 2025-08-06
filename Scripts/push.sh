@@ -14,6 +14,11 @@ print_info() { echo -e "${BLUE}ℹ️  $1${NC}"; }
 print_success() { echo -e "${GREEN}✅ $1${NC}"; }
 print_error() { echo -e "${RED}❌ $1${NC}"; }
 print_warning() { echo -e "${YELLOW}⚠️  $1${NC}"; }
+print_verbose() {
+    if [ "$VERBOSE" = true ]; then
+        echo -e "${BLUE}🔍 [VERBOSE] $1${NC}"
+    fi
+}
 
 # Get to project root
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -33,6 +38,7 @@ BUMP_VERSION=""
 AUTO_COMMIT=false
 AUTO_PUSH=false
 VERIFY_ONLY=false
+VERBOSE=false
 
 # Function to show usage
 show_usage() {
@@ -53,6 +59,9 @@ show_usage() {
     echo ""
     echo "Verification:"
     echo "  --verify, -v           Only verify, don't push"
+    echo ""
+    echo "Debug Options:"
+    echo "  --verbose, -V          Enable verbose output for debugging"
     echo ""
     echo "Examples:"
     echo "  $0 --github"
@@ -152,12 +161,36 @@ push_to_github() {
     # Generate release notes from CHANGELOG.md
     local release_notes=""
     if [ -f "CHANGELOG.md" ]; then
-        # Extract version section from CHANGELOG.md
-        release_notes=$(awk "/^## \[$version\]/,/^## /" CHANGELOG.md | head -n -1)
+        print_info "Extracting changelog for version $version..."
+        print_verbose "Looking for section: ## [$version]"
+
+        # Extract version section from CHANGELOG.md with better pattern matching
+        release_notes=$(awk -v version="$version" '
+            /^## \[/ && $0 ~ "\\[" version "\\]" {
+                in_section = 1
+                next
+            }
+            in_section && /^## \[/ {
+                in_section = 0
+                exit
+            }
+            in_section {
+                print
+            }
+        ' CHANGELOG.md)
+
         if [ -z "$release_notes" ]; then
+            print_warning "No changelog section found for version $version"
+            print_verbose "Available versions in CHANGELOG.md:"
+            print_verbose "$(grep '^## \[' CHANGELOG.md | head -5)"
             release_notes="Release $version"
+        else
+            print_success "Changelog extracted successfully"
+            print_verbose "Changelog content:"
+            print_verbose "$release_notes"
         fi
     else
+        print_warning "CHANGELOG.md not found"
         release_notes="Release $version"
     fi
 
@@ -285,6 +318,10 @@ while [[ $# -gt 0 ]]; do
             VERIFY_ONLY=true
             shift
             ;;
+        --verbose|-V)
+            VERBOSE=true
+            shift
+            ;;
         --help|-h)
             show_usage
             exit 0
@@ -296,6 +333,12 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
+
+# If no specific push target is requested, show help
+if [ "$PUSH_GITHUB" = false ] && [ "$PUSH_APP_STORE" = false ] && [ -z "$BUMP_VERSION" ] && [ "$AUTO_COMMIT" = false ] && [ "$AUTO_PUSH" = false ] && [ "$VERIFY_ONLY" = false ] && [ "$VERBOSE" = false ]; then
+    show_usage
+    exit 0
+fi
 
 # If no specific push target is requested, push to GitHub by default
 if [ "$PUSH_GITHUB" = false ] && [ "$PUSH_APP_STORE" = false ]; then

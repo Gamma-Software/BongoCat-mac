@@ -178,6 +178,8 @@ execute_option() {
             ;;
         13)
             echo "🚀 Complete release workflow..."
+            # Remove the Build folder
+            rm -rf Build
             ./Scripts/build.sh --release
             ./Scripts/package.sh --app
             ./Scripts/sign.sh --app
@@ -188,7 +190,7 @@ execute_option() {
             ./Scripts/sign.sh --pkg
             ./Scripts/verify.sh --signatures
             ./Scripts/verify.sh --notarize-dmg
-            ./Scripts/push.sh --all
+            ./Scripts/push.sh --github
             ;;
         14)
             if [ -z "$version" ]; then

@@ -126,7 +126,7 @@ create_app_bundle() {
     local app_bundle="Build/package/${app_name}.app"
     mkdir -p "$app_bundle/Contents/MacOS"
     mkdir -p "$app_bundle/Contents/Resources"
-
+    mkdir -p "$app_bundle/Contents/Resources/Icons"
     # Copy binary
     cp "$build_dir/BongoCat" "$app_bundle/Contents/MacOS/"
     chmod +x "$app_bundle/Contents/MacOS/BongoCat"
@@ -141,7 +141,8 @@ create_app_bundle() {
 
     # Copy assets
     if [ -d "Assets" ]; then
-        cp -R Assets/* "$app_bundle/Contents/Resources/"
+        cp -R Assets/Icons/AppIcon.icns "$app_bundle/Contents/Resources/Icons/AppIcon.icns"
+        cp -R Assets/Icons/logo.png "$app_bundle/Contents/Resources/Icons/logo.png"
     fi
 
     # Update Info.plist with correct version
