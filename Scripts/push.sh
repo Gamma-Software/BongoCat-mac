@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # BongoCat Push Script - GitHub and App Store distribution
-set -e
+set -xe
 
 # Colors for output
 GREEN='\033[0;32m'
@@ -75,9 +75,9 @@ show_usage() {
     echo "  • Auto-generates release notes from CHANGELOG.md"
     echo ""
     echo "🍎 App Store Connect:"
-    echo "  • Requires Apple ID credentials"
-    echo "  • Requires App Store Connect API access"
-    echo "  • Uploads IPA file for review"
+echo "  • Requires Apple ID credentials"
+echo "  • Requires App Store Connect API access"
+echo "  • Uploads PKG file for review"
     echo ""
     echo "📝 Version Management:"
     echo "  • Updates Info.plist version strings"
@@ -209,17 +209,17 @@ push_to_app_store() {
     print_info "Pushing to App Store Connect..."
 
     local version=$(get_version)
-    local ipa_file="Build/BongoCat-${version}-AppStore.ipa"
+    local pkg_file="Build/BongoCat-${version}.pkg"
 
-    # Check if IPA file exists
-    if [ ! -f "$ipa_file" ]; then
-        print_error "IPA file not found: $ipa_file"
-        print_info "Run ./Scripts/package.sh --app-store first"
+    # Check if pkg file exists
+    if [ ! -f "$pkg_file" ]; then
+        print_error "PKG file not found: $pkg_file"
+        print_info "Run ./Scripts/package.sh first"
         return 1
     fi
 
     # Check Apple ID credentials
-    if [ -z "$APPLE_ID" ] || [ -z "$APPLE_ID_PASSWORD" ]; then
+    if [ -z "$APPLE_ID" ] || [ -z "$APPLE_ID_PASSWORD" ] || [ -z "$TEAM_ID" ]; then
         print_error "Apple ID credentials not set"
         echo ""
         echo "💡 Set environment variables:"
@@ -229,28 +229,91 @@ push_to_app_store() {
         return 1
     fi
 
-    # Check if app is signed
-    local app_bundle="Build/package/BongoCat.app"
-    if [ ! -d "$app_bundle" ] || ! codesign -dv "$app_bundle" 2>&1 | grep -q "signed"; then
-        print_error "App must be signed before App Store upload"
-        print_info "Run: ./Scripts/sign.sh --app first"
+    # Check if pkg is signed
+    if ! pkgutil --check-signature "$pkg_file" 2>&1 | grep -q "Signed with a trusted timestamp on: "; then
+        print_error "PKG must be signed before App Store upload"
+        print_info "Run: ./Scripts/sign.sh --pkg first"
         return 1
     fi
 
-    # Upload to App Store Connect
-    print_info "Uploading IPA to App Store Connect..."
+    # Upload to App Store Connect using pkg file
+    print_info "Uploading pkg to App Store Connect..."
+    print_verbose "Running: xcrun altool --upload-package \"$pkg_file\" -t osx --apple-id \"$APP_APPLE_ID\" -p \"$APPLE_ID_PASSWORD\""
 
-    if command -v xcrun &> /dev/null; then
-        # Use altool for upload
-        if xcrun altool --upload-app --type macos --file "$ipa_file" --username "$APPLE_ID" --password "$APPLE_ID_PASSWORD"; then
-            print_success "IPA uploaded to App Store Connect successfully!"
-            print_info "Check App Store Connect for processing status"
-        else
-            print_error "Failed to upload IPA to App Store Connect"
-            return 1
-        fi
+    local upload_output=$(xcrun altool --upload-package \
+        "$pkg_file" \
+        -t osx \
+        --apple-id "$APP_APPLE_ID" \
+        -u "$APPLE_ID" \
+        -p "$APPLE_ID_PASSWORD" \
+        --bundle-id "com.leaptech.bongocat" \
+        --bundle-version "$version" \
+        --bundle-short-version-string "$version" \
+        --output-format xml 2>&1)
+    local upload_exit_code=$?
+
+    # Always show the output for debugging
+    echo "Upload output:"
+    echo "$upload_output"
+    echo "Exit code: $upload_exit_code"
+
+    if [ $upload_exit_code -eq 0 ] && echo "$upload_output" | grep -q "No errors uploading"; then
+        print_success "PKG uploaded to App Store Connect successfully!"
+        print_info "Check App Store Connect for processing status"
+        print_verbose "Upload details:"
+        print_verbose "$(echo "$upload_output" | grep -E "(No errors|RequestUUID|Product ID)")"
+    elif echo "$upload_output" | grep -q "No suitable application records were found"; then
+        print_error "App not found in App Store Connect"
+        echo ""
+        echo "💡 Solution: Create the app in App Store Connect first"
+        echo ""
+        echo "📋 Steps to create the app:"
+        echo "   1. Go to https://appstoreconnect.apple.com"
+        echo "   2. Click 'My Apps'"
+        echo "   3. Click '+' to add a new app"
+        echo "   4. Select 'macOS' as platform"
+        echo "   5. Enter app details:"
+        echo "      • Name: BongoCat"
+        echo "      • Bundle ID: com.leaptech.bongocat"
+        echo "      • SKU: bongocat-macos (or any unique identifier)"
+        echo "   6. Click 'Create'"
+        echo "   7. Run this script again"
+        return 1
+    elif echo "$upload_output" | grep -q "platform iOS App"; then
+        print_error "App was created for iOS instead of macOS"
+        echo ""
+        echo "💡 Solution: Delete the iOS app and create a new macOS app"
+        echo ""
+        echo "📋 Steps to fix:"
+        echo "   1. Go to https://appstoreconnect.apple.com"
+        echo "   2. Click 'My Apps'"
+        echo "   3. Find your BongoCat app"
+        echo "   4. Click '...' next to the app"
+        echo "   5. Select 'Delete App'"
+        echo "   6. Create a new app:"
+        echo "      • Click '+' to add new app"
+        echo "      • Select 'macOS' (not iOS!)"
+        echo "      • Name: BongoCat"
+        echo "      • Bundle ID: com.leaptech.bongocat"
+        echo "      • SKU: bongocat-macos"
+        echo "   7. Run this script again"
+        return 1
+    elif echo "$upload_output" | grep -q "ERROR ITMS-"; then
+        print_error "Upload failed with ITMS error:"
+        echo "$upload_output" | grep "ERROR ITMS-"
+        echo ""
+        echo "💡 Common solutions:"
+        echo "   1. Create the app in App Store Connect first"
+        echo "   2. Check that Bundle ID matches: com.leaptech.bongocat"
+        echo "   3. Verify app metadata in App Store Connect"
+        return 1
     else
-        print_error "xcrun not available"
+        print_error "Upload failed with altool:"
+        echo "$upload_output"
+        echo ""
+        echo "🔍 Debug information:"
+        echo "   Exit code: $upload_exit_code"
+        echo "   Output length: ${#upload_output} characters"
         return 1
     fi
 }

@@ -5,9 +5,37 @@ All notable changes to BongoCat-mac will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.2] - 2025-08-07
+
+### Added
+
+- Added `APP_APPLE_ID` to `.env.template` for Apple Developer account integration.
+
+### Modified
+
+- Updated `CHANGELOG.md` to reflect recent fixes and improvements in resource loading and packaging processes.
+- Modified `Info.plist` to correct the app version and icon file path.
+- Enhanced `run.sh` and `package.sh` scripts for improved build and packaging workflows, including better handling of DMG creation and App Store upload processes.
+
+### Fixed
+
+- Loading the images from the bundle
+
+### Deleted
+
+- Deleted the obsolete `analytics-config.plist.template` file to streamline project resources.
+
 ## [1.8.1] - 2025-08-06
 
-Update environment configuration, enhance packaging scripts, and improve notarization process
+Fix resource bundle loading issue and update environment configuration
+
+### Fixed
+
+- **Critical Fix**: Resolved "could not load resource bundle" error that was causing app crashes on macOS 15.6+.
+- Fixed Swift Package Manager resource bundle structure in packaging script to ensure proper resource loading.
+- Added proper bundle Info.plist creation for the `BongoCat-mac_BongoCat.bundle` that Swift Package Manager expects.
+- Ensured all required resources (cat images, logo, menu-logo, CHANGELOG.md) are properly included in the bundle.
+- Fixed resource loading fallback mechanisms to work correctly in packaged app distribution.
 
 ### Modified
 
@@ -18,7 +46,7 @@ Update environment configuration, enhance packaging scripts, and improve notariz
 - Removed obsolete scripts related to code signing and packaging, streamlining the workflow.
 - Improved `verify.sh` to include detailed checks for notarization status and added verbose output options.
 
-These changes enhance the overall development and deployment process for the BongoCat application, ensuring better compliance and user experience.
+These changes fix the critical resource loading issue and enhance the overall development and deployment process for the BongoCat application, ensuring better compliance and user experience.
 
 ## [1.8.0] - 2025-08-05
 

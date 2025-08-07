@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # BongoCat Package Script - DMG and PKG generation
-set -e
+set -xe
 
 # Colors for output
 GREEN='\033[0;32m'
@@ -97,7 +97,7 @@ create_app_bundle() {
 
     # Get version
     local version=$(get_version)
-    local build_version=$(get_build_version)
+    local build_version=$(get_version)
 
     print_info "Version: $version (Build $build_version)"
 
@@ -126,7 +126,6 @@ create_app_bundle() {
     local app_bundle="Build/package/${app_name}.app"
     mkdir -p "$app_bundle/Contents/MacOS"
     mkdir -p "$app_bundle/Contents/Resources"
-    mkdir -p "$app_bundle/Contents/Resources/Icons"
     # Copy binary
     cp "$build_dir/BongoCat" "$app_bundle/Contents/MacOS/"
     chmod +x "$app_bundle/Contents/MacOS/BongoCat"
@@ -134,28 +133,22 @@ create_app_bundle() {
     # Copy Info.plist
     cp Info.plist "$app_bundle/Contents/"
 
-    # Copy resources
+    # Copy resources to the bundle
     if [ -d "Sources/BongoCat/Resources" ]; then
         cp -R Sources/BongoCat/Resources/* "$app_bundle/Contents/Resources/"
     fi
 
     # Copy assets
     if [ -d "Assets" ]; then
-        cp -R Assets/Icons/AppIcon.icns "$app_bundle/Contents/Resources/Icons/AppIcon.icns"
-        cp -R Assets/Icons/logo.png "$app_bundle/Contents/Resources/Icons/logo.png"
+        cp -R Assets/Icons/AppIcon.icns "$app_bundle/Contents/Resources/AppIcon.icns"
+        #cp -R Assets/Icons/logo.png "$app_bundle/Contents/Resources/Icons/logo.png"
     fi
 
     # Update Info.plist with correct version
     defaults write "$app_bundle/Contents/Info.plist" CFBundleShortVersionString "$version"
     defaults write "$app_bundle/Contents/Info.plist" CFBundleVersion "$build_version"
-    defaults write "$app_bundle/Contents/Info.plist" CFBundleExecutable "BongoCat"
-    defaults write "$app_bundle/Contents/Info.plist" CFBundleIdentifier "com.leaptech.bongocat"
-    defaults write "$app_bundle/Contents/Info.plist" CFBundleName "BongoCat"
-    defaults write "$app_bundle/Contents/Info.plist" CFBundlePackageType "APPL"
     defaults write "$app_bundle/Contents/Info.plist" CFBundleSignature "????"
-    defaults write "$app_bundle/Contents/Info.plist" LSMinimumSystemVersion "13.0"
-    defaults write "$app_bundle/Contents/Info.plist" NSHighResolutionCapable true
-    defaults write "$app_bundle/Contents/Info.plist" LSUIElement true
+
 
     # Add entitlements if they exist
     if [ -f "BongoCat.entitlements" ]; then
@@ -178,6 +171,7 @@ create_dmg() {
 
     local app_bundle="Build/package/${app_name}.app"
     local dmg_name="Build/BongoCat-${version}.dmg"
+    local temp_dmg="Build/BongoCat-temp.dmg"
 
     # Check if app bundle exists
     if [ ! -d "$app_bundle" ]; then
@@ -195,12 +189,30 @@ create_dmg() {
     if [ -f "$dmg_name" ]; then
         rm "$dmg_name"
     fi
+    if [ -f "$temp_dmg" ]; then
+        rm "$temp_dmg"
+    fi
 
-    # Create DMG using hdiutil
-    if hdiutil create -volname "BongoCat" -srcfolder "$app_bundle" -ov -format UDZO "$dmg_name"; then
+    # Create a temporary directory for DMG contents
+    local temp_dir="Build/dmg-temp"
+    rm -rf "$temp_dir"
+    mkdir -p "$temp_dir"
+
+    # Copy app bundle to temp directory
+    cp -R "$app_bundle" "$temp_dir/"
+
+    # Create Applications folder shortcut
+    ln -s /Applications "$temp_dir/Applications"
+
+    # Create DMG with the temp directory
+    if hdiutil create -volname "BongoCat" -srcfolder "$temp_dir" -ov -format UDZO "$dmg_name"; then
         print_success "DMG created successfully: $dmg_name"
+
+        # Clean up temp directory
+        rm -rf "$temp_dir"
     else
         print_error "Failed to create DMG"
+        rm -rf "$temp_dir"
         return 1
     fi
 }

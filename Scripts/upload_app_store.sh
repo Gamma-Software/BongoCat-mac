@@ -186,38 +186,34 @@ upload_with_altool() {
 
     print_info "Starting upload with altool..."
 
-    # For macOS, we need to use a .pkg file, not IPA or zip
-    print_warning "altool expects .pkg file for macOS apps"
-    print_info "Using .pkg file for macOS upload..."
+    # For macOS validation, we need to create a zip file
+    print_info "Creating zip file for validation..."
 
-    # Check if we have a .pkg file
-    local pkg_file=""
-    if [ -n "$PKG_FILE" ]; then
-        pkg_file="$PKG_FILE"
-    else
-        # Auto-detect .pkg file
-        pkg_file=$(find Build/ -name "*.pkg" -type f | head -1)
+    # Check if we have the app bundle
+    local app_bundle="Build/package/BongoCat.app"
+    if [ ! -d "$app_bundle" ]; then
+        print_error "App bundle not found: $app_bundle"
+        print_info "Run ./Scripts/package.sh first"
+        return 1
     fi
 
-    if [ -z "$pkg_file" ] || [ ! -f "$pkg_file" ]; then
-        print_error "No .pkg file found"
-        print_info "Creating .pkg file first..."
-        ./Scripts/create_pkg.sh
-        pkg_file=$(find Build/ -name "*.pkg" -type f | head -1)
-        if [ -z "$pkg_file" ]; then
-            print_error "Failed to create .pkg file"
-            return 1
-        fi
+    # Create a temporary zip file for validation
+    local temp_zip="Build/BongoCat-validation.zip"
+    print_info "Creating validation zip: $temp_zip"
+
+    if ! zip -r "$temp_zip" "$app_bundle" > /dev/null 2>&1; then
+        print_error "Failed to create validation zip file"
+        return 1
     fi
 
-    print_success "Using .pkg file: $pkg_file"
+    print_success "Created validation zip: $temp_zip"
 
-            # First validate the app
+    # First validate the app using the zip file
     print_info "Validating app before upload..."
-    echo "Running: xcrun altool --validate-app -f $pkg_file -t macos -u $APPLE_ID -p [HIDDEN] --output-format xml"
+    echo "Running: xcrun altool --validate-app -f $temp_zip -t macos -u $APPLE_ID -p [HIDDEN] --output-format xml"
 
     validation_output=$(xcrun altool --validate-app \
-        -f "$pkg_file" \
+        -f "$temp_zip" \
         -t macos \
         -u "$APPLE_ID" \
         -p "$APPLE_ID_PASSWORD" \
@@ -263,9 +259,27 @@ upload_with_altool() {
         return 1
     fi
 
-        # Upload the app
+        # Upload the app using PKG file
     print_info "Uploading to App Store Connect..."
     print_warning "Note: App must exist in App Store Connect first"
+
+    # Get the PKG file for upload
+    local pkg_file=""
+    if [ -n "$PKG_FILE" ]; then
+        pkg_file="$PKG_FILE"
+    else
+        # Auto-detect .pkg file
+        pkg_file=$(find Build/ -name "*.pkg" -type f | head -1)
+    fi
+
+    if [ -z "$pkg_file" ] || [ ! -f "$pkg_file" ]; then
+        print_error "No .pkg file found for upload"
+        print_info "Run ./Scripts/package.sh first"
+        rm -f "$temp_zip"
+        return 1
+    fi
+
+    print_info "Using PKG file for upload: $pkg_file"
 
     upload_output=$(xcrun altool --upload-app \
         -f "$pkg_file" \
@@ -339,8 +353,13 @@ upload_with_altool() {
         echo "🔍 Debug information:"
         echo "   Exit code: $upload_exit_code"
         echo "   Output length: ${#upload_output} characters"
+        rm -f "$temp_zip"
         return 1
     fi
+
+    # Clean up temporary zip file
+    rm -f "$temp_zip"
+    print_success "Cleaned up validation zip file"
 }
 
 # Function to upload with notarytool

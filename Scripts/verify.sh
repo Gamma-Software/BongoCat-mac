@@ -35,6 +35,7 @@ VERIFY_NOTARIZE_APP=false
 VERIFY_NOTARIZE_PKG=false
 VERIFY_BUILD=false
 VERIFY_VERSIONS=false
+VERIFY_APP_STORE_REQUIREMENTS=false
 VERIFY_ALL=false
 VERBOSE=false
 
@@ -59,6 +60,7 @@ show_usage() {
     echo "  --notarize-pkg, -P    Verify PKG notarization using stapler validate"
     echo "  --build, -b           Verify build artifacts and dependencies"
     echo "  --versions, -v        Verify version consistency across project"
+    echo "  --app-store-requirements Verify app meets App Store requirements using altool"
     echo "  --all, -a             Run all verification checks"
     echo ""
     echo "Debug Options:"
@@ -69,6 +71,7 @@ show_usage() {
     echo "  $0 --signature --verbose"
     echo "  $0 --notarize-dmg"
     echo "  $0 --notarize-pkg --verbose"
+    echo "  $0 --app-store-requirements"
     echo "  $0 --all --verbose"
     echo ""
     echo "🔧 Environment Check:"
@@ -228,7 +231,7 @@ verify_signature() {
         local app_path="Build/package/BongoCat.app"
         print_verbose "App path: $app_path"
 
-        if codesign -dv "$app_path" 2>&1 | grep -q "signed"; then
+        if codesign -dv "$app_path" 2>&1 | grep -q "TeamIdentifier=$TEAM_ID"; then
             print_success "App bundle is signed"
             print_verbose "App signature details:"
             print_verbose "$(codesign -dv "$app_path" 2>&1)"
@@ -711,12 +714,106 @@ verify_notarize_pkg() {
     fi
 
     if [ "$verification_passed" = true ]; then
-        print_success "PKG notarization validation completed successfully!"
-        return 0
-    else
-        print_error "PKG notarization validation failed!"
+            print_success "PKG notarization validation completed successfully!"
+    return 0
+else
+    print_error "PKG notarization validation failed!"
+    return 1
+fi
+}
+
+# Function to verify app store requirements using altool
+verify_app_store_requirements() {
+    print_info "Verifying app meets App Store requirements using altool..."
+    echo ""
+
+    # Check if altool command is available
+    if ! command -v xcrun &> /dev/null; then
+        print_error "xcrun command not found"
+        print_info "xcrun is part of Xcode Command Line Tools"
+        print_info "Please install with: xcode-select --install"
         return 1
     fi
+    print_success "xcrun command found"
+    print_verbose "xcrun version: $(xcrun --version 2>/dev/null || echo 'version unknown')"
+
+    # Check if app bundle exists
+    if [ ! -d "Build/package/BongoCat.app" ]; then
+        print_error "No app bundle found to verify"
+        print_info "Run ./Scripts/package.sh first to create the app bundle"
+        print_verbose "Build directory contents:"
+        print_verbose "$(find Build/ -type d 2>/dev/null || echo 'No Build directory found')"
+        return 1
+    fi
+
+    local app_path="Build/package/BongoCat.app"
+    print_verbose "App path: $app_path"
+
+    # Check if Apple ID credentials are set
+    if [ -z "$APPLE_ID" ] || [ -z "$APPLE_ID_PASSWORD" ]; then
+        print_error "Apple ID credentials not set for App Store validation"
+        print_info "Please set APPLE_ID and APPLE_ID_PASSWORD environment variables"
+        print_verbose "APPLE_ID: ${APPLE_ID:-'not set'}"
+        print_verbose "APPLE_ID_PASSWORD: ${APPLE_ID_PASSWORD:+'set'}"
+        return 1
+    fi
+    print_success "Apple ID credentials found"
+    print_verbose "Using Apple ID: $APPLE_ID"
+
+    # Create a temporary zip file for validation
+    local validation_zip="Build/BongoCat-validation.zip"
+    print_info "Creating validation zip file..."
+
+    # Remove existing validation zip if it exists
+    if [ -f "$validation_zip" ]; then
+        rm "$validation_zip"
+        print_verbose "Removed existing validation zip: $validation_zip"
+    fi
+
+    # Create zip file
+    if cd "Build/package" && zip -r "../BongoCat-validation.zip" "BongoCat.app" > /dev/null 2>&1; then
+        print_success "Created validation zip file: $validation_zip"
+        print_verbose "Validation zip size: $(ls -lh "$validation_zip" | awk '{print $5}')"
+    else
+        print_error "Failed to create validation zip file"
+        print_verbose "Zip command output:"
+        print_verbose "$(cd "Build/package" && zip -r "../BongoCat-validation.zip" "BongoCat.app" 2>&1)"
+        cd "$PROJECT_ROOT"
+        return 1
+    fi
+
+    cd "$PROJECT_ROOT"
+
+    # Validate app using altool
+    print_info "Validating app with altool..."
+    print_verbose "Running: xcrun altool --validate-app -f \"$validation_zip\" -t macos -u \"$APPLE_ID\" -p \"$APPLE_ID_PASSWORD\""
+
+    if xcrun altool --validate-app \
+        -f "$validation_zip" \
+        -t macos \
+        -u "$APPLE_ID" \
+        -p "$APPLE_ID_PASSWORD" 2>&1 | tee /tmp/altool_output.txt; then
+        print_success "App Store validation passed!"
+        print_verbose "Altool validation output:"
+        print_verbose "$(cat /tmp/altool_output.txt)"
+    else
+        print_error "App Store validation failed!"
+        print_verbose "Altool validation output:"
+        print_verbose "$(cat /tmp/altool_output.txt)"
+
+        # Clean up validation zip
+        rm -f "$validation_zip"
+        rm -f /tmp/altool_output.txt
+        return 1
+    fi
+
+    # Clean up validation zip
+    rm -f "$validation_zip"
+    rm -f /tmp/altool_output.txt
+    print_verbose "Cleaned up validation zip file"
+
+    print_success "App Store requirements verification completed!"
+    return 0
 }
 
 # Parse command line arguments
@@ -754,6 +851,10 @@ while [[ $# -gt 0 ]]; do
             VERIFY_VERSIONS=true
             shift
             ;;
+        --app-store-requirements)
+            VERIFY_APP_STORE_REQUIREMENTS=true
+            shift
+            ;;
         --all|-a)
             VERIFY_ALL=true
             shift
@@ -775,7 +876,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # If no specific verification is requested, show help
-if [ "$VERIFY_ENVIRONMENT" = false ] && [ "$VERIFY_SIGNATURE" = false ] && [ "$VERIFY_SIGNATURES" = false ] && [ "$VERIFY_NOTARIZATION" = false ] && [ "$VERIFY_NOTARIZE_APP" = false ] && [ "$VERIFY_NOTARIZE_PKG" = false ] && [ "$VERIFY_BUILD" = false ] && [ "$VERIFY_VERSIONS" = false ] && [ "$VERIFY_ALL" = false ]; then
+if [ "$VERIFY_ENVIRONMENT" = false ] && [ "$VERIFY_SIGNATURE" = false ] && [ "$VERIFY_SIGNATURES" = false ] && [ "$VERIFY_NOTARIZATION" = false ] && [ "$VERIFY_NOTARIZE_APP" = false ] && [ "$VERIFY_NOTARIZE_PKG" = false ] && [ "$VERIFY_BUILD" = false ] && [ "$VERIFY_VERSIONS" = false ] && [ "$VERIFY_APP_STORE_REQUIREMENTS" = false ] && [ "$VERIFY_ALL" = false ]; then
     show_usage
     exit 0
 fi
@@ -826,6 +927,11 @@ fi
 
 if [ "$VERIFY_ALL" = true ] || [ "$VERIFY_VERSIONS" = true ]; then
     verify_versions
+    echo ""
+fi
+
+if [ "$VERIFY_ALL" = true ] || [ "$VERIFY_APP_STORE_REQUIREMENTS" = true ]; then
+    verify_app_store_requirements
     echo ""
 fi
 
