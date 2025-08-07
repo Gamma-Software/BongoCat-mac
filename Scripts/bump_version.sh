@@ -201,42 +201,6 @@ else
     exit 1
 fi
 
-# Update package_app.sh VERSION variable
-print_info "Updating package_app.sh..."
-PACKAGE_SCRIPT="$PROJECT_ROOT/Scripts/package_app.sh"
-
-if [ ! -f "$PACKAGE_SCRIPT" ]; then
-    print_warning "package_app.sh not found at $PACKAGE_SCRIPT, skipping..."
-else
-    create_backup "$PACKAGE_SCRIPT"
-
-    if sed -i '' "s/VERSION=\"[^\"]*\"/VERSION=\"$VERSION\"/" "$PACKAGE_SCRIPT"; then
-        print_success "Updated VERSION in package_app.sh to $VERSION"
-    else
-        print_error "Failed to update VERSION in package_app.sh"
-        restore_backups
-        exit 1
-    fi
-fi
-
-# Update DMG background Python script
-print_info "Updating DMG background script..."
-DMG_SCRIPT="$PROJECT_ROOT/Assets/DMG/create_background.py"
-
-if [ ! -f "$DMG_SCRIPT" ]; then
-    print_warning "create_background.py not found at $DMG_SCRIPT, skipping..."
-else
-    create_backup "$DMG_SCRIPT"
-
-    if sed -i '' "s/version_text = \"v[^\"]*\"/version_text = \"v$VERSION\"/" "$DMG_SCRIPT"; then
-        print_success "Updated version_text in create_background.py to v$VERSION"
-    else
-        print_error "Failed to update version_text in create_background.py"
-        restore_backups
-        exit 1
-    fi
-fi
-
 # Update README.md version badge
 print_info "Updating README.md version badge..."
 README_FILE="$PROJECT_ROOT/README.md"
@@ -343,8 +307,8 @@ if [ "$SHOULD_COMMIT" = true ]; then
         print_info "Updating CFBundleVersion with version + UTC date/time..."
 
         # Update CFBundleVersion in Info.plist with version + UTC date/time
-        if /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_VERSION" "$INFO_PLIST" 2>/dev/null; then
-            print_success "Updated CFBundleVersion to $BUILD_VERSION"
+        if /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $VERSION" "$INFO_PLIST" 2>/dev/null; then
+            print_success "Updated CFBundleVersion to $VERSION"
         else
             print_error "Failed to update CFBundleVersion with version + UTC date/time"
             exit 1
