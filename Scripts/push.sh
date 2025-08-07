@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # BongoCat Push Script - GitHub and App Store distribution
-set -e
+set -xe
 
 # Colors for output
 GREEN='\033[0;32m'
@@ -208,8 +208,10 @@ push_to_github() {
 push_to_app_store() {
     print_info "Pushing to App Store Connect..."
 
-    local version=$(get_version)
+    local version
+    version=$(get_version)
     local pkg_file="Build/BongoCat-${version}.pkg"
+    local zip_file="Build/BongoCat-${version}.pkg.zip"
 
     # Check if pkg file exists
     if [ ! -f "$pkg_file" ]; then
@@ -218,14 +220,28 @@ push_to_app_store() {
         return 1
     fi
 
+    # Zip the pkg file before upload
+    print_info "Zipping PKG before upload..."
+    if [ -f "$zip_file" ]; then
+        print_verbose "Removing existing zip: $zip_file"
+        rm -f "$zip_file"
+    fi
+    if zip -j "$zip_file" "$pkg_file"; then
+        print_success "PKG zipped successfully: $zip_file"
+    else
+        print_error "Failed to zip PKG file"
+        return 1
+    fi
+
     # Check Apple ID credentials
-    if [ -z "$APPLE_ID" ] || [ -z "$APPLE_ID_PASSWORD" ] || [ -z "$TEAM_ID" ]; then
+    if [ -z "$APPLE_ID" ] || [ -z "$APPLE_ID_PASSWORD" ] || [ -z "$TEAM_ID" ] || [ -z "$APP_APPLE_ID" ]; then
         print_error "Apple ID credentials not set"
         echo ""
         echo "💡 Set environment variables:"
-        echo "   export APPLE_ID='your-apple-id@example.com'"
+        echo "   export APP_APPLE_ID='1234567890'"
         echo "   export APPLE_ID_PASSWORD='your-app-specific-password'"
         echo "   export TEAM_ID='your-team-id'"
+        echo "   export APPLE_ID='your-apple-id@example.com'"
         return 1
     fi
 
@@ -236,19 +252,20 @@ push_to_app_store() {
         return 1
     fi
 
-    # Upload to App Store Connect using pkg file
-    print_info "Uploading pkg to App Store Connect..."
-    print_verbose "Running: xcrun altool --upload-package \"$pkg_file\" -t osx --apple-id \"$APP_APPLE_ID\" -p \"$APPLE_ID_PASSWORD\""
+    # Upload to App Store Connect using zipped pkg file
+    print_info "Uploading zipped pkg to App Store Connect..."
+    print_verbose "Running: xcrun altool --upload-package \"$zip_file\" -t osx --apple-id \"$APP_APPLE_ID\" -u \"$APPLE_ID\" -p \"******\" --bundle-id \"com.leaptech.bongocat\" --bundle-version \"$version\" --bundle-short-version-string \"$version\" --output-format xml"
 
-    local upload_output=$(xcrun altool --upload-package \
-        "$pkg_file" \
+    local upload_output
+    upload_output=$(xcrun altool --upload-package \
+        "$zip_file" \
         -t osx \
         --apple-id "$APP_APPLE_ID" \
         -u "$APPLE_ID" \
         -p "$APPLE_ID_PASSWORD" \
         --bundle-id "com.leaptech.bongocat" \
-        --bundle-version "$version" \
-        --bundle-short-version-string "$version" \
+        --bundle-version "\"$version\"" \
+        --bundle-short-version-string "\"$version\"" \
         --output-format xml 2>&1)
     local upload_exit_code=$?
 
