@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Modified
 
+- Do not push to github by default
 - Updated `CHANGELOG.md` to reflect recent fixes and improvements in resource loading and packaging processes.
 - Modified `Info.plist` to correct the app version and icon file path.
 - Enhanced `run.sh` and `package.sh` scripts for improved build and packaging workflows, including better handling of DMG creation and App Store upload processes.

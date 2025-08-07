@@ -414,11 +414,6 @@ if [ "$PUSH_GITHUB" = false ] && [ "$PUSH_APP_STORE" = false ] && [ -z "$BUMP_VE
     exit 0
 fi
 
-# If no specific push target is requested, push to GitHub by default
-if [ "$PUSH_GITHUB" = false ] && [ "$PUSH_APP_STORE" = false ]; then
-    PUSH_GITHUB=true
-fi
-
 # Main execution
 echo "🚀 BongoCat Push Script"
 echo "======================="
