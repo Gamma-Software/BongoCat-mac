@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # BongoCat Sign Script - Code signing and notarization
-set -xe
+set -e
 
 # Colors for output
 GREEN='\033[0;32m'

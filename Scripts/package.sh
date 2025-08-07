@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # BongoCat Package Script - DMG and PKG generation
-set -xe
+set -e
 
 # Colors for output
 GREEN='\033[0;32m'

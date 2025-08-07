@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # BongoCat Push Script - GitHub and App Store distribution
-set -xe
+set -e
 
 # Colors for output
 GREEN='\033[0;32m'
@@ -366,8 +366,19 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         --bump)
-            BUMP_VERSION="$2"
-            shift 2
+            # Check if next argument is missing or is another flag
+            if [[ -z "$2" || "$2" == -* ]]; then
+                read -p "Enter version to bump to (e.g., 1.2.3): " input_version
+                if [[ -z "$input_version" ]]; then
+                    print_error "No version provided for --bump"
+                    exit 1
+                fi
+                BUMP_VERSION="$input_version"
+                shift 1
+            else
+                BUMP_VERSION="$2"
+                shift 2
+            fi
             ;;
         --commit|-c)
             AUTO_COMMIT=true
