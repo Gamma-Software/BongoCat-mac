@@ -1,141 +1,23 @@
 {
-	"version": "2.0.0",
-	"tasks": [
-		{
-			"type": "swift",
-			"args": [
-				"build",
-				"--build-tests",
-				"-Xswiftc",
-				"-diagnostic-style=llvm"
-			],
-			"env": {},
-			"cwd": "/Users/valentinrudloff/Workspace/BongoCat-mac",
-			"disableTaskQueue": true,
-			"group": "build",
-			"problemMatcher": [],
-			"label": "swift: Build All",
-			"detail": "swift build --build-tests -Xswiftc -diagnostic-style=llvm"
-		},
-		{
-			"type": "shell",
-			"command": "./Scripts/build.sh",
-			"args": [],
-			"group": "build",
-			"presentation": {
-				"echo": true,
-				"reveal": "always",
-				"focus": false,
-				"panel": "shared",
-				"showReuseMessage": true,
-				"clear": false
-			},
-			"problemMatcher": [],
-			"label": "BongoCat: Build Debug",
-			"detail": "Build BongoCat in debug mode using build.sh"
-		},
-		{
-			"type": "shell",
-			"command": "./Scripts/build.sh",
-			"args": ["release"],
-			"group": "build",
-			"presentation": {
-				"echo": true,
-				"reveal": "always",
-				"focus": false,
-				"panel": "shared",
-				"showReuseMessage": true,
-				"clear": false
-			},
-			"problemMatcher": [],
-			"label": "BongoCat: Build Release",
-			"detail": "Build BongoCat in release mode using build.sh"
-		},
-		{
-			"type": "shell",
-			"command": "./Scripts/test.sh",
-			"args": [],
-			"group": "test",
-			"presentation": {
-				"echo": true,
-				"reveal": "always",
-				"focus": false,
-				"panel": "shared",
-				"showReuseMessage": true,
-				"clear": false
-			},
-			"problemMatcher": [],
-			"label": "BongoCat: Run Tests",
-			"detail": "Run all tests using test.sh"
-		},
-		{
-			"type": "shell",
-			"command": "./Scripts/test.sh",
-			"args": ["--verbose"],
-			"group": "test",
-			"presentation": {
-				"echo": true,
-				"reveal": "always",
-				"focus": false,
-				"panel": "shared",
-				"showReuseMessage": true,
-				"clear": false
-			},
-			"problemMatcher": [],
-			"label": "BongoCat: Run Tests (Verbose)",
-			"detail": "Run all tests with verbose output using test.sh"
-		},
-		{
-			"type": "shell",
-			"command": "./Scripts/package_app.sh",
-			"args": [],
-			"group": "build",
-			"presentation": {
-				"echo": true,
-				"reveal": "always",
-				"focus": false,
-				"panel": "shared",
-				"showReuseMessage": true,
-				"clear": false
-			},
-			"problemMatcher": [],
-			"label": "BongoCat: Package App",
-			"detail": "Package BongoCat into .app bundle and create DMG",
-			"dependsOn": "BongoCat: Build Release"
-		},
-		{
-			"type": "shell",
-			"command": "./Scripts/check_version.sh",
-			"args": [],
-			"group": "build",
-			"presentation": {
-				"echo": true,
-				"reveal": "always",
-				"focus": false,
-				"panel": "shared",
-				"showReuseMessage": true,
-				"clear": false
-			},
-			"problemMatcher": [],
-			"label": "BongoCat: Check Version Consistency",
-			"detail": "Check that all version numbers are consistent across project files"
-		},
-		{
-			"type": "shell",
-			"command": "./Scripts/check_version.sh",
-			"args": ["--verbose"],
-			"group": "build",
-			"presentation": {
-				"echo": true,
-				"reveal": "always",
-				"focus": false,
-				"panel": "shared",
-				"showReuseMessage": true,
-				"clear": false
-			},
-			"problemMatcher": [],
-			"label": "BongoCat: Check Version Consistency (Verbose)",
-			"detail": "Check version consistency with detailed output"
-		}
-	]
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build (xcodebuild Debug)",
+      "type": "shell",
+      "command": "xcodebuild -project ${workspaceFolder}/app/BongoCat.xcodeproj -scheme BongoCat -configuration Debug -destination 'platform=macOS' -derivedDataPath ${workspaceFolder}/.build",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Run app",
+      "type": "shell",
+      "command": "open ${workspaceFolder}/.build/Build/Products/Debug/BongoCat.app",
+      "dependsOn": "Build (xcodebuild Debug)"
+    },
+    {
+      "label": "Clean",
+      "type": "shell",
+      "command": "xcodebuild -project ${workspaceFolder}/app/BongoCat.xcodeproj -scheme BongoCat -configuration Debug -derivedDataPath ${workspaceFolder}/.build clean"
+    }
+  ]
 }
