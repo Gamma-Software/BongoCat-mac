@@ -23,8 +23,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
     var welcomeScreenController: WelcomeScreenController?
 
     // App information
-    private let appVersion = "1.6.0"
-    private let appBuild = "1.6.0.202508041247"
+    private let appVersion = "1.8.3"
+    private let appBuild = "1.8.3.202508071405"
     private let appAuthor = "Valentin Rudloff"
     private let appWebsite = "https://valentin.pival.fr"
 
@@ -277,34 +277,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         print("🔧 Status bar setup complete")
     }
 
-<<<<<<< Updated upstream
-=======
-    /// Loads the status bar icon, searching in the module bundle (Bundle.module) first for SwiftPM,
-    /// then falling back to the app bundle's Resources directory and other locations for development and CLI scenarios.
->>>>>>> Stashed changes
+    /// Loads the status bar icon, searching in the app bundle's Resources directory first,
+    /// then falling back to other locations for development and CLI scenarios.
     private func loadStatusBarIcon() -> NSImage? {
-        // Method 1: Try Bundle.module (for Swift Package Manager)
-        #if SWIFT_PACKAGE
-        if let url = Bundle.module.url(forResource: "menu-logo", withExtension: "png"),
-           let image = NSImage(contentsOf: url) {
-            return resizeIconForStatusBar(image, fromPath: "Bundle.module: menu-logo.png")
-        }
-        #endif
-
-<<<<<<< Updated upstream
-        // Method 2: Try Bundle.main.path (for packaged app)
-        if let bundlePath = Bundle.main.path(forResource: "menu-logo", ofType: "png"),
-           let bundleImage = NSImage(contentsOfFile: bundlePath) {
-            return resizeIconForStatusBar(bundleImage, fromPath: "Bundle.main path: \(bundlePath)")
-=======
-        // 0. Try Bundle.module (SwiftPM resource bundle)
-        #if SWIFT_PACKAGE
-        if let url = Bundle.module.url(forResource: "menu-logo", withExtension: "png", subdirectory: "Resources"),
-           let image = NSImage(contentsOf: url) {
-            print("✅ Loaded status bar icon from Bundle.module: Resources/menu-logo.png")
-            return resizeIconForStatusBar(image, fromPath: "Bundle.module: Resources/menu-logo.png")
-        }
-        #endif
+        print("🔍 Attempting to load status bar icon: menu-logo.png")
 
         // 1. Try Bundle.main.resourceURL (the correct way for packaged macOS apps)
         if let resourceURL = Bundle.main.resourceURL?.appendingPathComponent("menu-logo.png") {
@@ -315,61 +291,96 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
             }
         } else {
             print("⚠️  Bundle.main.resourceURL is nil")
->>>>>>> Stashed changes
         }
 
-        // Method 3: Try NSImage named loading (without extension)
+        // 2. Try Bundle.main.path(forResource:) (legacy, but sometimes works)
+        if let bundlePath = Bundle.main.path(forResource: "menu-logo", ofType: "png") {
+            print("🔎 Checking Bundle.main.path: \(bundlePath)")
+            if let bundleImage = NSImage(contentsOfFile: bundlePath) {
+                print("✅ Loaded status bar icon from Bundle.main.path: \(bundlePath)")
+                return resizeIconForStatusBar(bundleImage, fromPath: "Bundle.main.path: \(bundlePath)")
+            }
+        } else {
+            print("⚠️  Bundle.main.path(forResource:) returned nil")
+        }
+
+        // 3. Try NSImage(named:) (works if image is in asset catalog or registered in bundle)
+        print("🔎 Checking NSImage(named: menu-logo)")
         if let bundleImage = NSImage(named: "menu-logo") {
-            return resizeIconForStatusBar(bundleImage, fromPath: "NSImage named resource")
+            print("✅ Loaded status bar icon from NSImage(named: menu-logo)")
+            return resizeIconForStatusBar(bundleImage, fromPath: "NSImage(named: menu-logo)")
         }
 
-        // Method 4: Try executable directory paths (for CLI execution)
+        // 4. Try in-place next to executable (for CLI/dev scenarios)
         if let executablePath = Bundle.main.executablePath {
             let executableDir = URL(fileURLWithPath: executablePath).deletingLastPathComponent()
-            let possibleExecutablePaths = [
-                executableDir.appendingPathComponent("Sources/BongoCat/Resources/menu-logo.png"),
+            let possiblePaths = [
+                executableDir.appendingPathComponent("menu-logo.png"),
                 executableDir.appendingPathComponent("Resources/menu-logo.png"),
-                executableDir.appendingPathComponent("menu-logo.png")
+                executableDir.appendingPathComponent("Sources/BongoCat/Resources/menu-logo.png")
             ]
-
-            for path in possibleExecutablePaths {
+            for path in possiblePaths {
+                print("🔎 Checking executable directory: \(path.path)")
                 if let image = NSImage(contentsOf: path) {
+                    print("✅ Loaded status bar icon from executable directory: \(path.path)")
                     return resizeIconForStatusBar(image, fromPath: "executable directory: \(path.path)")
                 }
             }
+        } else {
+            print("⚠️  Bundle.main.executablePath is nil")
         }
 
-        // Method 5: Try current working directory paths (for CLI execution)
+        // 5. Try current working directory (for CLI/dev scenarios)
         let currentDir = FileManager.default.currentDirectoryPath
-        let possibleCurrentDirPaths = [
-            "\(currentDir)/Sources/BongoCat/Resources/menu-logo.png",
+        let cwdPaths = [
+            "\(currentDir)/menu-logo.png",
             "\(currentDir)/Resources/menu-logo.png",
-            "\(currentDir)/menu-logo.png"
+            "\(currentDir)/Sources/BongoCat/Resources/menu-logo.png"
         ]
-
-        for path in possibleCurrentDirPaths {
+        for path in cwdPaths {
+            print("🔎 Checking current directory: \(path)")
             if let image = NSImage(contentsOfFile: path) {
+                print("✅ Loaded status bar icon from current directory: \(path)")
                 return resizeIconForStatusBar(image, fromPath: "current directory: \(path)")
             }
         }
 
-        // Method 6: Try relative paths from project root (development fallback)
-        let possibleRelativePaths = [
+        // 6. Try relative paths (last resort)
+        let relativePaths = [
             "menu-logo.png",
             "./menu-logo.png",
-            "Sources/BongoCat/Resources/menu-logo.png",
-            "Resources/menu-logo.png"
+            "Resources/menu-logo.png",
+            "Sources/BongoCat/Resources/menu-logo.png"
         ]
-
-        for path in possibleRelativePaths {
+        for path in relativePaths {
+            print("🔎 Checking relative path: \(path)")
             if let image = NSImage(contentsOfFile: path) {
+                print("✅ Loaded status bar icon from relative path: \(path)")
                 return resizeIconForStatusBar(image, fromPath: "relative path: \(path)")
             }
+        }
+
+        // 7. (Optional) Try loading from a resource bundle if present (for SPM plugin/dev)
+        let allBundles = Bundle.allBundles
+        if !allBundles.isEmpty {
+            for bundle in allBundles {
+                print("🔎 Checking bundle: \(bundle.bundlePath)")
+                if let url = bundle.url(forResource: "menu-logo", withExtension: "png") {
+                    print("🔎 Checking bundle resource: \(url.path)")
+                    if let image = NSImage(contentsOf: url) {
+                        print("✅ Loaded status bar icon from bundle: \(bundle.bundlePath)")
+                        return resizeIconForStatusBar(image, fromPath: "Bundle: \(bundle.bundlePath)")
+                    }
+                }
+            }
+        } else {
+            print("⚠️  No additional bundles found in Bundle.allBundles")
         }
 
         print("❌ Failed to load menu-logo.png from all attempted methods")
         print("🔍 Debug info:")
         print("  - Bundle.main.bundlePath: \(Bundle.main.bundlePath)")
+        print("  - Bundle.main.resourceURL: \(Bundle.main.resourceURL?.path ?? "nil")")
         print("  - Bundle.main.executablePath: \(Bundle.main.executablePath ?? "nil")")
         print("  - Current working directory: \(FileManager.default.currentDirectoryPath)")
         return nil
@@ -684,7 +695,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         analytics.trackSocialShareInitiated("twitter")
         trackFeatureUsed("social_share")
 
-        let tweetText = "Just discovered BongoCat for macOS! A Bongo Cat overlay for your Mac - reacts to typing and clicks in real-time! Perfect for streamers and developers ✨ #BongoCat #macOS #Swift #OpenSource\n\nDownload: https://github.com/Gamma-Software/BongoCat-mac/releases/tag/v1.0.0\nSee it in action: https://youtu.be/ZFw8m6V3qRQ"
+        let tweetText = "Just discovered BongoCat for macOS! A Bongo Cat overlay for your Mac - reacts to typing and clicks in real-time! Perfect for streamers and developers ✨ #BongoCat #macOS #Swift #OpenSource\n\nDownload: https://github.com/Gamma-Software/BongoCat-mac/releases/tag/v1.8.0\nSee it in action: https://youtu.be/ZFw8m6V3qRQ"
         if let encodedText = tweetText.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
            let tweetURL = URL(string: "https://twitter.com/intent/tweet?text=\(encodedText)") {
             NSWorkspace.shared.open(tweetURL)

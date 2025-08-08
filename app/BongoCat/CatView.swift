@@ -611,128 +611,64 @@ struct BongoCatSprite: View {
 
 
 
-<<<<<<< Updated upstream
-    // Helper function to load images from bundle resources
-    private func loadImage(_ name: String) -> NSImage? {
-        let analytics = PostHogAnalyticsManager.shared
-        let loadStartTime = Date()
-
-        // Method 1: Try Bundle.module (for Swift Package Manager)
-        #if SWIFT_PACKAGE
-        if let url = Bundle.module.url(forResource: name, withExtension: "png", subdirectory: "Images"),
-           let image = NSImage(contentsOf: url) {
-=======
-    /// Loads a cat sprite image by name, searching in the module bundle (Bundle.module) first for SwiftPM,
-    /// then falling back to the app bundle and other locations for development and CLI scenarios.
+    /// Loads a cat sprite image by name, searching in the app bundle's Resources/Images directory first,
+    /// then falling back to other locations for development and CLI scenarios.
     private func loadImage(_ name: String) -> NSImage? {
         let analytics = PostHogAnalyticsManager.shared
         let loadStartTime = Date()
         let filename = "\(name).png"
-        print("🔍 [loadImage] Attempting to load image: \(filename)")
-
-        // 0. Try Bundle.module (SwiftPM resource bundle)
-        #if SWIFT_PACKAGE
-        print("🔎 [loadImage] Checking Bundle.module: Resources/\(filename)")
-        if let url = Bundle.module.url(forResource: name, withExtension: "png", subdirectory: "Resources"),
-           let image = NSImage(contentsOf: url) {
-            let loadTime = Date().timeIntervalSince(loadStartTime)
-            analytics.trackResourceLoadTime("image", loadTime: loadTime)
-            print("✅ Loaded image from Bundle.module: Resources/\(filename)")
-            return image
-        } else {
-            print("❌ [loadImage] Not found in Bundle.module/Resources")
-            analytics.trackImageLoadError(name, method: "Bundle.module/Resources")
-        }
-        #endif
 
         // 1. Try Bundle.main.resourceURL/Images (the correct way for packaged macOS apps)
-        print("🔎 [loadImage] Checking Bundle.main.resourceURL: Images/\(filename)")
-        if let resourceURL = Bundle.main.resourceURL?.appendingPathComponent("\(filename)"),
+        if let resourceURL = Bundle.main.resourceURL?.appendingPathComponent("Images/\(filename)"),
            let image = NSImage(contentsOf: resourceURL) {
->>>>>>> Stashed changes
             let loadTime = Date().timeIntervalSince(loadStartTime)
             analytics.trackResourceLoadTime("image", loadTime: loadTime)
-            print("✅ Loaded image from Bundle.module: Images/\(name).png")
+            print("✅ Loaded image from Bundle.main.resourceURL: Images/\(filename)")
             return image
         } else {
-<<<<<<< Updated upstream
-            analytics.trackImageLoadError(name, method: "Bundle.module")
-=======
-            print("❌ [loadImage] Not found in Bundle.main.resourceURL/Images")
             analytics.trackImageLoadError(name, method: "Bundle.main.resourceURL/Images")
->>>>>>> Stashed changes
         }
-        #endif
 
-<<<<<<< Updated upstream
-        // Method 2: Try Bundle.main with Images subdirectory (for packaged app)
-=======
         // 2. Try Bundle.main.url(forResource:inDirectory:) (legacy, but sometimes works)
-        print("🔎 [loadImage] Checking Bundle.main.url(forResource:inDirectory:): \(filename)")
->>>>>>> Stashed changes
         if let url = Bundle.main.url(forResource: name, withExtension: "png", subdirectory: "Images"),
            let image = NSImage(contentsOf: url) {
             let loadTime = Date().timeIntervalSince(loadStartTime)
             analytics.trackResourceLoadTime("image", loadTime: loadTime)
-            print("✅ Loaded image from Bundle.main Images subdirectory: Images/\(name).png")
+            print("✅ Loaded image from Bundle.main.url(forResource:inDirectory:): Images/\(filename)")
             return image
         } else {
-<<<<<<< Updated upstream
-            analytics.trackImageLoadError(name, method: "Bundle.main_subdirectory")
-        }
-
-        // Method 3: Try Bundle.main at root level (fallback for packaged app)
-=======
-            print("❌ [loadImage] Not found in Bundle.main.url_subdirectory")
             analytics.trackImageLoadError(name, method: "Bundle.main.url_subdirectory")
         }
 
         // 3. Try Bundle.main at root level (fallback for packaged app)
-        print("🔎 [loadImage] Checking Bundle.main root: \(filename)")
->>>>>>> Stashed changes
         if let url = Bundle.main.url(forResource: name, withExtension: "png"),
            let image = NSImage(contentsOf: url) {
             let loadTime = Date().timeIntervalSince(loadStartTime)
             analytics.trackResourceLoadTime("image", loadTime: loadTime)
-            print("✅ Loaded image from Bundle.main root: \(name).png")
+            print("✅ Loaded image from Bundle.main root: \(filename)")
             return image
         } else {
-            print("❌ [loadImage] Not found in Bundle.main_root")
             analytics.trackImageLoadError(name, method: "Bundle.main_root")
         }
 
-<<<<<<< Updated upstream
-        // Method 4: Try executable directory paths (for CLI execution)
-=======
         // 4. Try NSImage(named:) (works if image is in asset catalog or registered in bundle)
-        print("🔎 [loadImage] Checking NSImage(named: \(name))")
         if let bundleImage = NSImage(named: name) {
             let loadTime = Date().timeIntervalSince(loadStartTime)
             analytics.trackResourceLoadTime("image", loadTime: loadTime)
             print("✅ Loaded image from NSImage(named: \(name))")
             return bundleImage
-        } else {
-            print("❌ [loadImage] Not found in NSImage(named: \(name))")
         }
 
         // 5. Try in-place next to executable (for CLI/dev scenarios)
->>>>>>> Stashed changes
         if let executablePath = Bundle.main.executablePath {
             let executableDir = URL(fileURLWithPath: executablePath).deletingLastPathComponent()
-            let possibleExecutablePaths = [
-                executableDir.appendingPathComponent("Sources/BongoCat/Resources/Images/\(name).png"),
-                executableDir.appendingPathComponent("Resources/Images/\(name).png"),
-                executableDir.appendingPathComponent("Images/\(name).png"),
-                executableDir.appendingPathComponent("\(name).png")
+            let possiblePaths = [
+                executableDir.appendingPathComponent("Images/\(filename)"),
+                executableDir.appendingPathComponent("Resources/Images/\(filename)"),
+                executableDir.appendingPathComponent("Sources/BongoCat/Resources/Images/\(filename)"),
+                executableDir.appendingPathComponent(filename)
             ]
-<<<<<<< Updated upstream
-
-            for path in possibleExecutablePaths {
-=======
-            print("🔎 [loadImage] Checking executable directory paths:")
             for path in possiblePaths {
-                print("    - \(path.path)")
->>>>>>> Stashed changes
                 if let image = NSImage(contentsOf: path) {
                     let loadTime = Date().timeIntervalSince(loadStartTime)
                     analytics.trackResourceLoadTime("image", loadTime: loadTime)
@@ -740,27 +676,17 @@ struct BongoCatSprite: View {
                     return image
                 }
             }
-            print("❌ [loadImage] Not found in any executable directory path")
-        } else {
-            print("⚠️ [loadImage] Bundle.main.executablePath is nil")
         }
 
-        // Method 5: Try current working directory paths (for CLI execution)
+        // 6. Try current working directory (for CLI/dev scenarios)
         let currentDir = FileManager.default.currentDirectoryPath
-        let possibleCurrentDirPaths = [
-            "\(currentDir)/Sources/BongoCat/Resources/Images/\(name).png",
-            "\(currentDir)/Resources/Images/\(name).png",
-            "\(currentDir)/Images/\(name).png",
-            "\(currentDir)/\(name).png"
+        let cwdPaths = [
+            "\(currentDir)/Images/\(filename)",
+            "\(currentDir)/Resources/Images/\(filename)",
+            "\(currentDir)/Sources/BongoCat/Resources/Images/\(filename)",
+            "\(currentDir)/\(filename)"
         ]
-<<<<<<< Updated upstream
-
-        for path in possibleCurrentDirPaths {
-=======
-        print("🔎 [loadImage] Checking current working directory paths:")
         for path in cwdPaths {
-            print("    - \(path)")
->>>>>>> Stashed changes
             if let image = NSImage(contentsOfFile: path) {
                 let loadTime = Date().timeIntervalSince(loadStartTime)
                 analytics.trackResourceLoadTime("image", loadTime: loadTime)
@@ -768,23 +694,15 @@ struct BongoCatSprite: View {
                 return image
             }
         }
-        print("❌ [loadImage] Not found in any current working directory path")
 
-        // Method 6: Try relative paths from project root (development fallback)
-        let possibleRelativePaths = [
-            "Sources/BongoCat/Resources/Images/\(name).png",
-            "Resources/Images/\(name).png",
-            "Images/\(name).png",
-            "\(name).png"
+        // 7. Try relative paths (last resort)
+        let relativePaths = [
+            "Images/\(filename)",
+            "Resources/Images/\(filename)",
+            "Sources/BongoCat/Resources/Images/\(filename)",
+            filename
         ]
-<<<<<<< Updated upstream
-
-        for path in possibleRelativePaths {
-=======
-        print("🔎 [loadImage] Checking relative paths:")
         for path in relativePaths {
-            print("    - \(path)")
->>>>>>> Stashed changes
             if let image = NSImage(contentsOfFile: path) {
                 let loadTime = Date().timeIntervalSince(loadStartTime)
                 analytics.trackResourceLoadTime("image", loadTime: loadTime)
@@ -792,16 +710,11 @@ struct BongoCatSprite: View {
                 return image
             }
         }
-        print("❌ [loadImage] Not found in any relative path")
 
-<<<<<<< Updated upstream
-=======
         // 8. (Optional) Try loading from a resource bundle if present (for SPM plugin/dev)
         let allBundles = Bundle.allBundles
         if !allBundles.isEmpty {
-            print("🔎 [loadImage] Checking all bundles for Images/\(filename)")
             for bundle in allBundles {
-                print("    - \(bundle.bundlePath)")
                 if let url = bundle.url(forResource: name, withExtension: "png", subdirectory: "Images"),
                    let image = NSImage(contentsOf: url) {
                     let loadTime = Date().timeIntervalSince(loadStartTime)
@@ -810,22 +723,17 @@ struct BongoCatSprite: View {
                     return image
                 }
             }
-            print("❌ [loadImage] Not found in any Bundle.allBundles")
-        } else {
-            print("⚠️ [loadImage] Bundle.allBundles is empty")
         }
 
->>>>>>> Stashed changes
         // All methods failed
         analytics.trackImageLoadError(name, method: "all_methods_failed")
-        print("❌ Failed to load image: \(name).png from all attempted methods")
+        print("❌ Failed to load image: \(filename) from all attempted methods")
         print("🔍 Debug info:")
         print("  - Bundle.main.bundlePath: \(Bundle.main.bundlePath)")
+        print("  - Bundle.main.resourceURL: \(Bundle.main.resourceURL?.path ?? "nil")")
         print("  - Bundle.main.executablePath: \(Bundle.main.executablePath ?? "nil")")
         print("  - Current working directory: \(FileManager.default.currentDirectoryPath)")
         print("  - Home directory: \(FileManager.default.homeDirectoryForCurrentUser.path)")
-        print("  - Searched paths (relative): \(relativePaths)")
-        print("  - Searched paths (cwd): \(cwdPaths)")
         return nil
     }
 }
