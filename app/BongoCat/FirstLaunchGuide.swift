@@ -168,8 +168,7 @@ struct FirstLaunchGuide: View {
 
             VStack(alignment: .leading, spacing: 12) {
                 StepRow(number: 1, text: "Open System Preferences")
-                StepRow(number: 2, text: "Go to Security & Privacy")
-                StepRow(number: 3, text: "Click the Privacy tab")
+                StepRow(number: 2, text: "Go to Privacy & Security")
                 StepRow(number: 4, text: "Select Accessibility from the left sidebar")
                 StepRow(number: 5, text: "Click the lock icon and enter your password")
                 StepRow(number: 6, text: "Check the box next to BongoCat")

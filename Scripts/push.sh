@@ -264,8 +264,13 @@ push_to_app_store() {
         -u "$APPLE_ID" \
         -p "$APPLE_ID_PASSWORD" \
         --bundle-id "com.leaptech.bongocat" \
+<<<<<<< HEAD
         --bundle-version "$version" \
         --bundle-short-version-string "$version" \
+=======
+        --bundle-version "\"$version\"" \
+        --bundle-short-version-string "\"$version\"" \
+>>>>>>> main
         --output-format xml 2>&1)
     local upload_exit_code=$?
 
