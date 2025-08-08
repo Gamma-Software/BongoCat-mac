@@ -6,6 +6,12 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		16956BFC2E463D2600AD67FC /* Release.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 16956BFB2E463D2600AD67FC /* Release.xcconfig */; };
+		16956BFE2E463D6400AD67FC /* Common.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 16956BFD2E463D6400AD67FC /* Common.xcconfig */; };
+		16956C002E463D6B00AD67FC /* Debug.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 16956BFF2E463D6B00AD67FC /* Debug.xcconfig */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		164DF75E2E4549AE004B9F40 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -27,6 +33,9 @@
 		164DF74F2E4549AC004B9F40 /* BongoCat.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BongoCat.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		164DF75D2E4549AE004B9F40 /* BongoCatTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BongoCatTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		164DF7672E4549AE004B9F40 /* BongoCatUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BongoCatUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		16956BFB2E463D2600AD67FC /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
+		16956BFD2E463D6400AD67FC /* Common.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Common.xcconfig; sourceTree = "<group>"; };
+		16956BFF2E463D6B00AD67FC /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -79,6 +88,9 @@
 				164DF7602E4549AE004B9F40 /* BongoCatTests */,
 				164DF76A2E4549AE004B9F40 /* BongoCatUITests */,
 				164DF7502E4549AC004B9F40 /* Products */,
+				16956BFB2E463D2600AD67FC /* Release.xcconfig */,
+				16956BFD2E463D6400AD67FC /* Common.xcconfig */,
+				16956BFF2E463D6B00AD67FC /* Debug.xcconfig */,
 			);
 			sourceTree = "<group>";
 		};
@@ -214,6 +226,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				16956BFE2E463D6400AD67FC /* Common.xcconfig in Resources */,
+				16956BFC2E463D2600AD67FC /* Release.xcconfig in Resources */,
+				16956C002E463D6B00AD67FC /* Debug.xcconfig in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -271,7 +286,7 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		164B0E742E462822004F13EB /* Base */ = {
+		164B0E742E462822004F13EB /* Common */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -333,10 +348,11 @@
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
-			name = Base;
+			name = Common;
 		};
-		164B0E752E462822004F13EB /* Base */ = {
+		164B0E752E462822004F13EB /* Common */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 16956BFD2E463D6400AD67FC /* Common.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -361,9 +377,9 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 			};
-			name = Base;
+			name = Common;
 		};
-		164B0E762E462822004F13EB /* Base */ = {
+		164B0E762E462822004F13EB /* Common */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
@@ -379,9 +395,9 @@
 				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/BongoCat.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/BongoCat";
 			};
-			name = Base;
+			name = Common;
 		};
-		164B0E772E462822004F13EB /* Base */ = {
+		164B0E772E462822004F13EB /* Common */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
@@ -395,7 +411,7 @@
 				SWIFT_VERSION = 5.0;
 				TEST_TARGET_NAME = BongoCat;
 			};
-			name = Base;
+			name = Common;
 		};
 		164DF76F2E4549AE004B9F40 /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -519,6 +535,7 @@
 		};
 		164DF7722E4549AE004B9F40 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 16956BFF2E463D6B00AD67FC /* Debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -547,6 +564,7 @@
 		};
 		164DF7732E4549AE004B9F40 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 16956BFB2E463D2600AD67FC /* Release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -648,7 +666,7 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				164DF76F2E4549AE004B9F40 /* Debug */,
-				164B0E742E462822004F13EB /* Base */,
+				164B0E742E462822004F13EB /* Common */,
 				164DF7702E4549AE004B9F40 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
@@ -658,7 +676,7 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				164DF7722E4549AE004B9F40 /* Debug */,
-				164B0E752E462822004F13EB /* Base */,
+				164B0E752E462822004F13EB /* Common */,
 				164DF7732E4549AE004B9F40 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
@@ -668,7 +686,7 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				164DF7752E4549AE004B9F40 /* Debug */,
-				164B0E762E462822004F13EB /* Base */,
+				164B0E762E462822004F13EB /* Common */,
 				164DF7762E4549AE004B9F40 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
@@ -678,7 +696,7 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				164DF7782E4549AE004B9F40 /* Debug */,
-				164B0E772E462822004F13EB /* Base */,
+				164B0E772E462822004F13EB /* Common */,
 				164DF7792E4549AE004B9F40 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
