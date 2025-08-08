@@ -1,5 +1,28 @@
 import Foundation
+#if canImport(PostHog)
 import PostHog
+#else
+// Fallback stubs when PostHog SDK is not available. This allows the macOS app to build without the package.
+final class PostHogConfig {
+    var captureApplicationLifecycleEvents: Bool = false
+    var captureScreenViews: Bool = false
+    var debug: Bool = false
+    var optOut: Bool = false
+    init(apiKey: String, host: String) {}
+}
+
+final class PostHogSDK {
+    static let shared = PostHogSDK()
+    private init() {}
+    func setup(_ config: PostHogConfig) {}
+    func capture(_ event: String, properties: [String: Any]?) {}
+    func identify(_ id: String, userProperties: [String: Any]?) {}
+    func reset() {}
+    func optIn() {}
+    func optOut() {}
+    func flush() {}
+}
+#endif
 
 /**
  * PostHog Analytics Manager for BongoCat

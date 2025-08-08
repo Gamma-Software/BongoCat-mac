@@ -659,6 +659,15 @@ struct BongoCatSprite: View {
             return bundleImage
         }
 
+        // 4b. Try an underscore variant for asset catalog names (e.g., left-up -> left_up)
+        let underscoreVariant = name.replacingOccurrences(of: "-", with: "_")
+        if underscoreVariant != name, let altImage = NSImage(named: underscoreVariant) {
+            let loadTime = Date().timeIntervalSince(loadStartTime)
+            analytics.trackResourceLoadTime("image", loadTime: loadTime)
+            print("✅ Loaded image from NSImage(named: \(underscoreVariant)) [underscore variant]")
+            return altImage
+        }
+
         // 5. Try in-place next to executable (for CLI/dev scenarios)
         if let executablePath = Bundle.main.executablePath {
             let executableDir = URL(fileURLWithPath: executablePath).deletingLastPathComponent()
