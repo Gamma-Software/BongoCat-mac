@@ -186,7 +186,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 164DF74A2E4549AC004B9F40 /* Build configuration list for PBXProject "BongoCat" */;
+			buildConfigurationList = 164DF74A2E4549AC004B9F40 /* Build configuration list for PBXProject "BongoCat Overlay" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -641,7 +641,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		164DF74A2E4549AC004B9F40 /* Build configuration list for PBXProject "BongoCat" */ = {
+		164DF74A2E4549AC004B9F40 /* Build configuration list for PBXProject "BongoCat Overlay" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				164DF76F2E4549AE004B9F40 /* Debug */,
