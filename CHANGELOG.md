@@ -5,7 +5,74 @@ All notable changes to BongoCat-mac will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [unreleased] - 2025-08-04
+## [1.8.3] - 2025-08-07
+
+### Modified
+
+- Update `push.sh` to include zipping the pkg file before upload.
+- Update `run.sh` to include zipping the pkg file before upload.
+
+## [1.8.2] - 2025-08-07
+
+### Added
+
+- Added `APP_APPLE_ID` to `.env.template` for Apple Developer account integration.
+
+### Modified
+
+- Do not push to github by default
+- Updated `CHANGELOG.md` to reflect recent fixes and improvements in resource loading and packaging processes.
+- Modified `Info.plist` to correct the app version and icon file path.
+- Enhanced `run.sh` and `package.sh` scripts for improved build and packaging workflows, including better handling of DMG creation and App Store upload processes.
+
+### Fixed
+
+- Loading the images from the bundle
+
+### Deleted
+
+- Deleted the obsolete `analytics-config.plist.template` file to streamline project resources.
+
+## [1.8.1] - 2025-08-06
+
+Fix resource bundle loading issue and update environment configuration
+
+### Fixed
+
+- **Critical Fix**: Resolved "could not load resource bundle" error that was causing app crashes on macOS 15.6+.
+- Fixed Swift Package Manager resource bundle structure in packaging script to ensure proper resource loading.
+- Added proper bundle Info.plist creation for the `BongoCat-mac_BongoCat.bundle` that Swift Package Manager expects.
+- Ensured all required resources (cat images, logo, menu-logo, CHANGELOG.md) are properly included in the bundle.
+- Fixed resource loading fallback mechanisms to work correctly in packaged app distribution.
+
+### Modified
+
+- Updated `.env.template` to include new environment variables for Apple Developer account.
+- Enhanced `BongoCat.entitlements` with additional security keys for improved app performance.
+- Modified `run.sh` to support new build options and added verbose output for debugging.
+- Updated `package.sh` to allow for flexible package creation options and improved error handling.
+- Removed obsolete scripts related to code signing and packaging, streamlining the workflow.
+- Improved `verify.sh` to include detailed checks for notarization status and added verbose output options.
+
+These changes fix the critical resource loading issue and enhance the overall development and deployment process for the BongoCat application, ensuring better compliance and user experience.
+
+## [1.8.0] - 2025-08-05
+
+### Modified
+
+- Bumped version in `Info.plist`, `README.md`, and `BongoCatApp.swift` to v1.8.0.
+- Improved `run.sh` with a more comprehensive interactive menu for build, test, and installation options.
+- Enhanced `build.sh` to support various build configurations and actions, including cleaning, testing, and installation.
+- Updated `package_app.sh` to reflect the new version and streamline packaging processes.
+- Removed the obsolete `clear_accessibility.sh` script to clean up the project.
+
+## [1.7.1] - 2025-08-04
+
+### Modified
+
+- Update `upload_app_store.sh` to use `xcrun altool` for improved upload reliability.
+
+## [1.7.0] - 2025-08-04
 
 Add App Store packaging support and update README
 

@@ -47,6 +47,12 @@ COVERAGE=false
 QUIET=false
 FILTER=""
 
+# Load environment variables
+if [ -f ".env" ]; then
+    source .env
+fi
+
+
 while [[ $# -gt 0 ]]; do
     case $1 in
         -v|--verbose)
