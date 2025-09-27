@@ -1,0 +1,583 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		16956BFC2E463D2600AD67FC /* Release.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 16956BFB2E463D2600AD67FC /* Release.xcconfig */; };
+		16956BFE2E463D6400AD67FC /* Common.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 16956BFD2E463D6400AD67FC /* Common.xcconfig */; };
+		16956C002E463D6B00AD67FC /* Debug.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 16956BFF2E463D6B00AD67FC /* Debug.xcconfig */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		164DF75E2E4549AE004B9F40 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 164DF7472E4549AC004B9F40 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 164DF74E2E4549AC004B9F40;
+			remoteInfo = BongoCat;
+		};
+		164DF7682E4549AE004B9F40 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 164DF7472E4549AC004B9F40 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 164DF74E2E4549AC004B9F40;
+			remoteInfo = BongoCat;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		164DF74F2E4549AC004B9F40 /* Bongo Cat Overlay.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Bongo Cat Overlay.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		164DF75D2E4549AE004B9F40 /* BongoCatTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BongoCatTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		164DF7672E4549AE004B9F40 /* BongoCatUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BongoCatUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		16956BFB2E463D2600AD67FC /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
+		16956BFD2E463D6400AD67FC /* Common.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Common.xcconfig; sourceTree = "<group>"; };
+		16956BFF2E463D6B00AD67FC /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		164DF7512E4549AC004B9F40 /* BongoCat */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = BongoCat;
+			sourceTree = "<group>";
+		};
+		164DF7602E4549AE004B9F40 /* BongoCatTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = BongoCatTests;
+			sourceTree = "<group>";
+		};
+		164DF76A2E4549AE004B9F40 /* BongoCatUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = BongoCatUITests;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		164DF74C2E4549AC004B9F40 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		164DF75A2E4549AE004B9F40 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		164DF7642E4549AE004B9F40 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		164DF7462E4549AC004B9F40 = {
+			isa = PBXGroup;
+			children = (
+				164DF7512E4549AC004B9F40 /* BongoCat */,
+				164DF7602E4549AE004B9F40 /* BongoCatTests */,
+				164DF76A2E4549AE004B9F40 /* BongoCatUITests */,
+				164DF7502E4549AC004B9F40 /* Products */,
+				16956BFB2E463D2600AD67FC /* Release.xcconfig */,
+				16956BFD2E463D6400AD67FC /* Common.xcconfig */,
+				16956BFF2E463D6B00AD67FC /* Debug.xcconfig */,
+			);
+			sourceTree = "<group>";
+		};
+		164DF7502E4549AC004B9F40 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				164DF74F2E4549AC004B9F40 /* Bongo Cat Overlay.app */,
+				164DF75D2E4549AE004B9F40 /* BongoCatTests.xctest */,
+				164DF7672E4549AE004B9F40 /* BongoCatUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		164DF74E2E4549AC004B9F40 /* BongoCat */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 164DF7712E4549AE004B9F40 /* Build configuration list for PBXNativeTarget "BongoCat" */;
+			buildPhases = (
+				164DF74B2E4549AC004B9F40 /* Sources */,
+				164DF74C2E4549AC004B9F40 /* Frameworks */,
+				164DF74D2E4549AC004B9F40 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				164DF7512E4549AC004B9F40 /* BongoCat */,
+			);
+			name = BongoCat;
+			packageProductDependencies = (
+			);
+			productName = BongoCat;
+			productReference = 164DF74F2E4549AC004B9F40 /* Bongo Cat Overlay.app */;
+			productType = "com.apple.product-type.application";
+		};
+		164DF75C2E4549AE004B9F40 /* BongoCatTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 164DF7742E4549AE004B9F40 /* Build configuration list for PBXNativeTarget "BongoCatTests" */;
+			buildPhases = (
+				164DF7592E4549AE004B9F40 /* Sources */,
+				164DF75A2E4549AE004B9F40 /* Frameworks */,
+				164DF75B2E4549AE004B9F40 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				164DF75F2E4549AE004B9F40 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				164DF7602E4549AE004B9F40 /* BongoCatTests */,
+			);
+			name = BongoCatTests;
+			packageProductDependencies = (
+			);
+			productName = BongoCatTests;
+			productReference = 164DF75D2E4549AE004B9F40 /* BongoCatTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		164DF7662E4549AE004B9F40 /* BongoCatUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 164DF7772E4549AE004B9F40 /* Build configuration list for PBXNativeTarget "BongoCatUITests" */;
+			buildPhases = (
+				164DF7632E4549AE004B9F40 /* Sources */,
+				164DF7642E4549AE004B9F40 /* Frameworks */,
+				164DF7652E4549AE004B9F40 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				164DF7692E4549AE004B9F40 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				164DF76A2E4549AE004B9F40 /* BongoCatUITests */,
+			);
+			name = BongoCatUITests;
+			packageProductDependencies = (
+			);
+			productName = BongoCatUITests;
+			productReference = 164DF7672E4549AE004B9F40 /* BongoCatUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		164DF7472E4549AC004B9F40 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1640;
+				LastUpgradeCheck = 1640;
+				TargetAttributes = {
+					164DF74E2E4549AC004B9F40 = {
+						CreatedOnToolsVersion = 16.4;
+					};
+					164DF75C2E4549AE004B9F40 = {
+						CreatedOnToolsVersion = 16.4;
+						TestTargetID = 164DF74E2E4549AC004B9F40;
+					};
+					164DF7662E4549AE004B9F40 = {
+						CreatedOnToolsVersion = 16.4;
+						TestTargetID = 164DF74E2E4549AC004B9F40;
+					};
+				};
+			};
+			buildConfigurationList = 164DF74A2E4549AC004B9F40 /* Build configuration list for PBXProject "BongoCat Overlay" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 164DF7462E4549AC004B9F40;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 164DF7502E4549AC004B9F40 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				164DF74E2E4549AC004B9F40 /* BongoCat */,
+				164DF75C2E4549AE004B9F40 /* BongoCatTests */,
+				164DF7662E4549AE004B9F40 /* BongoCatUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		164DF74D2E4549AC004B9F40 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				16956BFE2E463D6400AD67FC /* Common.xcconfig in Resources */,
+				16956BFC2E463D2600AD67FC /* Release.xcconfig in Resources */,
+				16956C002E463D6B00AD67FC /* Debug.xcconfig in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		164DF75B2E4549AE004B9F40 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		164DF7652E4549AE004B9F40 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		164DF74B2E4549AC004B9F40 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		164DF7592E4549AE004B9F40 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		164DF7632E4549AE004B9F40 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		164DF75F2E4549AE004B9F40 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 164DF74E2E4549AC004B9F40 /* BongoCat */;
+			targetProxy = 164DF75E2E4549AE004B9F40 /* PBXContainerItemProxy */;
+		};
+		164DF7692E4549AE004B9F40 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 164DF74E2E4549AC004B9F40 /* BongoCat */;
+			targetProxy = 164DF7682E4549AE004B9F40 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		164DF76F2E4549AE004B9F40 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 76AKU4UJH2;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.5;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "Bongo Cat";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		164DF7702E4549AE004B9F40 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 76AKU4UJH2;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.5;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "Bongo Cat";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		164DF7722E4549AE004B9F40 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = BongoCat/BongoCat.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 76AKU4UJH2;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Bongo Cat";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 13.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.leaptech.bongo;
+				PRODUCT_NAME = "Bongo Cat Overlay";
+				REGISTER_APP_GROUPS = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		164DF7732E4549AE004B9F40 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = BongoCat/BongoCat.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 76AKU4UJH2;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Bongo Cat";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 13.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.leaptech.bongo;
+				PRODUCT_NAME = "Bongo Cat Overlay";
+				REGISTER_APP_GROUPS = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		164DF7752E4549AE004B9F40 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 76AKU4UJH2;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.leaptech.BongoCatTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/BongoCat.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/BongoCat";
+			};
+			name = Debug;
+		};
+		164DF7762E4549AE004B9F40 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 76AKU4UJH2;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.leaptech.BongoCatTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/BongoCat.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/BongoCat";
+			};
+			name = Release;
+		};
+		164DF7782E4549AE004B9F40 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 76AKU4UJH2;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.leaptech.BongoCatUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = BongoCat;
+			};
+			name = Debug;
+		};
+		164DF7792E4549AE004B9F40 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 76AKU4UJH2;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.leaptech.BongoCatUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = BongoCat;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		164DF74A2E4549AC004B9F40 /* Build configuration list for PBXProject "BongoCat Overlay" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				164DF76F2E4549AE004B9F40 /* Debug */,
+				164DF7702E4549AE004B9F40 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		164DF7712E4549AE004B9F40 /* Build configuration list for PBXNativeTarget "BongoCat" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				164DF7722E4549AE004B9F40 /* Debug */,
+				164DF7732E4549AE004B9F40 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		164DF7742E4549AE004B9F40 /* Build configuration list for PBXNativeTarget "BongoCatTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				164DF7752E4549AE004B9F40 /* Debug */,
+				164DF7762E4549AE004B9F40 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		164DF7772E4549AE004B9F40 /* Build configuration list for PBXNativeTarget "BongoCatUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				164DF7782E4549AE004B9F40 /* Debug */,
+				164DF7792E4549AE004B9F40 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 164DF7472E4549AC004B9F40 /* Project object */;
+}

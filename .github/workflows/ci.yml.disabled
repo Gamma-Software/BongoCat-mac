@@ -1,0 +1,23 @@
+name: macOS CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select latest Xcode
+        run: sudo xcode-select -s "/Applications/Xcode.app"
+      - name: Build
+        run: |
+          xcodebuild -version
+          xcodebuild -project app/BongoCat.xcodeproj -scheme BongoCat -configuration Debug -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO build | xcpretty || true
+        env:
+          NSUnbufferedIO: "YES"
+
+

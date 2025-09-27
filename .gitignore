@@ -2,6 +2,26 @@
 #
 # gitignore contributors: remember to update Global/Xcode.gitignore, Objective-C.gitignore & Swift.gitignore
 
+# macOS
+.DS_Store
+
+# Xcode
+DerivedData/
+build/
+*.xcuserstate
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+
+# SwiftPM
+.build/
+Package.resolved
+
+# VS Code
+.vscode/settings.json
+
+
+
+
 ## User settings
 xcuserdata/
 
