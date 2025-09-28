@@ -38,9 +38,22 @@
 		16956BFF2E463D6B00AD67FC /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		165CCF582E89688500A8EDBA /* Exceptions for "BongoCat" folder in "BongoCat" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 164DF74E2E4549AC004B9F40 /* BongoCat */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		164DF7512E4549AC004B9F40 /* BongoCat */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				165CCF582E89688500A8EDBA /* Exceptions for "BongoCat" folder in "BongoCat" target */,
+			);
 			path = BongoCat;
 			sourceTree = "<group>";
 		};
