@@ -23,8 +23,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
     var welcomeScreenController: WelcomeScreenController?
 
     // App information
-    private let appVersion = "1.8.3"
-    private let appBuild = "1.8.3.202508071405"
+    private let appVersion = "4"
+    private let appBuild = "1.8.4.202509280013"
     private let appAuthor = "Valentin Rudloff"
     private let appWebsite = "https://valentin.pival.fr"
 
@@ -57,7 +57,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
     private let pawBehaviorKey = "BongoCatPawBehavior"
 
     // Auto-start at launch management
-    @Published var autoStartAtLaunchEnabled: Bool = true  // Default enabled
+    @Published var autoStartAtLaunchEnabled: Bool = false  // Default disabled
     private let autoStartAtLaunchKey = "BongoCatAutoStartAtLaunch"
 
     // Position management - Enhanced for per-app positioning
@@ -228,7 +228,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         menu.addItem(NSMenuItem(title: "Reset Stroke Counter", action: #selector(resetStrokeCounter), keyEquivalent: ""))
 
         menu.addItem(NSMenuItem.separator())
-        menu.addItem(NSMenuItem(title: "Buy me a coffee ☕", action: #selector(buyMeACoffee), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "Tweet about BongoCat 🐦", action: #selector(tweetAboutBongoCat), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "Check for Updates 🔄", action: #selector(checkForUpdates), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "Auto-Start at Launch 🚀", action: #selector(toggleAutoStartAtLaunch), keyEquivalent: ""))
@@ -527,7 +526,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
             ignoreClicksEnabled = false
             clickThroughEnabled = true
             pawBehaviorMode = .random  // Random paw behavior
-            autoStartAtLaunchEnabled = true
+            autoStartAtLaunchEnabled = false
             savedPosition = NSPoint(x: 100, y: 100)
             currentCornerPosition = .custom
             snapToCornerEnabled = false
@@ -596,7 +595,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         let alert = NSAlert()
         alert.messageText = "About BongoCat \(getVersionString())"
         alert.informativeText = """
-        🐱 BongoCat for macOS 🐱
+        🐱 BongoCat Overlay 🐱
 
         Version: \(getVersionString())
         Bundle ID: \(getBundleIdentifier())
@@ -610,7 +609,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
         🎵 Original Concept:
-        Inspired by DitzyFlama's Bongo Cat meme and StrayRogue's adorable cat artwork. The Windows Steam version by Irox Games Studio sparked the idea for this native macOS implementation.
+        Inspired by DitzyFlama's Bongo Cat meme and StrayRogue's adorable cat artwork. The Windows Steam version by Irox Games Studio sparked the idea for this native implementation.
 
         🚀 Features:
         • Native Swift/SwiftUI implementation
@@ -675,27 +674,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         }
     }
 
-    @objc internal func buyMeACoffee() {
-        // Track menu action and social share
-        analytics.trackMenuAction("buy_me_coffee")
-        analytics.trackSocialShareInitiated("coffee_donation")
-        trackFeatureUsed("buy_coffee")
-
-        if let url = URL(string: "https://coff.ee/valentinrudloff") {
-            NSWorkspace.shared.open(url)
-            print("Opening Buy me a coffee: https://coff.ee/valentinrudloff")
-        } else {
-            print("Failed to create URL for Buy me a coffee")
-        }
-    }
-
     @objc internal func tweetAboutBongoCat() {
         // Track social share
         analytics.trackMenuAction("tweet_about_bongocat")
         analytics.trackSocialShareInitiated("twitter")
         trackFeatureUsed("social_share")
 
-        let tweetText = "Just discovered BongoCat for macOS! A Bongo Cat overlay for your Mac - reacts to typing and clicks in real-time! Perfect for streamers and developers ✨ #BongoCat #macOS #Swift #OpenSource\n\nDownload: https://github.com/Gamma-Software/BongoCat-mac/releases/tag/v1.8.0\nSee it in action: https://youtu.be/ZFw8m6V3qRQ"
+        let tweetText = "Just discovered BongoCat Overlay! A Bongo Cat overlay - reacts to typing and clicks in real-time! Perfect for streamers and developers ✨ #BongoCat #Swift #OpenSource\n\nDownload: https://github.com/Gamma-Software/BongoCat-mac/releases/tag/v1.8.0\nSee it in action: https://youtu.be/ZFw8m6V3qRQ"
         if let encodedText = tweetText.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
            let tweetURL = URL(string: "https://twitter.com/intent/tweet?text=\(encodedText)") {
             NSWorkspace.shared.open(tweetURL)
@@ -1045,10 +1030,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         visitWebsite()
     }
 
-    func buyMeACoffeePublic() {
-        buyMeACoffee()
-    }
-
     func tweetAboutBongoCatPublic() {
         tweetAboutBongoCat()
     }
@@ -1217,7 +1198,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         if UserDefaults.standard.object(forKey: autoStartAtLaunchKey) != nil {
             autoStartAtLaunchEnabled = UserDefaults.standard.bool(forKey: autoStartAtLaunchKey)
         } else {
-            autoStartAtLaunchEnabled = true // Default enabled
+            autoStartAtLaunchEnabled = false // Default disabled
         }
         print("Loaded auto-start at launch preference: \(autoStartAtLaunchEnabled)")
     }

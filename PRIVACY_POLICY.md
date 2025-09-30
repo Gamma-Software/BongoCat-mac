@@ -1,4 +1,4 @@
-# Privacy Policy for BongoCat macOS
+# Privacy Policy for BongoCat
 
 **Last Updated:** August 2025
 **Version:** 1.7.1
@@ -6,7 +6,7 @@
 
 ## Introduction
 
-BongoCat is a native macOS application that displays an animated cat overlay that responds to keyboard and mouse input. This Privacy Policy explains how we collect, use, and protect your information when you use BongoCat.
+BongoCat is a native application that displays an animated cat overlay that responds to keyboard and mouse input. This Privacy Policy explains how we collect, use, and protect your information when you use BongoCat.
 
 ## Information We Collect
 
@@ -59,7 +59,7 @@ BongoCat requires accessibility permissions to function properly:
 - **Location**: Data may be processed in the United States or European Union
 
 ### Local Data
-- **Storage**: Stored locally on your device using macOS UserDefaults
+- **Storage**: Stored locally on your device using UserDefaults
 - **Access**: Only accessible by the BongoCat application
 - **Retention**: Persists until you uninstall the app or reset preferences
 

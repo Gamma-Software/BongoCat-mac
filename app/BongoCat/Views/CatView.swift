@@ -787,11 +787,6 @@ struct CatView: View {
 
                             Divider()
 
-                            Button("Buy me a coffee ☕") {
-                                animationController.appDelegate?.buyMeACoffeePublic()
-                                PostHogAnalyticsManager.shared.trackContextMenuUsed("right_click", action: "buy_coffee")
-                            }
-
                             Button("Tweet about BongoCat 🐦") {
                                 animationController.appDelegate?.tweetAboutBongoCatPublic()
                                 PostHogAnalyticsManager.shared.trackContextMenuUsed("right_click", action: "tweet_about_bongocat")
