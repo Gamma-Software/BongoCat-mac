@@ -718,11 +718,6 @@ struct AboutPreferencesView: View {
             PreferencesSection(title: "Support") {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
-                        Button("Buy me a coffee ☕") {
-                            appDelegate.buyMeACoffee()
-                        }
-                        .buttonStyle(.bordered)
-
                         Button("Tweet about BongoCat 🐦") {
                             appDelegate.tweetAboutBongoCat()
                         }
