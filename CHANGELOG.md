@@ -11,6 +11,7 @@ Apple review feedback
 
 ### Modified
 
+- Remove app sandbox entitlement
 - Disable auto-start at launch by default
 - Remove buy me a coffee button
 - Remove macOS reference
