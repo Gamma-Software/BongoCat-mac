@@ -109,42 +109,82 @@ struct InputEvent: Identifiable {
 
 enum KeystrokeColor: String, CaseIterable {
     case white = "White"
+    case lightGray = "Light Gray"
+    case gray = "Gray"
+    case darkGray = "Dark Gray"
     case black = "Black"
+    case red = "Red"
     case orange = "Orange"
-    case cyan = "Cyan"
     case yellow = "Yellow"
+    case green = "Green"
+    case mint = "Mint"
+    case teal = "Teal"
+    case cyan = "Cyan"
+    case blue = "Blue"
+    case indigo = "Indigo"
+    case purple = "Purple"
+    case pink = "Pink"
 
     var color: Color {
         switch self {
-        case .white: return .white
-        case .black: return Color(NSColor.black)
-        case .orange: return .orange
-        case .cyan: return .cyan
-        case .yellow: return .yellow
+        case .white:     return .white
+        case .lightGray: return Color(NSColor.lightGray)
+        case .gray:      return Color(NSColor.gray)
+        case .darkGray:  return Color(NSColor.darkGray)
+        case .black:     return Color(NSColor.black)
+        case .red:       return .red
+        case .orange:    return .orange
+        case .yellow:    return .yellow
+        case .green:     return .green
+        case .mint:      return .mint
+        case .teal:      return .teal
+        case .cyan:      return .cyan
+        case .blue:      return .blue
+        case .indigo:    return .indigo
+        case .purple:    return .purple
+        case .pink:      return .pink
         }
     }
 }
 
 enum KeystrokeBgColor: String, CaseIterable {
-    case black = "Black"
-    case darkGray = "Dark Gray"
-    case white = "White"
-    case blue = "Blue"
-    case purple = "Purple"
-    case red = "Red"
-    case green = "Green"
     case none = "None"
+    case white = "White"
+    case lightGray = "Light Gray"
+    case gray = "Gray"
+    case darkGray = "Dark Gray"
+    case black = "Black"
+    case red = "Red"
+    case orange = "Orange"
+    case yellow = "Yellow"
+    case green = "Green"
+    case mint = "Mint"
+    case teal = "Teal"
+    case cyan = "Cyan"
+    case blue = "Blue"
+    case indigo = "Indigo"
+    case purple = "Purple"
+    case pink = "Pink"
 
     var color: Color {
         switch self {
-        case .black:    return Color(NSColor.black)
-        case .darkGray: return Color(NSColor.darkGray)
-        case .white:    return .white
-        case .blue:     return .blue
-        case .purple:   return .purple
-        case .red:      return .red
-        case .green:    return .green
-        case .none:     return .clear
+        case .none:      return .clear
+        case .white:     return .white
+        case .lightGray: return Color(NSColor.lightGray)
+        case .gray:      return Color(NSColor.gray)
+        case .darkGray:  return Color(NSColor.darkGray)
+        case .black:     return Color(NSColor.black)
+        case .red:       return .red
+        case .orange:    return .orange
+        case .yellow:    return .yellow
+        case .green:     return .green
+        case .mint:      return .mint
+        case .teal:      return .teal
+        case .cyan:      return .cyan
+        case .blue:      return .blue
+        case .indigo:    return .indigo
+        case .purple:    return .purple
+        case .pink:      return .pink
         }
     }
 }
