@@ -211,7 +211,7 @@ class CatAnimationController: ObservableObject {
     @Published var keystrokeDisplayBgColor: KeystrokeBgColor = .black
     @Published var keystrokeCounterSpacing: Double = 1
     @Published var keystrokeCount: Int = 0
-    private let maxInputEvents = 5
+    private let maxInputEvents = 4
     private let keystrokeExpireDuration: TimeInterval = 2.0
 
     // Reference to AppDelegate for context menu actions
@@ -1066,9 +1066,13 @@ struct KeystrokeDisplayView: View {
                                           weight: .semibold,
                                           design: .monospaced))
                             .foregroundColor(animationController.keystrokeDisplayTextColor.color)
-                            .fixedSize(horizontal: true, vertical: false)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
                             .padding(.horizontal, 3)
                             .padding(.vertical, 1)
+                            .frame(minWidth: CGFloat(animationController.keystrokeDisplayFontSize) * 1.85,
+                                   maxWidth: CGFloat(animationController.keystrokeDisplayFontSize) * 1.85,
+                                   alignment: .center)
                             .background(
                                 RoundedRectangle(cornerRadius: 4)
                                     .fill(animationController.keystrokeDisplayBgColor.color.opacity(
