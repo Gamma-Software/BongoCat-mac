@@ -244,50 +244,41 @@ class OverlayWindow: NSWindowController, NSWindowDelegate {
         guard let animationController = catAnimationController else { return }
 
         animationController.updateViewScale(scale)
-
-        let baseWidth: CGFloat = 150
-        let baseCatHeight: CGFloat = 125
-        let keystrokeExtra: CGFloat = animationController.showKeystrokeDisplay ? 35 : 0
-        let newWidth = baseWidth * scale
-        let newHeight = (baseCatHeight + keystrokeExtra) * scale
-
-        if let window = window {
-            let currentFrame = window.frame
-            let newFrame = NSRect(
-                x: currentFrame.origin.x,
-                y: currentFrame.origin.y,
-                width: newWidth,
-                height: newHeight
-            )
-            window.setFrame(newFrame, display: true, animate: true)
-        }
-
+        resizeWindow(scale: scale)
         print("Window scale updated to: \(scale)")
     }
 
     func updateKeystrokeDisplay(_ show: Bool) {
         guard let animationController = catAnimationController else { return }
         animationController.showKeystrokeDisplay = show
+        resizeWindow(scale: animationController.viewScale)
+        print("Keystroke display updated to: \(show)")
+    }
 
+    func updateKeystrokeDisplaySpacing(_ spacing: Double) {
+        guard let animationController = catAnimationController else { return }
+        animationController.keystrokeDisplaySpacing = spacing
+        resizeWindow(scale: animationController.viewScale)
+    }
+
+    private func resizeWindow(scale: Double) {
+        guard let animationController = catAnimationController else { return }
         let baseWidth: CGFloat = 150
         let baseCatHeight: CGFloat = 125
-        let keystrokeExtra: CGFloat = show ? 35 : 0
-        let scale = animationController.viewScale
-        let newWidth = baseWidth * scale
-        let newHeight = (baseCatHeight + keystrokeExtra) * scale
+        let spacing = CGFloat(animationController.keystrokeDisplaySpacing)
+        let keystrokeExtra: CGFloat = animationController.showKeystrokeDisplay ? (48 + spacing) : 0
+        let newWidth = baseWidth * CGFloat(scale)
+        let newHeight = (baseCatHeight + keystrokeExtra) * CGFloat(scale)
 
         if let window = window {
             let currentFrame = window.frame
-            let newFrame = NSRect(
+            window.setFrame(NSRect(
                 x: currentFrame.origin.x,
                 y: currentFrame.origin.y,
                 width: newWidth,
                 height: newHeight
-            )
-            window.setFrame(newFrame, display: true, animate: true)
+            ), display: true, animate: true)
         }
-
-        print("Keystroke display updated to: \(show)")
     }
 
     func updateRotation(_ rotation: Double) {

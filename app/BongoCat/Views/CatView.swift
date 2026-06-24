@@ -138,6 +138,9 @@ class CatAnimationController: ObservableObject {
 
     // Keystroke display
     @Published var showKeystrokeDisplay: Bool = false
+    @Published var showKeystrokeCounter: Bool = true
+    @Published var showKeystrokeKeys: Bool = true
+    @Published var keystrokeDisplaySpacing: Double = 0
     @Published var recentInputEvents: [InputEvent] = []
     @Published var keystrokeDisplayFontSize: Double = 13
     @Published var keystrokeDisplayTextColor: KeystrokeColor = .white
@@ -335,7 +338,7 @@ class CatAnimationController: ObservableObject {
             print("🖱️ Left click down detected - left paw animation")
             strokeCounter.incrementMouseClicks()
             keystrokeCount = strokeCounter.totalStrokes
-            if showKeystrokeDisplay { recordInputEvent("L") }
+            if showKeystrokeDisplay { recordInputEvent("M1") }
             triggerPawAnimation(.leftPawDown)
         case .leftClickUp:
             if ignoreClicksEnabled {
@@ -352,7 +355,7 @@ class CatAnimationController: ObservableObject {
             print("🖱️ Right click down detected - right paw animation")
             strokeCounter.incrementMouseClicks()
             keystrokeCount = strokeCounter.totalStrokes
-            if showKeystrokeDisplay { recordInputEvent("R") }
+            if showKeystrokeDisplay { recordInputEvent("M2") }
             triggerPawAnimation(.rightPawDown)
         case .rightClickUp:
             if ignoreClicksEnabled {
@@ -519,6 +522,18 @@ class CatAnimationController: ObservableObject {
         showKeystrokeDisplay = show
     }
 
+    func setShowKeystrokeCounter(_ show: Bool) {
+        showKeystrokeCounter = show
+    }
+
+    func setShowKeystrokeKeys(_ show: Bool) {
+        showKeystrokeKeys = show
+    }
+
+    func setKeystrokeDisplaySpacing(_ spacing: Double) {
+        keystrokeDisplaySpacing = spacing
+    }
+
     func setKeystrokeDisplayFontSize(_ size: Double) {
         keystrokeDisplayFontSize = size
     }
@@ -543,16 +558,43 @@ class CatAnimationController: ObservableObject {
 
     func formatKey(_ key: String) -> String {
         switch key {
-        case " ": return "SPC"
-        case "\r", "\n": return "↩"
-        case "\t": return "⇥"
-        case "\u{7f}", "\u{8}": return "⌫"
-        case "\u{1b}", "Escape", "ESC", "esc": return "ESC"
-        case "\u{f700}": return "↑"
-        case "\u{f701}": return "↓"
-        case "\u{f702}": return "←"
-        case "\u{f703}": return "→"
-        case "unknown": return "?"
+        case " ":                           return "␣"
+        case "\r", "\n":                    return "↩"
+        case "\t":                          return "⇥"
+        case "\u{7f}", "\u{8}":            return "⌫"
+        case "\u{1b}", "Escape", "ESC", "esc": return "⎋"
+        // Modifier keys (already pre-formatted from InputMonitor)
+        case "⌘":                           return "⌘"
+        case "⌥":                           return "⌥"
+        case "⌃":                           return "⌃"
+        case "⇧":                           return "⇧"
+        case "⇪":                           return "⇪"
+        case "fn":                          return "fn"
+        // Arrow keys
+        case "\u{f700}":                    return "↑"
+        case "\u{f701}":                    return "↓"
+        case "\u{f702}":                    return "←"
+        case "\u{f703}":                    return "→"
+        // F keys
+        case "\u{F704}":                    return "F1"
+        case "\u{F705}":                    return "F2"
+        case "\u{F706}":                    return "F3"
+        case "\u{F707}":                    return "F4"
+        case "\u{F708}":                    return "F5"
+        case "\u{F709}":                    return "F6"
+        case "\u{F70A}":                    return "F7"
+        case "\u{F70B}":                    return "F8"
+        case "\u{F70C}":                    return "F9"
+        case "\u{F70D}":                    return "F10"
+        case "\u{F70E}":                    return "F11"
+        case "\u{F70F}":                    return "F12"
+        // Other special keys
+        case "\u{F728}":                    return "⌦"
+        case "\u{F729}":                    return "↖"
+        case "\u{F72B}":                    return "↘"
+        case "\u{F72C}":                    return "⇞"
+        case "\u{F72D}":                    return "⇟"
+        case "unknown":                     return "?"
         default:
             let upper = key.uppercased()
             return upper.count <= 3 ? upper : String(upper.prefix(3))
@@ -837,12 +879,11 @@ struct CatView: View {
 
     var body: some View {
         GeometryReader { geometry in
-            // When keystroke display is on the window is 160 units tall (125 cat + 35 display).
-            // We keep the cat portion constant regardless of whether the display is showing.
-            let catH: CGFloat = animationController.showKeystrokeDisplay
-                ? geometry.size.height * (125.0 / 160.0)
-                : geometry.size.height
-            let displayH: CGFloat = geometry.size.height - catH
+            let spacing = CGFloat(animationController.keystrokeDisplaySpacing)
+            let totalBase: CGFloat = animationController.showKeystrokeDisplay ? (173.0 + spacing) : 125.0
+            let catH: CGFloat = geometry.size.height * (125.0 / totalBase)
+            let spacingH: CGFloat = animationController.showKeystrokeDisplay ? geometry.size.height * (spacing / totalBase) : 0
+            let displayH: CGFloat = geometry.size.height - catH - spacingH
 
             VStack(spacing: 0) {
                 // Clear background area (18.5% of cat height)
@@ -911,6 +952,7 @@ struct CatView: View {
 
                 // Keystroke display panel
                 if animationController.showKeystrokeDisplay {
+                    Color.clear.frame(height: spacingH)
                     KeystrokeDisplayView()
                         .frame(height: displayH)
                 }
@@ -929,45 +971,57 @@ struct KeystrokeDisplayView: View {
     @EnvironmentObject var animationController: CatAnimationController
 
     var body: some View {
-        HStack(spacing: 3) {
-            ForEach(animationController.recentInputEvents) { event in
-                Text(event.label)
-                    .font(.system(size: animationController.keystrokeDisplayFontSize,
+        VStack(spacing: 1) {
+            // Count row
+            if animationController.showKeystrokeCounter {
+                Text("\(animationController.keystrokeCount)")
+                    .font(.system(size: animationController.keystrokeDisplayFontSize - 1,
                                   weight: .semibold,
                                   design: .monospaced))
-                    .foregroundColor(animationController.keystrokeDisplayTextColor.color)
-                    .padding(.horizontal, 5)
-                    .padding(.vertical, 2)
-                    .background(
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(Color.black.opacity(0.45))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 4)
-                                    .stroke(animationController.keystrokeDisplayTextColor.color.opacity(0.35),
-                                            lineWidth: 0.5)
-                            )
-                    )
-                    .transition(.asymmetric(
-                        insertion: .move(edge: .trailing).combined(with: .opacity),
-                        removal: .opacity
-                    ))
+                    .foregroundColor(animationController.keystrokeDisplayTextColor.color.opacity(0.75))
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .animation(.none, value: animationController.keystrokeCount)
             }
 
-            Spacer(minLength: 0)
-
-            Text("\(animationController.keystrokeCount)")
-                .font(.system(size: animationController.keystrokeDisplayFontSize - 1,
-                              weight: .medium,
-                              design: .monospaced))
-                .foregroundColor(animationController.keystrokeDisplayTextColor.color.opacity(0.6))
-                .padding(.trailing, 4)
-                .animation(.none, value: animationController.keystrokeCount)
+            // Recent key labels row
+            if animationController.showKeystrokeKeys {
+                HStack(spacing: 2) {
+                    ForEach(animationController.recentInputEvents) { event in
+                        Text(event.label)
+                            .font(.system(size: animationController.keystrokeDisplayFontSize,
+                                          weight: .semibold,
+                                          design: .monospaced))
+                            .foregroundColor(animationController.keystrokeDisplayTextColor.color)
+                            .fixedSize(horizontal: true, vertical: false)
+                            .padding(.horizontal, 3)
+                            .padding(.vertical, 1)
+                            .background(
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(Color.black.opacity(0.45))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 4)
+                                            .stroke(animationController.keystrokeDisplayTextColor.color.opacity(0.35),
+                                                    lineWidth: 0.5)
+                                    )
+                            )
+                            .transition(.asymmetric(
+                                insertion: .move(edge: .trailing).combined(with: .opacity),
+                                removal: .opacity
+                            ))
+                    }
+                    Spacer(minLength: 0)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .clipped()
+                .animation(.easeInOut(duration: 0.12), value: animationController.recentInputEvents.map { $0.id })
+            }
         }
-        .animation(.easeInOut(duration: 0.12), value: animationController.recentInputEvents.map { $0.id })
         .padding(.horizontal, 4)
-        .padding(.vertical, 3)
+        .padding(.top, 2)
+        .padding(.bottom, 2)
         .background(Color.black.opacity(0.22))
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, alignment: .top)
+        .frame(maxHeight: .infinity, alignment: .top)
     }
 }
 

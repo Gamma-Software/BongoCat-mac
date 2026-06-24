@@ -90,6 +90,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
     // Keystroke display management
     @Published var showKeystrokeDisplay: Bool = false
     private let keystrokeDisplayKey = "BongoCatShowKeystrokeDisplay"
+    @Published var showKeystrokeCounter: Bool = true
+    private let keystrokeCounterKey = "BongoCatShowKeystrokeCounter"
+    @Published var showKeystrokeKeys: Bool = true
+    private let keystrokeKeysKey = "BongoCatShowKeystrokeKeys"
+    @Published var keystrokeDisplaySpacing: Double = 0
+    private let keystrokeDisplaySpacingKey = "BongoCatKeystrokeDisplaySpacing"
     @Published var keystrokeDisplayFontSize: Double = 13
     private let keystrokeDisplayFontSizeKey = "BongoCatKeystrokeDisplayFontSize"
     @Published var keystrokeDisplayTextColor: KeystrokeColor = .white
@@ -464,6 +470,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         overlayWindow?.catAnimationController?.setPawBehaviorMode(pawBehaviorMode)  // Apply paw behavior preference
         overlayWindow?.updateIgnoreMouseEvents(clickThroughEnabled)  // Apply click through preference
         overlayWindow?.updateKeystrokeDisplay(showKeystrokeDisplay)  // Apply keystroke display preference
+        overlayWindow?.catAnimationController?.setShowKeystrokeCounter(showKeystrokeCounter)
+        overlayWindow?.catAnimationController?.setShowKeystrokeKeys(showKeystrokeKeys)
+        overlayWindow?.updateKeystrokeDisplaySpacing(keystrokeDisplaySpacing)
         overlayWindow?.catAnimationController?.setKeystrokeDisplayFontSize(keystrokeDisplayFontSize)
         overlayWindow?.catAnimationController?.setKeystrokeDisplayTextColor(keystrokeDisplayTextColor)
 
@@ -589,6 +598,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
             isPerAppHidingEnabled = true  // Per-app hiding enabled
             perAppHiddenApps.removeAll()
             showKeystrokeDisplay = false
+            showKeystrokeCounter = true
+            showKeystrokeKeys = true
+            keystrokeDisplaySpacing = 0
             keystrokeDisplayFontSize = 13
             keystrokeDisplayTextColor = .white
 
@@ -2640,6 +2652,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         if UserDefaults.standard.object(forKey: keystrokeDisplayKey) != nil {
             showKeystrokeDisplay = UserDefaults.standard.bool(forKey: keystrokeDisplayKey)
         }
+        if UserDefaults.standard.object(forKey: keystrokeCounterKey) != nil {
+            showKeystrokeCounter = UserDefaults.standard.bool(forKey: keystrokeCounterKey)
+        }
+        if UserDefaults.standard.object(forKey: keystrokeKeysKey) != nil {
+            showKeystrokeKeys = UserDefaults.standard.bool(forKey: keystrokeKeysKey)
+        }
+        if UserDefaults.standard.object(forKey: keystrokeDisplaySpacingKey) != nil {
+            keystrokeDisplaySpacing = UserDefaults.standard.double(forKey: keystrokeDisplaySpacingKey)
+        }
         if UserDefaults.standard.object(forKey: keystrokeDisplayFontSizeKey) != nil {
             keystrokeDisplayFontSize = UserDefaults.standard.double(forKey: keystrokeDisplayFontSizeKey)
         }
@@ -2647,20 +2668,26 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
            let color = KeystrokeColor(rawValue: colorRaw) {
             keystrokeDisplayTextColor = color
         }
-        print("Loaded keystroke display prefs — show:\(showKeystrokeDisplay), size:\(keystrokeDisplayFontSize), color:\(keystrokeDisplayTextColor.rawValue)")
+        print("Loaded keystroke display prefs — show:\(showKeystrokeDisplay), counter:\(showKeystrokeCounter), keys:\(showKeystrokeKeys), size:\(keystrokeDisplayFontSize), color:\(keystrokeDisplayTextColor.rawValue)")
     }
 
     internal func saveKeystrokeDisplayPreferences() {
         UserDefaults.standard.set(showKeystrokeDisplay, forKey: keystrokeDisplayKey)
+        UserDefaults.standard.set(showKeystrokeCounter, forKey: keystrokeCounterKey)
+        UserDefaults.standard.set(showKeystrokeKeys, forKey: keystrokeKeysKey)
+        UserDefaults.standard.set(keystrokeDisplaySpacing, forKey: keystrokeDisplaySpacingKey)
         UserDefaults.standard.set(keystrokeDisplayFontSize, forKey: keystrokeDisplayFontSizeKey)
         UserDefaults.standard.set(keystrokeDisplayTextColor.rawValue, forKey: keystrokeDisplayTextColorKey)
     }
 
     internal func applyKeystrokeDisplaySettings() {
         if let controller = overlayWindow?.catAnimationController {
+            controller.setShowKeystrokeCounter(showKeystrokeCounter)
+            controller.setShowKeystrokeKeys(showKeystrokeKeys)
             controller.setKeystrokeDisplayFontSize(keystrokeDisplayFontSize)
             controller.setKeystrokeDisplayTextColor(keystrokeDisplayTextColor)
         }
+        overlayWindow?.updateKeystrokeDisplaySpacing(keystrokeDisplaySpacing)
     }
 
         // MARK: - Additional Helper Methods
