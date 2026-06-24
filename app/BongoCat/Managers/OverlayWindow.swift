@@ -243,16 +243,14 @@ class OverlayWindow: NSWindowController, NSWindowDelegate {
     func updateScale(_ scale: Double) {
         guard let animationController = catAnimationController else { return }
 
-        // Update the cat view scale
         animationController.updateViewScale(scale)
 
-        // Calculate new window size based on scale
-        let baseWidth: CGFloat = 150  // Reduced from 175 to match cat size
-        let baseHeight: CGFloat = 125 // Reduced from 200 to match cat size
+        let baseWidth: CGFloat = 150
+        let baseCatHeight: CGFloat = 125
+        let keystrokeExtra: CGFloat = animationController.showKeystrokeDisplay ? 35 : 0
         let newWidth = baseWidth * scale
-        let newHeight = baseHeight * scale
+        let newHeight = (baseCatHeight + keystrokeExtra) * scale
 
-        // Update window size
         if let window = window {
             let currentFrame = window.frame
             let newFrame = NSRect(
@@ -265,6 +263,31 @@ class OverlayWindow: NSWindowController, NSWindowDelegate {
         }
 
         print("Window scale updated to: \(scale)")
+    }
+
+    func updateKeystrokeDisplay(_ show: Bool) {
+        guard let animationController = catAnimationController else { return }
+        animationController.showKeystrokeDisplay = show
+
+        let baseWidth: CGFloat = 150
+        let baseCatHeight: CGFloat = 125
+        let keystrokeExtra: CGFloat = show ? 35 : 0
+        let scale = animationController.viewScale
+        let newWidth = baseWidth * scale
+        let newHeight = (baseCatHeight + keystrokeExtra) * scale
+
+        if let window = window {
+            let currentFrame = window.frame
+            let newFrame = NSRect(
+                x: currentFrame.origin.x,
+                y: currentFrame.origin.y,
+                width: newWidth,
+                height: newHeight
+            )
+            window.setFrame(newFrame, display: true, animate: true)
+        }
+
+        print("Keystroke display updated to: \(show)")
     }
 
     func updateRotation(_ rotation: Double) {

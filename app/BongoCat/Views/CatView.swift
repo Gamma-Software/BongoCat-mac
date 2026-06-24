@@ -102,6 +102,29 @@ enum InputType {
     case trackpadTouch
 }
 
+struct InputEvent: Identifiable {
+    let id = UUID()
+    let label: String
+}
+
+enum KeystrokeColor: String, CaseIterable {
+    case white = "White"
+    case black = "Black"
+    case orange = "Orange"
+    case cyan = "Cyan"
+    case yellow = "Yellow"
+
+    var color: Color {
+        switch self {
+        case .white: return .white
+        case .black: return Color(NSColor.black)
+        case .orange: return .orange
+        case .cyan: return .cyan
+        case .yellow: return .yellow
+        }
+    }
+}
+
 // MARK: - Observable Cat Animation Controller
 class CatAnimationController: ObservableObject {
     @Published var currentState: CatState = .idle
@@ -112,6 +135,13 @@ class CatAnimationController: ObservableObject {
     @Published var isFlippedHorizontally: Bool = false  // New property for horizontal flip
     @Published var ignoreClicksEnabled: Bool = false  // Control whether to ignore mouse clicks
     @Published var pawBehaviorMode: PawBehaviorMode = .alternating  // Control paw behavior mode
+
+    // Keystroke display
+    @Published var showKeystrokeDisplay: Bool = false
+    @Published var recentInputEvents: [InputEvent] = []
+    @Published var keystrokeDisplayFontSize: Double = 13
+    @Published var keystrokeDisplayTextColor: KeystrokeColor = .white
+    private let maxInputEvents = 8
 
     // Reference to AppDelegate for context menu actions
     weak var appDelegate: AppDelegate?
@@ -288,6 +318,7 @@ class CatAnimationController: ObservableObject {
         case .keyboardDown(let key):
             print("⌨️ Keyboard down detected - key: \(key)")
             strokeCounter.incrementKeystrokes()
+            if showKeystrokeDisplay { recordInputEvent(formatKey(key)) }
             triggerKeyboardDown(for: key)
         case .keyboardUp(let key):
             print("⌨️ Keyboard up detected - key: \(key)")
@@ -299,6 +330,7 @@ class CatAnimationController: ObservableObject {
             }
             print("🖱️ Left click down detected - left paw animation")
             strokeCounter.incrementMouseClicks()
+            if showKeystrokeDisplay { recordInputEvent("L") }
             triggerPawAnimation(.leftPawDown)
         case .leftClickUp:
             if ignoreClicksEnabled {
@@ -314,6 +346,7 @@ class CatAnimationController: ObservableObject {
             }
             print("🖱️ Right click down detected - right paw animation")
             strokeCounter.incrementMouseClicks()
+            if showKeystrokeDisplay { recordInputEvent("R") }
             triggerPawAnimation(.rightPawDown)
         case .rightClickUp:
             if ignoreClicksEnabled {
@@ -472,6 +505,46 @@ class CatAnimationController: ObservableObject {
 
         print("🎯 Returning to idle immediately (no more trackpad touches)")
         currentState = .idle
+    }
+
+    // MARK: - Keystroke Display
+
+    func setShowKeystrokeDisplay(_ show: Bool) {
+        showKeystrokeDisplay = show
+    }
+
+    func setKeystrokeDisplayFontSize(_ size: Double) {
+        keystrokeDisplayFontSize = size
+    }
+
+    func setKeystrokeDisplayTextColor(_ color: KeystrokeColor) {
+        keystrokeDisplayTextColor = color
+    }
+
+    func recordInputEvent(_ label: String) {
+        let event = InputEvent(label: label)
+        recentInputEvents.append(event)
+        if recentInputEvents.count > maxInputEvents {
+            recentInputEvents.removeFirst(recentInputEvents.count - maxInputEvents)
+        }
+    }
+
+    func formatKey(_ key: String) -> String {
+        switch key {
+        case " ": return "SPC"
+        case "\r", "\n": return "↩"
+        case "\t": return "⇥"
+        case "\u{7f}", "\u{8}": return "⌫"
+        case "\u{1b}", "Escape", "ESC", "esc": return "ESC"
+        case "\u{f700}": return "↑"
+        case "\u{f701}": return "↓"
+        case "\u{f702}": return "←"
+        case "\u{f703}": return "→"
+        case "unknown": return "?"
+        default:
+            let upper = key.uppercased()
+            return upper.count <= 3 ? upper : String(upper.prefix(3))
+        }
     }
 
     private func animateAlternatePaws() {
@@ -752,26 +825,31 @@ struct CatView: View {
 
     var body: some View {
         GeometryReader { geometry in
-            VStack(spacing: 0) {
-                // Clear background area (18.5% of total height to match original 25px/135px)
-                Color.clear
-                    .frame(height: geometry.size.height * 0.185)
+            // When keystroke display is on the window is 160 units tall (125 cat + 35 display).
+            // We keep the cat portion constant regardless of whether the display is showing.
+            let catH: CGFloat = animationController.showKeystrokeDisplay
+                ? geometry.size.height * (125.0 / 160.0)
+                : geometry.size.height
+            let displayH: CGFloat = geometry.size.height - catH
 
-                // Red cat area (81.5% of total height to match original 110px/135px)
+            VStack(spacing: 0) {
+                // Clear background area (18.5% of cat height)
+                Color.clear
+                    .frame(height: catH * 0.185)
+
+                // Cat sprite area (81.5% of cat height)
                 ZStack {
                     Color.clear
-                    //Color.red //DEBUG
 
-                    // The authentic BongoCat sprite using real images
                     BongoCatSprite(state: animationController.currentState)
                         .scaleEffect(animationController.scale)
-                        .scaleEffect(x: animationController.isFlippedHorizontally ? -1 : 1, y: 1)  // Apply horizontal flip
-                        .rotationEffect(.degrees(animationController.rotation))  // Apply rotation
+                        .scaleEffect(x: animationController.isFlippedHorizontally ? -1 : 1, y: 1)
+                        .rotationEffect(.degrees(animationController.rotation))
                         .animation(.easeInOut(duration: 0.08), value: animationController.currentState)
                         .animation(.easeInOut(duration: 0.1), value: animationController.scale)
-                        .animation(.easeInOut(duration: 0.3), value: animationController.rotation)  // Smooth rotation transitions
-                        .animation(.easeInOut(duration: 0.3), value: animationController.isFlippedHorizontally)  // Smooth flip transitions
-                        .contentShape(Rectangle()) // Make the entire sprite area tappable
+                        .animation(.easeInOut(duration: 0.3), value: animationController.rotation)
+                        .animation(.easeInOut(duration: 0.3), value: animationController.isFlippedHorizontally)
+                        .contentShape(Rectangle())
                         .contextMenu {
                             Button("Show/Hide Overlay") {
                                 animationController.appDelegate?.toggleOverlayPublic()
@@ -817,14 +895,58 @@ struct CatView: View {
                             }
                         }
                 }
-                .frame(height: geometry.size.height * 0.815)
+                .frame(height: catH * 0.815)
+
+                // Keystroke display panel
+                if animationController.showKeystrokeDisplay {
+                    KeystrokeDisplayView()
+                        .frame(height: displayH)
+                }
             }
         }
-        .scaleEffect(animationController.viewScale)  // Apply view scaling
-        .animation(.easeInOut(duration: 0.3), value: animationController.viewScale)  // Smooth scale transitions
+        .scaleEffect(animationController.viewScale)
+        .animation(.easeInOut(duration: 0.3), value: animationController.viewScale)
         .onAppear {
             print("🐱 CatView appeared, current state: \(animationController.currentState)")
         }
+    }
+}
+
+// MARK: - Keystroke Display View
+struct KeystrokeDisplayView: View {
+    @EnvironmentObject var animationController: CatAnimationController
+
+    var body: some View {
+        HStack(spacing: 3) {
+            ForEach(animationController.recentInputEvents) { event in
+                Text(event.label)
+                    .font(.system(size: animationController.keystrokeDisplayFontSize,
+                                  weight: .semibold,
+                                  design: .monospaced))
+                    .foregroundColor(animationController.keystrokeDisplayTextColor.color)
+                    .padding(.horizontal, 5)
+                    .padding(.vertical, 2)
+                    .background(
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Color.black.opacity(0.45))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 4)
+                                    .stroke(animationController.keystrokeDisplayTextColor.color.opacity(0.35),
+                                            lineWidth: 0.5)
+                            )
+                    )
+                    .transition(.asymmetric(
+                        insertion: .move(edge: .trailing).combined(with: .opacity),
+                        removal: .opacity
+                    ))
+            }
+            Spacer(minLength: 0)
+        }
+        .animation(.easeInOut(duration: 0.12), value: animationController.recentInputEvents.map { $0.id })
+        .padding(.horizontal, 4)
+        .padding(.vertical, 3)
+        .background(Color.black.opacity(0.22))
+        .frame(maxWidth: .infinity)
     }
 }
 

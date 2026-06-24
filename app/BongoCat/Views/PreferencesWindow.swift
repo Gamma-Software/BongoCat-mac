@@ -195,6 +195,66 @@ struct GeneralPreferencesView: View {
                 }
             }
 
+            PreferencesSection(title: "Keystroke Display") {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Text("Show keystroke display")
+                            .frame(width: 200, alignment: .leading)
+                        Toggle("", isOn: Binding(
+                            get: { appDelegate.showKeystrokeDisplay },
+                            set: { newValue in
+                                appDelegate.showKeystrokeDisplay = newValue
+                                appDelegate.saveKeystrokeDisplayPreferences()
+                                appDelegate.overlayWindow?.updateKeystrokeDisplay(newValue)
+                            }
+                        ))
+                        Spacer()
+                    }
+
+                    if appDelegate.showKeystrokeDisplay {
+                        HStack {
+                            Text("Font size")
+                                .frame(width: 200, alignment: .leading)
+                            Picker("", selection: Binding(
+                                get: { appDelegate.keystrokeDisplayFontSize },
+                                set: { newValue in
+                                    appDelegate.keystrokeDisplayFontSize = newValue
+                                    appDelegate.saveKeystrokeDisplayPreferences()
+                                    appDelegate.applyKeystrokeDisplaySettings()
+                                }
+                            )) {
+                                Text("Small").tag(11.0)
+                                Text("Medium").tag(13.0)
+                                Text("Large").tag(16.0)
+                            }
+                            .pickerStyle(MenuPickerStyle())
+                            .frame(width: 150)
+                            Spacer()
+                        }
+
+                        HStack {
+                            Text("Text color")
+                                .frame(width: 200, alignment: .leading)
+                            Picker("", selection: Binding(
+                                get: { appDelegate.keystrokeDisplayTextColor },
+                                set: { newValue in
+                                    appDelegate.keystrokeDisplayTextColor = newValue
+                                    appDelegate.saveKeystrokeDisplayPreferences()
+                                    appDelegate.applyKeystrokeDisplaySettings()
+                                }
+                            )) {
+                                ForEach(KeystrokeColor.allCases, id: \.self) { color in
+                                    Text(color.rawValue).tag(color)
+                                }
+                            }
+                            .pickerStyle(MenuPickerStyle())
+                            .frame(width: 150)
+                            Spacer()
+                        }
+                    }
+                }
+            }
+
             PreferencesSection(title: "App Behavior") {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
