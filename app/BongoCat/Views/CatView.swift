@@ -125,6 +125,30 @@ enum KeystrokeColor: String, CaseIterable {
     }
 }
 
+enum KeystrokeBgColor: String, CaseIterable {
+    case black = "Black"
+    case darkGray = "Dark Gray"
+    case white = "White"
+    case blue = "Blue"
+    case purple = "Purple"
+    case red = "Red"
+    case green = "Green"
+    case none = "None"
+
+    var color: Color {
+        switch self {
+        case .black:    return Color(NSColor.black)
+        case .darkGray: return Color(NSColor.darkGray)
+        case .white:    return .white
+        case .blue:     return .blue
+        case .purple:   return .purple
+        case .red:      return .red
+        case .green:    return .green
+        case .none:     return .clear
+        }
+    }
+}
+
 // MARK: - Observable Cat Animation Controller
 class CatAnimationController: ObservableObject {
     @Published var currentState: CatState = .idle
@@ -144,6 +168,8 @@ class CatAnimationController: ObservableObject {
     @Published var recentInputEvents: [InputEvent] = []
     @Published var keystrokeDisplayFontSize: Double = 13
     @Published var keystrokeDisplayTextColor: KeystrokeColor = .white
+    @Published var keystrokeDisplayBgColor: KeystrokeBgColor = .black
+    @Published var keystrokeCounterSpacing: Double = 1
     @Published var keystrokeCount: Int = 0
     private let maxInputEvents = 5
     private let keystrokeExpireDuration: TimeInterval = 2.0
@@ -540,6 +566,14 @@ class CatAnimationController: ObservableObject {
 
     func setKeystrokeDisplayTextColor(_ color: KeystrokeColor) {
         keystrokeDisplayTextColor = color
+    }
+
+    func setKeystrokeDisplayBgColor(_ color: KeystrokeBgColor) {
+        keystrokeDisplayBgColor = color
+    }
+
+    func setKeystrokeCounterSpacing(_ spacing: Double) {
+        keystrokeCounterSpacing = spacing
     }
 
     func recordInputEvent(_ label: String) {
@@ -971,7 +1005,7 @@ struct KeystrokeDisplayView: View {
     @EnvironmentObject var animationController: CatAnimationController
 
     var body: some View {
-        VStack(spacing: 1) {
+        VStack(spacing: CGFloat(animationController.keystrokeCounterSpacing)) {
             // Count row
             if animationController.showKeystrokeCounter {
                 Text("\(animationController.keystrokeCount)")
@@ -997,7 +1031,9 @@ struct KeystrokeDisplayView: View {
                             .padding(.vertical, 1)
                             .background(
                                 RoundedRectangle(cornerRadius: 4)
-                                    .fill(Color.black.opacity(0.45))
+                                    .fill(animationController.keystrokeDisplayBgColor.color.opacity(
+                                        animationController.keystrokeDisplayBgColor == .none ? 0 : 0.6
+                                    ))
                                     .overlay(
                                         RoundedRectangle(cornerRadius: 4)
                                             .stroke(animationController.keystrokeDisplayTextColor.color.opacity(0.35),
@@ -1019,7 +1055,9 @@ struct KeystrokeDisplayView: View {
         .padding(.horizontal, 4)
         .padding(.top, 2)
         .padding(.bottom, 2)
-        .background(Color.black.opacity(0.22))
+        .background(animationController.keystrokeDisplayBgColor.color.opacity(
+            animationController.keystrokeDisplayBgColor == .none ? 0 : 0.22
+        ))
         .frame(maxWidth: .infinity, alignment: .top)
         .frame(maxHeight: .infinity, alignment: .top)
     }

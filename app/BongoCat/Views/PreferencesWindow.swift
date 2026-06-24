@@ -297,6 +297,44 @@ struct GeneralPreferencesView: View {
                             .frame(width: 150)
                             Spacer()
                         }
+
+                        HStack {
+                            Text("Background color")
+                                .frame(width: 200, alignment: .leading)
+                            Picker("", selection: Binding(
+                                get: { appDelegate.keystrokeDisplayBgColor },
+                                set: { newValue in
+                                    appDelegate.keystrokeDisplayBgColor = newValue
+                                    appDelegate.saveKeystrokeDisplayPreferences()
+                                    appDelegate.applyKeystrokeDisplaySettings()
+                                }
+                            )) {
+                                ForEach(KeystrokeBgColor.allCases, id: \.self) { color in
+                                    Text(color.rawValue).tag(color)
+                                }
+                            }
+                            .pickerStyle(MenuPickerStyle())
+                            .frame(width: 150)
+                            Spacer()
+                        }
+
+                        HStack {
+                            Text("Counter spacing")
+                                .frame(width: 200, alignment: .leading)
+                            Slider(value: Binding(
+                                get: { appDelegate.keystrokeCounterSpacing },
+                                set: { newValue in
+                                    appDelegate.keystrokeCounterSpacing = newValue
+                                    appDelegate.saveKeystrokeDisplayPreferences()
+                                    appDelegate.applyKeystrokeDisplaySettings()
+                                }
+                            ), in: 0...20, step: 1)
+                            .frame(width: 110)
+                            Text("\(Int(appDelegate.keystrokeCounterSpacing))px")
+                                .frame(width: 35, alignment: .leading)
+                                .foregroundColor(.secondary)
+                            Spacer()
+                        }
                     }
                 }
             }

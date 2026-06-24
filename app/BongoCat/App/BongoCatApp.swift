@@ -100,6 +100,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
     private let keystrokeDisplayFontSizeKey = "BongoCatKeystrokeDisplayFontSize"
     @Published var keystrokeDisplayTextColor: KeystrokeColor = .white
     private let keystrokeDisplayTextColorKey = "BongoCatKeystrokeDisplayTextColor"
+    @Published var keystrokeDisplayBgColor: KeystrokeBgColor = .black
+    private let keystrokeDisplayBgColorKey = "BongoCatKeystrokeDisplayBgColor"
+    @Published var keystrokeCounterSpacing: Double = 1
+    private let keystrokeCounterSpacingKey = "BongoCatKeystrokeCounterSpacing"
 
     // Milestone notifications management
     @Published internal var milestoneManager = MilestoneNotificationManager.shared
@@ -475,6 +479,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         overlayWindow?.updateKeystrokeDisplaySpacing(keystrokeDisplaySpacing)
         overlayWindow?.catAnimationController?.setKeystrokeDisplayFontSize(keystrokeDisplayFontSize)
         overlayWindow?.catAnimationController?.setKeystrokeDisplayTextColor(keystrokeDisplayTextColor)
+        overlayWindow?.catAnimationController?.setKeystrokeDisplayBgColor(keystrokeDisplayBgColor)
+        overlayWindow?.catAnimationController?.setKeystrokeCounterSpacing(keystrokeCounterSpacing)
 
         // Apply saved position
         overlayWindow?.setPositionProgrammatically(savedPosition)
@@ -603,6 +609,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
             keystrokeDisplaySpacing = 0
             keystrokeDisplayFontSize = 13
             keystrokeDisplayTextColor = .white
+            keystrokeDisplayBgColor = .black
+            keystrokeCounterSpacing = 1
 
             // Save all the reset values
             saveScale()
@@ -2668,6 +2676,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
            let color = KeystrokeColor(rawValue: colorRaw) {
             keystrokeDisplayTextColor = color
         }
+        if let bgRaw = UserDefaults.standard.string(forKey: keystrokeDisplayBgColorKey),
+           let bg = KeystrokeBgColor(rawValue: bgRaw) {
+            keystrokeDisplayBgColor = bg
+        }
+        if UserDefaults.standard.object(forKey: keystrokeCounterSpacingKey) != nil {
+            keystrokeCounterSpacing = UserDefaults.standard.double(forKey: keystrokeCounterSpacingKey)
+        }
         print("Loaded keystroke display prefs — show:\(showKeystrokeDisplay), counter:\(showKeystrokeCounter), keys:\(showKeystrokeKeys), size:\(keystrokeDisplayFontSize), color:\(keystrokeDisplayTextColor.rawValue)")
     }
 
@@ -2678,6 +2693,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         UserDefaults.standard.set(keystrokeDisplaySpacing, forKey: keystrokeDisplaySpacingKey)
         UserDefaults.standard.set(keystrokeDisplayFontSize, forKey: keystrokeDisplayFontSizeKey)
         UserDefaults.standard.set(keystrokeDisplayTextColor.rawValue, forKey: keystrokeDisplayTextColorKey)
+        UserDefaults.standard.set(keystrokeDisplayBgColor.rawValue, forKey: keystrokeDisplayBgColorKey)
+        UserDefaults.standard.set(keystrokeCounterSpacing, forKey: keystrokeCounterSpacingKey)
     }
 
     internal func applyKeystrokeDisplaySettings() {
@@ -2686,6 +2703,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
             controller.setShowKeystrokeKeys(showKeystrokeKeys)
             controller.setKeystrokeDisplayFontSize(keystrokeDisplayFontSize)
             controller.setKeystrokeDisplayTextColor(keystrokeDisplayTextColor)
+            controller.setKeystrokeDisplayBgColor(keystrokeDisplayBgColor)
+            controller.setKeystrokeCounterSpacing(keystrokeCounterSpacing)
         }
         overlayWindow?.updateKeystrokeDisplaySpacing(keystrokeDisplaySpacing)
     }
