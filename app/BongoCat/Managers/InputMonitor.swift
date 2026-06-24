@@ -63,6 +63,12 @@ class InputMonitor {
                 break
             }
         }
+
+        if keyboardEventMonitor == nil {
+            print("❌ Keyboard monitor failed to register — Input Monitoring permission likely not granted")
+        } else {
+            print("✅ Keyboard monitor registered successfully")
+        }
     }
 
     private func startMouseMonitoring() {

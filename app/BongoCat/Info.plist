@@ -39,5 +39,7 @@
 	</dict>
 	<key>NSHighResolutionCapable</key>
 	<true/>
+	<key>NSInputMonitoringUsageDescription</key>
+	<string>BongoCat needs Input Monitoring access to detect letter key presses and animate the cat.</string>
 </dict>
 </plist>

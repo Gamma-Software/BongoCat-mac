@@ -156,6 +156,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         lastNonBongoCatApp = getCurrentActiveApp()
         
         requestAccessibilityPermissions()
+        requestInputMonitoringPermissions()
 
         // Initialize analytics and track app launch
         analytics.trackAppLaunch()
@@ -563,6 +564,44 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         let response = alert.runModal()
         if response == .alertFirstButtonReturn {
             NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!)
+        }
+    }
+
+    private func requestInputMonitoringPermissions() {
+        if CGPreflightListenEventAccess() {
+            print("✅ Input Monitoring access already granted")
+            return
+        }
+
+        print("⚠️ Input Monitoring access required for letter key detection")
+        let granted = CGRequestListenEventAccess()
+
+        if !granted {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                if !CGPreflightListenEventAccess() {
+                    self.showInputMonitoringAlert()
+                }
+            }
+        }
+    }
+
+    private func showInputMonitoringAlert() {
+        let alert = NSAlert()
+        alert.messageText = "Input Monitoring Access Required"
+        alert.informativeText = """
+        BongoCat needs Input Monitoring access to detect letter key presses.
+
+        Without it, only modifier keys (⌘, ⌃, ⇧, ⌥) will be detected.
+
+        After enabling, quit and restart BongoCat.
+        """
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: "Open System Settings")
+        alert.addButton(withTitle: "Continue Anyway")
+
+        let response = alert.runModal()
+        if response == .alertFirstButtonReturn {
+            NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ListenEvent")!)
         }
     }
 
