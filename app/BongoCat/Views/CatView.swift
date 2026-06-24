@@ -141,7 +141,9 @@ class CatAnimationController: ObservableObject {
     @Published var recentInputEvents: [InputEvent] = []
     @Published var keystrokeDisplayFontSize: Double = 13
     @Published var keystrokeDisplayTextColor: KeystrokeColor = .white
-    private let maxInputEvents = 8
+    @Published var keystrokeCount: Int = 0
+    private let maxInputEvents = 5
+    private let keystrokeExpireDuration: TimeInterval = 2.0
 
     // Reference to AppDelegate for context menu actions
     weak var appDelegate: AppDelegate?
@@ -164,6 +166,7 @@ class CatAnimationController: ObservableObject {
     private let trackpadTouchTimeout: TimeInterval = 0.3  // Time to wait after last trackpad event before returning to idle
 
     init() {
+        keystrokeCount = UserDefaults.standard.integer(forKey: "BongoCatTotalStrokes")
     }
 
     deinit {
@@ -318,6 +321,7 @@ class CatAnimationController: ObservableObject {
         case .keyboardDown(let key):
             print("⌨️ Keyboard down detected - key: \(key)")
             strokeCounter.incrementKeystrokes()
+            keystrokeCount = strokeCounter.totalStrokes
             if showKeystrokeDisplay { recordInputEvent(formatKey(key)) }
             triggerKeyboardDown(for: key)
         case .keyboardUp(let key):
@@ -330,6 +334,7 @@ class CatAnimationController: ObservableObject {
             }
             print("🖱️ Left click down detected - left paw animation")
             strokeCounter.incrementMouseClicks()
+            keystrokeCount = strokeCounter.totalStrokes
             if showKeystrokeDisplay { recordInputEvent("L") }
             triggerPawAnimation(.leftPawDown)
         case .leftClickUp:
@@ -346,6 +351,7 @@ class CatAnimationController: ObservableObject {
             }
             print("🖱️ Right click down detected - right paw animation")
             strokeCounter.incrementMouseClicks()
+            keystrokeCount = strokeCounter.totalStrokes
             if showKeystrokeDisplay { recordInputEvent("R") }
             triggerPawAnimation(.rightPawDown)
         case .rightClickUp:
@@ -526,6 +532,12 @@ class CatAnimationController: ObservableObject {
         recentInputEvents.append(event)
         if recentInputEvents.count > maxInputEvents {
             recentInputEvents.removeFirst(recentInputEvents.count - maxInputEvents)
+        }
+        let eventId = event.id
+        DispatchQueue.main.asyncAfter(deadline: .now() + keystrokeExpireDuration) { [weak self] in
+            withAnimation(.easeOut(duration: 0.25)) {
+                self?.recentInputEvents.removeAll { $0.id == eventId }
+            }
         }
     }
 
@@ -940,7 +952,16 @@ struct KeystrokeDisplayView: View {
                         removal: .opacity
                     ))
             }
+
             Spacer(minLength: 0)
+
+            Text("\(animationController.keystrokeCount)")
+                .font(.system(size: animationController.keystrokeDisplayFontSize - 1,
+                              weight: .medium,
+                              design: .monospaced))
+                .foregroundColor(animationController.keystrokeDisplayTextColor.color.opacity(0.6))
+                .padding(.trailing, 4)
+                .animation(.none, value: animationController.keystrokeCount)
         }
         .animation(.easeInOut(duration: 0.12), value: animationController.recentInputEvents.map { $0.id })
         .padding(.horizontal, 4)
