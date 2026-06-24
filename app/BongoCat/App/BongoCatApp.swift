@@ -640,6 +640,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
 
             // Reset stroke counter
             overlayWindow?.catAnimationController?.strokeCounter.reset()
+            overlayWindow?.catAnimationController?.keystrokeCount = 0
 
             // Update all menu items to reflect the changes
             updateScaleMenuItems()
@@ -1519,6 +1520,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         let response = alert.runModal()
         if response == .alertFirstButtonReturn {
             overlayWindow?.catAnimationController?.strokeCounter.reset()
+            overlayWindow?.catAnimationController?.keystrokeCount = 0
             updateStrokeCounterMenuItem()
 
             // Track stroke counter reset
