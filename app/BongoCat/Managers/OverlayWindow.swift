@@ -266,7 +266,7 @@ class OverlayWindow: NSWindowController, NSWindowDelegate {
         let baseWidth: CGFloat = 150
         let baseCatHeight: CGFloat = 125
         let spacing = CGFloat(animationController.keystrokeDisplaySpacing)
-        let keystrokeExtra: CGFloat = animationController.showKeystrokeDisplay ? (48 + spacing) : 0
+        let keystrokeExtra: CGFloat = animationController.showKeystrokeDisplay ? max(20, 48 + spacing) : 0
         let newWidth = baseWidth * CGFloat(scale)
         let newHeight = (baseCatHeight + keystrokeExtra) * CGFloat(scale)
 

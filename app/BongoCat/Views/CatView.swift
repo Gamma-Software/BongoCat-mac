@@ -916,7 +916,7 @@ struct CatView: View {
             let spacing = CGFloat(animationController.keystrokeDisplaySpacing)
             let totalBase: CGFloat = animationController.showKeystrokeDisplay ? (173.0 + spacing) : 125.0
             let catH: CGFloat = geometry.size.height * (125.0 / totalBase)
-            let spacingH: CGFloat = animationController.showKeystrokeDisplay ? geometry.size.height * (spacing / totalBase) : 0
+            let spacingH: CGFloat = animationController.showKeystrokeDisplay ? max(0, geometry.size.height * (spacing / totalBase)) : 0
             let displayH: CGFloat = geometry.size.height - catH - spacingH
 
             VStack(spacing: 0) {

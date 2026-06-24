@@ -250,7 +250,7 @@ struct GeneralPreferencesView: View {
                                     appDelegate.saveKeystrokeDisplayPreferences()
                                     appDelegate.applyKeystrokeDisplaySettings()
                                 }
-                            ), in: 0...50, step: 1)
+                            ), in: -30...50, step: 1)
                             .frame(width: 110)
                             Text("\(Int(appDelegate.keystrokeDisplaySpacing))px")
                                 .frame(width: 35, alignment: .leading)
