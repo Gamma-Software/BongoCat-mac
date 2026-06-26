@@ -954,7 +954,10 @@ struct CatView: View {
     var body: some View {
         GeometryReader { geometry in
             let spacing = CGFloat(animationController.keystrokeDisplaySpacing)
-            let totalBase: CGFloat = animationController.showKeystrokeDisplay ? (173.0 + spacing) : 125.0
+            let fontSize = CGFloat(animationController.keystrokeDisplayFontSize)
+            let counterSpacing = CGFloat(animationController.keystrokeCounterSpacing)
+            let panelBase = max(48, fontSize * 3.5 + counterSpacing + 8)
+            let totalBase: CGFloat = animationController.showKeystrokeDisplay ? (125.0 + panelBase + spacing) : 125.0
             let catH: CGFloat = geometry.size.height * (125.0 / totalBase)
             let spacingH: CGFloat = animationController.showKeystrokeDisplay ? max(0, geometry.size.height * (spacing / totalBase)) : 0
             let displayH: CGFloat = geometry.size.height - catH - spacingH
@@ -1045,65 +1048,70 @@ struct KeystrokeDisplayView: View {
     @EnvironmentObject var animationController: CatAnimationController
 
     var body: some View {
-        VStack(spacing: CGFloat(animationController.keystrokeCounterSpacing)) {
-            // Count row
-            if animationController.showKeystrokeCounter {
-                Text("\(animationController.keystrokeCount)")
-                    .font(.system(size: animationController.keystrokeDisplayFontSize - 1,
-                                  weight: .semibold,
-                                  design: .monospaced))
-                    .foregroundColor(animationController.keystrokeDisplayTextColor.color.opacity(0.75))
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .animation(.none, value: animationController.keystrokeCount)
-            }
+        // GeometryReader so badge widths are derived from the actual available
+        // space rather than from the font size. This prevents any minimum-size
+        // constraint from propagating upward and resizing the window.
+        GeometryReader { geo in
+            // 4 badge slots + 3 inter-badge gaps (3×2pt) + 2×4pt H-padding = 14pt overhead
+            let badgeWidth = max(16, (geo.size.width - 14) / 4)
 
-            // Recent key labels row
-            if animationController.showKeystrokeKeys {
-                HStack(spacing: 2) {
-                    ForEach(animationController.recentInputEvents) { event in
-                        Text(event.label)
-                            .font(.system(size: animationController.keystrokeDisplayFontSize,
-                                          weight: .semibold,
-                                          design: .monospaced))
-                            .foregroundColor(animationController.keystrokeDisplayTextColor.color)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.8)
-                            .padding(.horizontal, 3)
-                            .padding(.vertical, 1)
-                            .frame(minWidth: CGFloat(animationController.keystrokeDisplayFontSize) * 1.85,
-                                   maxWidth: CGFloat(animationController.keystrokeDisplayFontSize) * 1.85,
-                                   alignment: .center)
-                            .background(
-                                RoundedRectangle(cornerRadius: 4)
-                                    .fill(animationController.keystrokeDisplayBgColor.color.opacity(
-                                        animationController.keystrokeDisplayBgColor == .none ? 0 : 0.6
-                                    ))
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 4)
-                                            .stroke(animationController.keystrokeDisplayTextColor.color.opacity(0.35),
-                                                    lineWidth: 0.5)
-                                    )
-                            )
-                            .transition(.asymmetric(
-                                insertion: .move(edge: .trailing).combined(with: .opacity),
-                                removal: .opacity
-                            ))
-                    }
-                    Spacer(minLength: 0)
+            VStack(spacing: CGFloat(animationController.keystrokeCounterSpacing)) {
+                // Count row
+                if animationController.showKeystrokeCounter {
+                    Text("\(animationController.keystrokeCount)")
+                        .font(.system(size: animationController.keystrokeDisplayFontSize - 1,
+                                      weight: .semibold,
+                                      design: .monospaced))
+                        .foregroundColor(animationController.keystrokeDisplayTextColor.color.opacity(0.75))
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .animation(.none, value: animationController.keystrokeCount)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .clipped()
-                .animation(.easeInOut(duration: 0.12), value: animationController.recentInputEvents.map { $0.id })
+
+                // Recent key labels row
+                if animationController.showKeystrokeKeys {
+                    HStack(spacing: 2) {
+                        ForEach(animationController.recentInputEvents) { event in
+                            Text(event.label)
+                                .font(.system(size: animationController.keystrokeDisplayFontSize,
+                                              weight: .semibold,
+                                              design: .monospaced))
+                                .foregroundColor(animationController.keystrokeDisplayTextColor.color)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.8)
+                                .padding(.horizontal, 3)
+                                .padding(.vertical, 1)
+                                .frame(width: badgeWidth, alignment: .center)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 4)
+                                        .fill(animationController.keystrokeDisplayBgColor.color.opacity(
+                                            animationController.keystrokeDisplayBgColor == .none ? 0 : 0.6
+                                        ))
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 4)
+                                                .stroke(animationController.keystrokeDisplayTextColor.color.opacity(0.35),
+                                                        lineWidth: 0.5)
+                                        )
+                                )
+                                .transition(.asymmetric(
+                                    insertion: .move(edge: .trailing).combined(with: .opacity),
+                                    removal: .opacity
+                                ))
+                        }
+                        Spacer(minLength: 0)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .animation(.easeInOut(duration: 0.12), value: animationController.recentInputEvents.map { $0.id })
+                }
             }
+            .padding(.horizontal, 4)
+            .padding(.top, 2)
+            .padding(.bottom, 2)
+            .background(animationController.keystrokeDisplayBgColor.color.opacity(
+                animationController.keystrokeDisplayBgColor == .none ? 0 : 0.22
+            ))
+            .frame(maxWidth: .infinity, alignment: .top)
+            .frame(maxHeight: .infinity, alignment: .top)
         }
-        .padding(.horizontal, 4)
-        .padding(.top, 2)
-        .padding(.bottom, 2)
-        .background(animationController.keystrokeDisplayBgColor.color.opacity(
-            animationController.keystrokeDisplayBgColor == .none ? 0 : 0.22
-        ))
-        .frame(maxWidth: .infinity, alignment: .top)
-        .frame(maxHeight: .infinity, alignment: .top)
     }
 }
 

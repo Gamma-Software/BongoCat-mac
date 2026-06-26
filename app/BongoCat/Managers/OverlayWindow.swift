@@ -266,8 +266,18 @@ class OverlayWindow: NSWindowController, NSWindowDelegate {
         let baseWidth: CGFloat = 150
         let baseCatHeight: CGFloat = 125
         let spacing = CGFloat(animationController.keystrokeDisplaySpacing)
-        let keystrokeExtra: CGFloat = animationController.showKeystrokeDisplay ? max(20, 48 + spacing) : 0
-        let newWidth = baseWidth * CGFloat(scale)
+        let fontSize = CGFloat(animationController.keystrokeDisplayFontSize)
+        // Panel height must accommodate two text rows at the current font size.
+        // 48pt fits medium (13pt); scale up for larger fonts.
+        let counterSpacing = CGFloat(animationController.keystrokeCounterSpacing)
+        let panelHeight = max(48, fontSize * 3.5 + counterSpacing + 8)
+        let keystrokeExtra: CGFloat = animationController.showKeystrokeDisplay ? max(20, panelHeight + spacing) : 0
+
+        // Width is the larger of the cat base width and the exact space needed for
+        // 4 key badges + 3 inter-badge gaps (3×2pt) + horizontal padding (2×4pt).
+        // This gives a stable, pre-computed width that never resizes while typing.
+        let badgeRowWidth: CGFloat = animationController.showKeystrokeDisplay ? fontSize * 2.1 * 4 + 14 : 0
+        let newWidth = max(baseWidth, badgeRowWidth) * CGFloat(scale)
         let newHeight = (baseCatHeight + keystrokeExtra) * CGFloat(scale)
 
         if let window = window {
