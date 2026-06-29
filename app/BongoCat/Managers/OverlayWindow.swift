@@ -243,28 +243,52 @@ class OverlayWindow: NSWindowController, NSWindowDelegate {
     func updateScale(_ scale: Double) {
         guard let animationController = catAnimationController else { return }
 
-        // Update the cat view scale
         animationController.updateViewScale(scale)
+        resizeWindow(scale: scale)
+        print("Window scale updated to: \(scale)")
+    }
 
-        // Calculate new window size based on scale
-        let baseWidth: CGFloat = 150  // Reduced from 175 to match cat size
-        let baseHeight: CGFloat = 125 // Reduced from 200 to match cat size
-        let newWidth = baseWidth * scale
-        let newHeight = baseHeight * scale
+    func updateKeystrokeDisplay(_ show: Bool) {
+        guard let animationController = catAnimationController else { return }
+        animationController.showKeystrokeDisplay = show
+        resizeWindow(scale: animationController.viewScale)
+        print("Keystroke display updated to: \(show)")
+    }
 
-        // Update window size
+    func updateKeystrokeDisplaySpacing(_ spacing: Double) {
+        guard let animationController = catAnimationController else { return }
+        animationController.keystrokeDisplaySpacing = spacing
+        resizeWindow(scale: animationController.viewScale)
+    }
+
+    private func resizeWindow(scale: Double) {
+        guard let animationController = catAnimationController else { return }
+        let baseWidth: CGFloat = 150
+        let baseCatHeight: CGFloat = 125
+        let spacing = CGFloat(animationController.keystrokeDisplaySpacing)
+        let fontSize = CGFloat(animationController.keystrokeDisplayFontSize)
+        // Panel height must accommodate two text rows at the current font size.
+        // 48pt fits medium (13pt); scale up for larger fonts.
+        let counterSpacing = CGFloat(animationController.keystrokeCounterSpacing)
+        let panelHeight = max(48, fontSize * 3.5 + counterSpacing + 8)
+        let keystrokeExtra: CGFloat = animationController.showKeystrokeDisplay ? max(20, panelHeight + spacing) : 0
+
+        // Width is the larger of the cat base width and the exact space needed for
+        // 4 key badges + 3 inter-badge gaps (3×2pt) + horizontal padding (2×4pt).
+        // This gives a stable, pre-computed width that never resizes while typing.
+        let badgeRowWidth: CGFloat = animationController.showKeystrokeDisplay ? fontSize * 2.1 * 4 + 14 : 0
+        let newWidth = max(baseWidth, badgeRowWidth) * CGFloat(scale)
+        let newHeight = (baseCatHeight + keystrokeExtra) * CGFloat(scale)
+
         if let window = window {
             let currentFrame = window.frame
-            let newFrame = NSRect(
+            window.setFrame(NSRect(
                 x: currentFrame.origin.x,
                 y: currentFrame.origin.y,
                 width: newWidth,
                 height: newHeight
-            )
-            window.setFrame(newFrame, display: true, animate: true)
+            ), display: true, animate: true)
         }
-
-        print("Window scale updated to: \(scale)")
     }
 
     func updateRotation(_ rotation: Double) {

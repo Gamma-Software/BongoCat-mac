@@ -102,6 +102,93 @@ enum InputType {
     case trackpadTouch
 }
 
+struct InputEvent: Identifiable {
+    let id = UUID()
+    let label: String
+}
+
+enum KeystrokeColor: String, CaseIterable {
+    case white = "White"
+    case lightGray = "Light Gray"
+    case gray = "Gray"
+    case darkGray = "Dark Gray"
+    case black = "Black"
+    case red = "Red"
+    case orange = "Orange"
+    case yellow = "Yellow"
+    case green = "Green"
+    case mint = "Mint"
+    case teal = "Teal"
+    case cyan = "Cyan"
+    case blue = "Blue"
+    case indigo = "Indigo"
+    case purple = "Purple"
+    case pink = "Pink"
+
+    var color: Color {
+        switch self {
+        case .white:     return .white
+        case .lightGray: return Color(NSColor.lightGray)
+        case .gray:      return Color(NSColor.gray)
+        case .darkGray:  return Color(NSColor.darkGray)
+        case .black:     return Color(NSColor.black)
+        case .red:       return .red
+        case .orange:    return .orange
+        case .yellow:    return .yellow
+        case .green:     return .green
+        case .mint:      return .mint
+        case .teal:      return .teal
+        case .cyan:      return .cyan
+        case .blue:      return .blue
+        case .indigo:    return .indigo
+        case .purple:    return .purple
+        case .pink:      return .pink
+        }
+    }
+}
+
+enum KeystrokeBgColor: String, CaseIterable {
+    case none = "None"
+    case white = "White"
+    case lightGray = "Light Gray"
+    case gray = "Gray"
+    case darkGray = "Dark Gray"
+    case black = "Black"
+    case red = "Red"
+    case orange = "Orange"
+    case yellow = "Yellow"
+    case green = "Green"
+    case mint = "Mint"
+    case teal = "Teal"
+    case cyan = "Cyan"
+    case blue = "Blue"
+    case indigo = "Indigo"
+    case purple = "Purple"
+    case pink = "Pink"
+
+    var color: Color {
+        switch self {
+        case .none:      return .clear
+        case .white:     return .white
+        case .lightGray: return Color(NSColor.lightGray)
+        case .gray:      return Color(NSColor.gray)
+        case .darkGray:  return Color(NSColor.darkGray)
+        case .black:     return Color(NSColor.black)
+        case .red:       return .red
+        case .orange:    return .orange
+        case .yellow:    return .yellow
+        case .green:     return .green
+        case .mint:      return .mint
+        case .teal:      return .teal
+        case .cyan:      return .cyan
+        case .blue:      return .blue
+        case .indigo:    return .indigo
+        case .purple:    return .purple
+        case .pink:      return .pink
+        }
+    }
+}
+
 // MARK: - Observable Cat Animation Controller
 class CatAnimationController: ObservableObject {
     @Published var currentState: CatState = .idle
@@ -112,6 +199,20 @@ class CatAnimationController: ObservableObject {
     @Published var isFlippedHorizontally: Bool = false  // New property for horizontal flip
     @Published var ignoreClicksEnabled: Bool = false  // Control whether to ignore mouse clicks
     @Published var pawBehaviorMode: PawBehaviorMode = .alternating  // Control paw behavior mode
+
+    // Keystroke display
+    @Published var showKeystrokeDisplay: Bool = false
+    @Published var showKeystrokeCounter: Bool = true
+    @Published var showKeystrokeKeys: Bool = true
+    @Published var keystrokeDisplaySpacing: Double = 0
+    @Published var recentInputEvents: [InputEvent] = []
+    @Published var keystrokeDisplayFontSize: Double = 13
+    @Published var keystrokeDisplayTextColor: KeystrokeColor = .white
+    @Published var keystrokeDisplayBgColor: KeystrokeBgColor = .black
+    @Published var keystrokeCounterSpacing: Double = 1
+    @Published var keystrokeCount: Int = 0
+    private let maxInputEvents = 4
+    private let keystrokeExpireDuration: TimeInterval = 2.0
 
     // Reference to AppDelegate for context menu actions
     weak var appDelegate: AppDelegate?
@@ -134,6 +235,7 @@ class CatAnimationController: ObservableObject {
     private let trackpadTouchTimeout: TimeInterval = 0.3  // Time to wait after last trackpad event before returning to idle
 
     init() {
+        keystrokeCount = UserDefaults.standard.integer(forKey: "BongoCatTotalStrokes")
     }
 
     deinit {
@@ -288,6 +390,8 @@ class CatAnimationController: ObservableObject {
         case .keyboardDown(let key):
             print("⌨️ Keyboard down detected - key: \(key)")
             strokeCounter.incrementKeystrokes()
+            keystrokeCount = strokeCounter.totalStrokes
+            if showKeystrokeDisplay { recordInputEvent(formatKey(key)) }
             triggerKeyboardDown(for: key)
         case .keyboardUp(let key):
             print("⌨️ Keyboard up detected - key: \(key)")
@@ -299,6 +403,8 @@ class CatAnimationController: ObservableObject {
             }
             print("🖱️ Left click down detected - left paw animation")
             strokeCounter.incrementMouseClicks()
+            keystrokeCount = strokeCounter.totalStrokes
+            if showKeystrokeDisplay { recordInputEvent("M1") }
             triggerPawAnimation(.leftPawDown)
         case .leftClickUp:
             if ignoreClicksEnabled {
@@ -314,6 +420,8 @@ class CatAnimationController: ObservableObject {
             }
             print("🖱️ Right click down detected - right paw animation")
             strokeCounter.incrementMouseClicks()
+            keystrokeCount = strokeCounter.totalStrokes
+            if showKeystrokeDisplay { recordInputEvent("M2") }
             triggerPawAnimation(.rightPawDown)
         case .rightClickUp:
             if ignoreClicksEnabled {
@@ -472,6 +580,99 @@ class CatAnimationController: ObservableObject {
 
         print("🎯 Returning to idle immediately (no more trackpad touches)")
         currentState = .idle
+    }
+
+    // MARK: - Keystroke Display
+
+    func setShowKeystrokeDisplay(_ show: Bool) {
+        showKeystrokeDisplay = show
+    }
+
+    func setShowKeystrokeCounter(_ show: Bool) {
+        showKeystrokeCounter = show
+    }
+
+    func setShowKeystrokeKeys(_ show: Bool) {
+        showKeystrokeKeys = show
+    }
+
+    func setKeystrokeDisplaySpacing(_ spacing: Double) {
+        keystrokeDisplaySpacing = spacing
+    }
+
+    func setKeystrokeDisplayFontSize(_ size: Double) {
+        keystrokeDisplayFontSize = size
+    }
+
+    func setKeystrokeDisplayTextColor(_ color: KeystrokeColor) {
+        keystrokeDisplayTextColor = color
+    }
+
+    func setKeystrokeDisplayBgColor(_ color: KeystrokeBgColor) {
+        keystrokeDisplayBgColor = color
+    }
+
+    func setKeystrokeCounterSpacing(_ spacing: Double) {
+        keystrokeCounterSpacing = spacing
+    }
+
+    func recordInputEvent(_ label: String) {
+        let event = InputEvent(label: label)
+        recentInputEvents.append(event)
+        if recentInputEvents.count > maxInputEvents {
+            recentInputEvents.removeFirst(recentInputEvents.count - maxInputEvents)
+        }
+        let eventId = event.id
+        DispatchQueue.main.asyncAfter(deadline: .now() + keystrokeExpireDuration) { [weak self] in
+            withAnimation(.easeOut(duration: 0.25)) {
+                self?.recentInputEvents.removeAll { $0.id == eventId }
+            }
+        }
+    }
+
+    func formatKey(_ key: String) -> String {
+        switch key {
+        case " ":                           return "␣"
+        case "\r", "\n":                    return "↩"
+        case "\t":                          return "⇥"
+        case "\u{7f}", "\u{8}":            return "⌫"
+        case "\u{1b}", "Escape", "ESC", "esc": return "⎋"
+        // Modifier keys (already pre-formatted from InputMonitor)
+        case "⌘":                           return "⌘"
+        case "⌥":                           return "⌥"
+        case "⌃":                           return "⌃"
+        case "⇧":                           return "⇧"
+        case "⇪":                           return "⇪"
+        case "fn":                          return "fn"
+        // Arrow keys
+        case "\u{f700}":                    return "↑"
+        case "\u{f701}":                    return "↓"
+        case "\u{f702}":                    return "←"
+        case "\u{f703}":                    return "→"
+        // F keys
+        case "\u{F704}":                    return "F1"
+        case "\u{F705}":                    return "F2"
+        case "\u{F706}":                    return "F3"
+        case "\u{F707}":                    return "F4"
+        case "\u{F708}":                    return "F5"
+        case "\u{F709}":                    return "F6"
+        case "\u{F70A}":                    return "F7"
+        case "\u{F70B}":                    return "F8"
+        case "\u{F70C}":                    return "F9"
+        case "\u{F70D}":                    return "F10"
+        case "\u{F70E}":                    return "F11"
+        case "\u{F70F}":                    return "F12"
+        // Other special keys
+        case "\u{F728}":                    return "⌦"
+        case "\u{F729}":                    return "↖"
+        case "\u{F72B}":                    return "↘"
+        case "\u{F72C}":                    return "⇞"
+        case "\u{F72D}":                    return "⇟"
+        case "unknown":                     return "?"
+        default:
+            let upper = key.uppercased()
+            return upper.count <= 3 ? upper : String(upper.prefix(3))
+        }
     }
 
     private func animateAlternatePaws() {
@@ -752,26 +953,33 @@ struct CatView: View {
 
     var body: some View {
         GeometryReader { geometry in
-            VStack(spacing: 0) {
-                // Clear background area (18.5% of total height to match original 25px/135px)
-                Color.clear
-                    .frame(height: geometry.size.height * 0.185)
+            let spacing = CGFloat(animationController.keystrokeDisplaySpacing)
+            let fontSize = CGFloat(animationController.keystrokeDisplayFontSize)
+            let counterSpacing = CGFloat(animationController.keystrokeCounterSpacing)
+            let panelBase = max(48, fontSize * 3.5 + counterSpacing + 8)
+            let totalBase: CGFloat = animationController.showKeystrokeDisplay ? (125.0 + panelBase + spacing) : 125.0
+            let catH: CGFloat = geometry.size.height * (125.0 / totalBase)
+            let spacingH: CGFloat = animationController.showKeystrokeDisplay ? max(0, geometry.size.height * (spacing / totalBase)) : 0
+            let displayH: CGFloat = geometry.size.height - catH - spacingH
 
-                // Red cat area (81.5% of total height to match original 110px/135px)
+            VStack(spacing: 0) {
+                // Clear background area (18.5% of cat height)
+                Color.clear
+                    .frame(height: catH * 0.185)
+
+                // Cat sprite area (81.5% of cat height)
                 ZStack {
                     Color.clear
-                    //Color.red //DEBUG
 
-                    // The authentic BongoCat sprite using real images
                     BongoCatSprite(state: animationController.currentState)
                         .scaleEffect(animationController.scale)
-                        .scaleEffect(x: animationController.isFlippedHorizontally ? -1 : 1, y: 1)  // Apply horizontal flip
-                        .rotationEffect(.degrees(animationController.rotation))  // Apply rotation
+                        .scaleEffect(x: animationController.isFlippedHorizontally ? -1 : 1, y: 1)
+                        .rotationEffect(.degrees(animationController.rotation))
                         .animation(.easeInOut(duration: 0.08), value: animationController.currentState)
                         .animation(.easeInOut(duration: 0.1), value: animationController.scale)
-                        .animation(.easeInOut(duration: 0.3), value: animationController.rotation)  // Smooth rotation transitions
-                        .animation(.easeInOut(duration: 0.3), value: animationController.isFlippedHorizontally)  // Smooth flip transitions
-                        .contentShape(Rectangle()) // Make the entire sprite area tappable
+                        .animation(.easeInOut(duration: 0.3), value: animationController.rotation)
+                        .animation(.easeInOut(duration: 0.3), value: animationController.isFlippedHorizontally)
+                        .contentShape(Rectangle())
                         .contextMenu {
                             Button("Show/Hide Overlay") {
                                 animationController.appDelegate?.toggleOverlayPublic()
@@ -817,13 +1025,92 @@ struct CatView: View {
                             }
                         }
                 }
-                .frame(height: geometry.size.height * 0.815)
+                .frame(height: catH * 0.815)
+
+                // Keystroke display panel
+                if animationController.showKeystrokeDisplay {
+                    Color.clear.frame(height: spacingH)
+                    KeystrokeDisplayView()
+                        .frame(height: displayH)
+                }
             }
         }
-        .scaleEffect(animationController.viewScale)  // Apply view scaling
-        .animation(.easeInOut(duration: 0.3), value: animationController.viewScale)  // Smooth scale transitions
+        .scaleEffect(animationController.viewScale)
+        .animation(.easeInOut(duration: 0.3), value: animationController.viewScale)
         .onAppear {
             print("🐱 CatView appeared, current state: \(animationController.currentState)")
+        }
+    }
+}
+
+// MARK: - Keystroke Display View
+struct KeystrokeDisplayView: View {
+    @EnvironmentObject var animationController: CatAnimationController
+
+    var body: some View {
+        // GeometryReader so badge widths are derived from the actual available
+        // space rather than from the font size. This prevents any minimum-size
+        // constraint from propagating upward and resizing the window.
+        GeometryReader { geo in
+            // 4 badge slots + 3 inter-badge gaps (3×2pt) + 2×4pt H-padding = 14pt overhead
+            let badgeWidth = max(16, (geo.size.width - 14) / 4)
+
+            VStack(spacing: CGFloat(animationController.keystrokeCounterSpacing)) {
+                // Count row
+                if animationController.showKeystrokeCounter {
+                    Text("\(animationController.keystrokeCount)")
+                        .font(.system(size: animationController.keystrokeDisplayFontSize - 1,
+                                      weight: .semibold,
+                                      design: .monospaced))
+                        .foregroundColor(animationController.keystrokeDisplayTextColor.color.opacity(0.75))
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .animation(.none, value: animationController.keystrokeCount)
+                }
+
+                // Recent key labels row
+                if animationController.showKeystrokeKeys {
+                    HStack(spacing: 2) {
+                        ForEach(animationController.recentInputEvents) { event in
+                            Text(event.label)
+                                .font(.system(size: animationController.keystrokeDisplayFontSize,
+                                              weight: .semibold,
+                                              design: .monospaced))
+                                .foregroundColor(animationController.keystrokeDisplayTextColor.color)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.8)
+                                .padding(.horizontal, 3)
+                                .padding(.vertical, 1)
+                                .frame(width: badgeWidth, alignment: .center)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 4)
+                                        .fill(animationController.keystrokeDisplayBgColor.color.opacity(
+                                            animationController.keystrokeDisplayBgColor == .none ? 0 : 0.6
+                                        ))
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 4)
+                                                .stroke(animationController.keystrokeDisplayTextColor.color.opacity(0.35),
+                                                        lineWidth: 0.5)
+                                        )
+                                )
+                                .transition(.asymmetric(
+                                    insertion: .move(edge: .trailing).combined(with: .opacity),
+                                    removal: .opacity
+                                ))
+                        }
+                        Spacer(minLength: 0)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .animation(.easeInOut(duration: 0.12), value: animationController.recentInputEvents.map { $0.id })
+                }
+            }
+            .padding(.horizontal, 4)
+            .padding(.top, 2)
+            .padding(.bottom, 2)
+            .background(animationController.keystrokeDisplayBgColor.color.opacity(
+                animationController.keystrokeDisplayBgColor == .none ? 0 : 0.22
+            ))
+            .frame(maxWidth: .infinity, alignment: .top)
+            .frame(maxHeight: .infinity, alignment: .top)
         }
     }
 }

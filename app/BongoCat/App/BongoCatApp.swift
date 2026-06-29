@@ -87,6 +87,24 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
     private let perAppHidingKey = "BongoCatPerAppHiding"
     internal var lastNonBongoCatApp: (bundleIdentifier: String, displayName: String) = ("unknown", "Unknown App")
 
+    // Keystroke display management
+    @Published var showKeystrokeDisplay: Bool = false
+    private let keystrokeDisplayKey = "BongoCatShowKeystrokeDisplay"
+    @Published var showKeystrokeCounter: Bool = true
+    private let keystrokeCounterKey = "BongoCatShowKeystrokeCounter"
+    @Published var showKeystrokeKeys: Bool = true
+    private let keystrokeKeysKey = "BongoCatShowKeystrokeKeys"
+    @Published var keystrokeDisplaySpacing: Double = 0
+    private let keystrokeDisplaySpacingKey = "BongoCatKeystrokeDisplaySpacing"
+    @Published var keystrokeDisplayFontSize: Double = 13
+    private let keystrokeDisplayFontSizeKey = "BongoCatKeystrokeDisplayFontSize"
+    @Published var keystrokeDisplayTextColor: KeystrokeColor = .white
+    private let keystrokeDisplayTextColorKey = "BongoCatKeystrokeDisplayTextColor"
+    @Published var keystrokeDisplayBgColor: KeystrokeBgColor = .black
+    private let keystrokeDisplayBgColorKey = "BongoCatKeystrokeDisplayBgColor"
+    @Published var keystrokeCounterSpacing: Double = 1
+    private let keystrokeCounterSpacingKey = "BongoCatKeystrokeCounterSpacing"
+
     // Milestone notifications management
     @Published internal var milestoneManager = MilestoneNotificationManager.shared
 
@@ -125,6 +143,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         loadClickThroughPreference()
         loadPawBehaviorPreference()
         loadAutoStartAtLaunchPreference()
+        loadKeystrokeDisplayPreferences()
         loadPositionPreferences()
         loadPerAppPositioning()
         loadPerAppHiding()
@@ -137,6 +156,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         lastNonBongoCatApp = getCurrentActiveApp()
         
         requestAccessibilityPermissions()
+        requestInputMonitoringPermissions()
 
         // Initialize analytics and track app launch
         analytics.trackAppLaunch()
@@ -454,6 +474,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         overlayWindow?.catAnimationController?.setIgnoreClicksEnabled(ignoreClicksEnabled)  // Apply ignore clicks preference
         overlayWindow?.catAnimationController?.setPawBehaviorMode(pawBehaviorMode)  // Apply paw behavior preference
         overlayWindow?.updateIgnoreMouseEvents(clickThroughEnabled)  // Apply click through preference
+        overlayWindow?.updateKeystrokeDisplay(showKeystrokeDisplay)  // Apply keystroke display preference
+        overlayWindow?.catAnimationController?.setShowKeystrokeCounter(showKeystrokeCounter)
+        overlayWindow?.catAnimationController?.setShowKeystrokeKeys(showKeystrokeKeys)
+        overlayWindow?.updateKeystrokeDisplaySpacing(keystrokeDisplaySpacing)
+        overlayWindow?.catAnimationController?.setKeystrokeDisplayFontSize(keystrokeDisplayFontSize)
+        overlayWindow?.catAnimationController?.setKeystrokeDisplayTextColor(keystrokeDisplayTextColor)
+        overlayWindow?.catAnimationController?.setKeystrokeDisplayBgColor(keystrokeDisplayBgColor)
+        overlayWindow?.catAnimationController?.setKeystrokeCounterSpacing(keystrokeCounterSpacing)
 
         // Apply saved position
         overlayWindow?.setPositionProgrammatically(savedPosition)
@@ -539,6 +567,44 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         }
     }
 
+    private func requestInputMonitoringPermissions() {
+        if CGPreflightListenEventAccess() {
+            print("✅ Input Monitoring access already granted")
+            return
+        }
+
+        print("⚠️ Input Monitoring access required for letter key detection")
+        let granted = CGRequestListenEventAccess()
+
+        if !granted {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                if !CGPreflightListenEventAccess() {
+                    self.showInputMonitoringAlert()
+                }
+            }
+        }
+    }
+
+    private func showInputMonitoringAlert() {
+        let alert = NSAlert()
+        alert.messageText = "Input Monitoring Access Required"
+        alert.informativeText = """
+        BongoCat needs Input Monitoring access to detect letter key presses.
+
+        Without it, only modifier keys (⌘, ⌃, ⇧, ⌥) will be detected.
+
+        After enabling, quit and restart BongoCat.
+        """
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: "Open System Settings")
+        alert.addButton(withTitle: "Continue Anyway")
+
+        let response = alert.runModal()
+        if response == .alertFirstButtonReturn {
+            NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ListenEvent")!)
+        }
+    }
+
     @objc private func toggleOverlay() {
         overlayWindow?.toggleVisibility()
         let isVisible = overlayWindow?.window?.isVisible ?? false
@@ -576,6 +642,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
             perAppPositions.removeAll()
             isPerAppHidingEnabled = true  // Per-app hiding enabled
             perAppHiddenApps.removeAll()
+            showKeystrokeDisplay = false
+            showKeystrokeCounter = true
+            showKeystrokeKeys = true
+            keystrokeDisplaySpacing = 0
+            keystrokeDisplayFontSize = 13
+            keystrokeDisplayTextColor = .white
+            keystrokeDisplayBgColor = .black
+            keystrokeCounterSpacing = 1
 
             // Save all the reset values
             saveScale()
@@ -589,6 +663,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
             savePositionPreferences()
             savePerAppPositioning()
             savePerAppHiding()
+            saveKeystrokeDisplayPreferences()
 
             // Apply changes to the overlay window
             overlayWindow?.updateScale(currentScale)
@@ -599,9 +674,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
             overlayWindow?.catAnimationController?.setPawBehaviorMode(pawBehaviorMode)
             overlayWindow?.updateIgnoreMouseEvents(clickThroughEnabled)
             overlayWindow?.setPositionProgrammatically(savedPosition)
+            overlayWindow?.updateKeystrokeDisplay(false)
+            applyKeystrokeDisplaySettings()
 
             // Reset stroke counter
             overlayWindow?.catAnimationController?.strokeCounter.reset()
+            overlayWindow?.catAnimationController?.keystrokeCount = 0
 
             // Update all menu items to reflect the changes
             updateScaleMenuItems()
@@ -1481,6 +1559,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
         let response = alert.runModal()
         if response == .alertFirstButtonReturn {
             overlayWindow?.catAnimationController?.strokeCounter.reset()
+            overlayWindow?.catAnimationController?.keystrokeCount = 0
             updateStrokeCounterMenuItem()
 
             // Track stroke counter reset
@@ -2614,6 +2693,61 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, ObservableOb
     internal func resetFirstLaunchFlag() {
         UserDefaults.standard.removeObject(forKey: "BongoCatHasLaunchedBefore")
         print("First launch flag reset - welcome screen will show on next launch")
+    }
+
+    // MARK: - Keystroke Display Preferences
+
+    internal func loadKeystrokeDisplayPreferences() {
+        if UserDefaults.standard.object(forKey: keystrokeDisplayKey) != nil {
+            showKeystrokeDisplay = UserDefaults.standard.bool(forKey: keystrokeDisplayKey)
+        }
+        if UserDefaults.standard.object(forKey: keystrokeCounterKey) != nil {
+            showKeystrokeCounter = UserDefaults.standard.bool(forKey: keystrokeCounterKey)
+        }
+        if UserDefaults.standard.object(forKey: keystrokeKeysKey) != nil {
+            showKeystrokeKeys = UserDefaults.standard.bool(forKey: keystrokeKeysKey)
+        }
+        if UserDefaults.standard.object(forKey: keystrokeDisplaySpacingKey) != nil {
+            keystrokeDisplaySpacing = UserDefaults.standard.double(forKey: keystrokeDisplaySpacingKey)
+        }
+        if UserDefaults.standard.object(forKey: keystrokeDisplayFontSizeKey) != nil {
+            keystrokeDisplayFontSize = UserDefaults.standard.double(forKey: keystrokeDisplayFontSizeKey)
+        }
+        if let colorRaw = UserDefaults.standard.string(forKey: keystrokeDisplayTextColorKey),
+           let color = KeystrokeColor(rawValue: colorRaw) {
+            keystrokeDisplayTextColor = color
+        }
+        if let bgRaw = UserDefaults.standard.string(forKey: keystrokeDisplayBgColorKey),
+           let bg = KeystrokeBgColor(rawValue: bgRaw) {
+            keystrokeDisplayBgColor = bg
+        }
+        if UserDefaults.standard.object(forKey: keystrokeCounterSpacingKey) != nil {
+            keystrokeCounterSpacing = UserDefaults.standard.double(forKey: keystrokeCounterSpacingKey)
+        }
+        print("Loaded keystroke display prefs — show:\(showKeystrokeDisplay), counter:\(showKeystrokeCounter), keys:\(showKeystrokeKeys), size:\(keystrokeDisplayFontSize), color:\(keystrokeDisplayTextColor.rawValue)")
+    }
+
+    internal func saveKeystrokeDisplayPreferences() {
+        UserDefaults.standard.set(showKeystrokeDisplay, forKey: keystrokeDisplayKey)
+        UserDefaults.standard.set(showKeystrokeCounter, forKey: keystrokeCounterKey)
+        UserDefaults.standard.set(showKeystrokeKeys, forKey: keystrokeKeysKey)
+        UserDefaults.standard.set(keystrokeDisplaySpacing, forKey: keystrokeDisplaySpacingKey)
+        UserDefaults.standard.set(keystrokeDisplayFontSize, forKey: keystrokeDisplayFontSizeKey)
+        UserDefaults.standard.set(keystrokeDisplayTextColor.rawValue, forKey: keystrokeDisplayTextColorKey)
+        UserDefaults.standard.set(keystrokeDisplayBgColor.rawValue, forKey: keystrokeDisplayBgColorKey)
+        UserDefaults.standard.set(keystrokeCounterSpacing, forKey: keystrokeCounterSpacingKey)
+    }
+
+    internal func applyKeystrokeDisplaySettings() {
+        if let controller = overlayWindow?.catAnimationController {
+            controller.setShowKeystrokeCounter(showKeystrokeCounter)
+            controller.setShowKeystrokeKeys(showKeystrokeKeys)
+            controller.setKeystrokeDisplayFontSize(keystrokeDisplayFontSize)
+            controller.setKeystrokeDisplayTextColor(keystrokeDisplayTextColor)
+            controller.setKeystrokeDisplayBgColor(keystrokeDisplayBgColor)
+            controller.setKeystrokeCounterSpacing(keystrokeCounterSpacing)
+        }
+        overlayWindow?.updateKeystrokeDisplaySpacing(keystrokeDisplaySpacing)
     }
 
         // MARK: - Additional Helper Methods
